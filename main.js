@@ -16,29 +16,30 @@ const MODEL_SCALE = [3, 3, 3]; // Adjust based on your model's unit scale
 
 const map = new maplibregl.Map({
     container: 'map',
-    // // NEW STYLE URL (Free, reliable, has fonts)
-    // style: {
-    //     'version': 8,
-    //     'sources': {},
-    //     'layers': [
-    //         {
-    //             'id': 'background',
-    //             'type': 'background',
-    //             'paint': {
-    //                 'background-color': '#ffffff' // Dark Gray/Black Background
-    //             }
-    //         }
-    //     ],
-    //     // CRITICAL: We need this URL to download fonts for your text labels
-    //     // This uses the reliable OpenMapTiles font server
-    //     'glyphs': 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
-    // },
-    style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    // NEW STYLE URL (Free, reliable, has fonts)
+    style: {
+        'version': 8,
+        'sources': {},
+        'layers': [
+            {
+                'id': 'background',
+                'type': 'background',
+                'paint': {
+                    'background-color': '#ffffff' // Dark Gray/Black Background
+                }
+            }
+        ],
+        // CRITICAL: We need this URL to download fonts for your text labels
+        // This uses the reliable OpenMapTiles font server
+        'glyphs': 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
+    },
+    // style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
     center: [121.585150, 24.989265],
     zoom: 17.81,
     pitch: 60,
     bearing: -17.6,
-    antialias: true
+    antialias: true,
+    doubleClickZoom: false
 });
 
 
@@ -49,13 +50,13 @@ const map = new maplibregl.Map({
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-        { id: 1, name: "校門口", coords: [121.586012, 24.986974, 3.80], neighbors: [2] },
-        { id: 2, name: "Lobby",         coords: [121.5853, 24.9876, 1.5], neighbors: [1, 3, 4] },
-        { id: 3, name: "Reception",     coords: [121.5855, 24.9875, 1.5], neighbors: [2] },
-        { id: 4, name: "Hallway A",     coords: [121.5857, 24.9874, 1.5], neighbors: [2, 5] },
-        { id: 5, name: "Intersection",  coords: [121.5859, 24.9873, 1.5], neighbors: [4, 6, 7] },
-        { id: 6, name: "Cafeteria",     coords: [121.5861, 24.9872, 1.5], neighbors: [5] },
-        { id: 7, name: "Gate 5",        coords: [121.5853, 24.9871, 1.5], neighbors: [5] }
+        { id: 1, name: "校門口", coords: [121.586012, 24.986974, 3.80], neighbors: [4,2] },
+        { id: 2, name: "福利社", coords: [121.586088, 24.987667, 3.80], neighbors: [1] },
+        { id: 3, name: "學務處",     coords: [121.585874, 24.987540, 3.80], neighbors: [4] },
+        { id: 4, name: "校長室",     coords: [121.585305, 24.987318, 3.80], neighbors: [1,3] },
+        { id: 5, name: "Intersection",  coords: [121.5859, 24.9873, 1.5], neighbors: [] },
+        { id: 6, name: "Cafeteria",     coords: [121.5861, 24.9875, 1.5], neighbors: [] },
+        { id: 7, name: "Gate 5",        coords: [121.5853, 24.9876, 1.5], neighbors: [] }
     ];
 
 
@@ -279,60 +280,184 @@ map.on('load', () => {
         }))
     };
 
+    initDropdowns();
 
     console.log("Map Layers Initialized");
 });
 
 
 // ==========================================
-// 4. CINEMATIC CAMERA LOGIC
+// 4. CINEMATIC CAMERA LOGIC & PATH UPDATE
 // ==========================================
 
+// NEW: Helper to smooth jagged paths into curves
+function getSmoothPath(geoCoords) {
+    if (geoCoords.length < 2) return geoCoords;
+
+    const smoothedVectors = [];
+
+    // We simply draw straight lines between points, but break them into small chunks
+    // so the animation loop has plenty of data to work with.
+    for (let i = 0; i < geoCoords.length - 1; i++) {
+        const start = geoCoords[i];
+        const end = geoCoords[i + 1];
+
+        // Create 20 points between each node for smooth camera movement
+        // (Increase this number if nodes are very far apart)
+        const segments = 20; 
+        
+        for (let j = 0; j < segments; j++) {
+            const t = j / segments;
+            
+            // Linear Interpolation (Math for "Straight Line")
+            const lng = start[0] + (end[0] - start[0]) * t;
+            const lat = start[1] + (end[1] - start[1]) * t;
+            const alt = start[2] + (end[2] - start[2]) * t;
+            
+            smoothedVectors.push([lng, lat, alt]);
+        }
+    }
+    
+    // Add the final point
+    smoothedVectors.push(geoCoords[geoCoords.length - 1]);
+
+    return smoothedVectors;
+}
+
+// Helper: Update the Blue Line in Three.js
+function updatePathVisuals(newPathCoords) {
+    if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
+
+    const layer = window.threeLayer;
+    
+    // 1. Find and remove old line
+    const oldLine = layer.sceneNodes.children.find(c => c.type === 'Line');
+    if (oldLine) layer.sceneNodes.remove(oldLine);
+
+    // 2. Create new Geometry
+    const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
+    const originScale = originMerc.meterInMercatorCoordinateUnits();
+
+    const pathPoints = newPathCoords.map(coord => {
+        const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2]);
+        const x = (nodeMerc.x - originMerc.x) / originScale;
+        const y = -(nodeMerc.y - originMerc.y) / originScale;
+        const z = (nodeMerc.z - originMerc.z) / originScale;
+        return new THREE.Vector3(x, y, z);
+    });
+
+    // 3. Add new Line
+    const geometry = new THREE.BufferGeometry().setFromPoints(pathPoints);
+    const material = new THREE.LineBasicMaterial({ color: 0x00d2ff, linewidth: 3 });
+    const newLine = new THREE.Line(geometry, material);
+    
+    layer.sceneNodes.add(newLine);
+    map.triggerRepaint();
+}
+
 document.getElementById('start-btn').addEventListener('click', () => {
-    animateCamera(NAV_PATH, 5000); // Path, Duration in ms
+    // 1. Get User Selection
+    const startId = parseInt(document.getElementById('start-select').value);
+    const endId = parseInt(document.getElementById('end-select').value);
+
+    if (startId === endId) {
+        alert("Start and Destination cannot be the same.");
+        return;
+    }
+
+    // 2. Run A* Algorithm (Get raw sharp path)
+    const rawPath = findPath(startId, endId);
+    
+    if (rawPath.length > 0) {
+        // 3. SMOOTH THE PATH
+        // We convert the sharp A* path into a curved cinematic path
+        const smoothPath = getSmoothPath(rawPath);
+
+        // 4. Update Global Variable (and Visuals)
+        NAV_PATH.length = 0; 
+        smoothPath.forEach(p => NAV_PATH.push(p));
+
+        // Update the Blue Line on the map
+        updatePathVisuals(NAV_PATH);
+
+        // 5. Start Camera Animation
+        console.log("Starting Cinematic Route with points:", NAV_PATH.length);
+        animateCamera([...NAV_PATH], 5000);
+    }
 });
 
-function animateCamera(path, duration) {
-    const start = performance.now();
-    const pathLength = turf.length(turf.lineString(path), { units: 'kilometers' });
+let currentAnimFrame = null;
 
-    // Use requestAnimationFrame for smooth loop
+function animateCamera(path, duration) {
+    // 1. Cancel any existing animation to prevent conflicts/crashes
+    if (currentAnimFrame) {
+        cancelAnimationFrame(currentAnimFrame);
+    }
+
+    const start = performance.now();
+    const totalPoints = path.length - 1;
+
     function frame(time) {
         const elapsed = time - start;
-        const progress = Math.min(elapsed / duration, 1); // 0.0 to 1.0
+        const progress = Math.min(elapsed / duration, 1); 
 
-        // Calculate current position along the line using Turf.js
-        // We find the point at distance = length * progress
-        const distanceTraveled = pathLength * progress;
-        const currentPoint = turf.along(turf.lineString(path), distanceTraveled, { units: 'kilometers' });
-        const coords = currentPoint.geometry.coordinates;
+        // 1. Calculate Position on Path
+        const currentFloatIndex = progress * totalPoints;
+        const currentIndex = Math.floor(currentFloatIndex);
+        
+        // Safety Check: If path is invalid or cleared, stop immediately
+        if (!path[currentIndex]) return;
 
-        // Calculate Bearing (look ahead)
-        // To make it cinematic, we look slightly ahead of our current position
-        const lookAheadDistance = Math.min(distanceTraveled + 0.005, pathLength);
-        const lookAheadPoint = turf.along(turf.lineString(path), lookAheadDistance, { units: 'kilometers' });
-        const bearing = turf.bearing(currentPoint, lookAheadPoint);
+        const nextIndex = Math.min(currentIndex + 1, totalPoints);
+        const ratio = currentFloatIndex - currentIndex;
 
-        // Update Camera
-        // 'center': The target the camera is looking at (current position on path)
-        // 'zoom': Close up for indoor feel
-        // 'pitch': Angled down slightly
-        // 'bearing': Rotated to face the direction of the path
-        map.jumpTo({
-            center: coords,
-            zoom: 20,
-            pitch: 60,
-            bearing: bearing
+        const p1 = path[currentIndex];
+        const p2 = path[nextIndex];
+
+        // Interpolate current coordinates
+        const camLng = p1[0] + (p2[0] - p1[0]) * ratio;
+        const camLat = p1[1] + (p2[1] - p1[1]) * ratio;
+        
+        // 2. Look Ahead Calculation
+        const lookAheadIndex = Math.min(currentIndex + 3, totalPoints);
+        const target = path[lookAheadIndex];
+
+        const bearing = calculateBearing(camLng, camLat, target[0], target[1]);
+
+        // 3. Update Map
+        map.flyTo({
+            center: [camLng, camLat],
+            bearing: bearing,
+            pitch: 0,
+            zoom: 19
         });
 
         if (progress < 1) {
-            requestAnimationFrame(frame);
+            // Store the ID so we can cancel it later
+            currentAnimFrame = requestAnimationFrame(frame);
         } else {
-            console.log("Navigation Complete");
+            console.log("Cinematic Flight Complete");
+            currentAnimFrame = null; // Reset when done
         }
     }
+    
+    // Start the loop
+    currentAnimFrame = requestAnimationFrame(frame);
+}
 
-    requestAnimationFrame(frame);
+// Keep your existing calculateBearing function below this
+function calculateBearing(startLng, startLat, destLng, destLat) {
+    const startLatRad = startLat * (Math.PI / 180);
+    const startLngRad = startLng * (Math.PI / 180);
+    const destLatRad = destLat * (Math.PI / 180);
+    const destLngRad = destLng * (Math.PI / 180);
+
+    const y = Math.sin(destLngRad - startLngRad) * Math.cos(destLatRad);
+    const x = Math.cos(startLatRad) * Math.sin(destLatRad) -
+              Math.sin(startLatRad) * Math.cos(destLatRad) * Math.cos(destLngRad - startLngRad);
+    
+    const brng = Math.atan2(y, x);
+    return (brng * 180 / Math.PI + 360) % 360;
 }
 
 // ==========================================
@@ -549,3 +674,108 @@ canvas.addEventListener('mouseup', () => {
         map.dragPan.enable(); // Re-enable map
     }
 });
+
+
+// ==========================================
+// 2.5 PATHFINDING LOGIC (A*)
+// ==========================================
+
+// Helper: Distance between two 3D points
+function getDistance(coordA, coordB) {
+    const dx = coordA[0] - coordB[0];
+    const dy = coordA[1] - coordB[1];
+    const dz = coordA[2] - coordB[2];
+    return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+// A* Algorithm
+function findPath(startId, endId) {
+    // 1. Setup Node Map for easy lookup
+    const nodeMap = {};
+    NAVIGATION_NODES.forEach(n => nodeMap[n.id] = n);
+
+    const startNode = nodeMap[startId];
+    const endNode = nodeMap[endId];
+
+    // 2. Initialize Sets
+    let openSet = [startNode];
+    let cameFrom = {}; // To reconstruction path
+    
+    let gScore = {}; // Cost from start to node
+    let fScore = {}; // Estimated total cost (g + h)
+
+    NAVIGATION_NODES.forEach(n => {
+        gScore[n.id] = Infinity;
+        fScore[n.id] = Infinity;
+    });
+
+    gScore[startId] = 0;
+    fScore[startId] = getDistance(startNode.coords, endNode.coords);
+
+    while (openSet.length > 0) {
+        // Get node with lowest fScore
+        let current = openSet.reduce((a, b) => fScore[a.id] < fScore[b.id] ? a : b);
+
+        if (current.id === endId) {
+            return reconstructPath(cameFrom, current.id, nodeMap);
+        }
+
+        // Remove current from openSet
+        openSet = openSet.filter(n => n.id !== current.id);
+
+        // Check neighbors
+        current.neighbors.forEach(neighborId => {
+            const neighbor = nodeMap[neighborId];
+            const tentativeGScore = gScore[current.id] + getDistance(current.coords, neighbor.coords);
+
+            if (tentativeGScore < gScore[neighborId]) {
+                // This path is better
+                cameFrom[neighborId] = current.id;
+                gScore[neighborId] = tentativeGScore;
+                fScore[neighborId] = gScore[neighborId] + getDistance(neighbor.coords, endNode.coords);
+
+                if (!openSet.includes(neighbor)) {
+                    openSet.push(neighbor);
+                }
+            }
+        });
+    }
+    
+    alert("No path found!");
+    return [];
+}
+
+function reconstructPath(cameFrom, currentId, nodeMap) {
+    const totalPath = [nodeMap[currentId].coords];
+    while (currentId in cameFrom) {
+        currentId = cameFrom[currentId];
+        totalPath.unshift(nodeMap[currentId].coords);
+    }
+    return totalPath;
+}
+
+// Populate UI Dropdowns
+function initDropdowns() {
+    const startSel = document.getElementById('start-select');
+    const endSel = document.getElementById('end-select');
+    
+    NAVIGATION_NODES.forEach(node => {
+        const opt1 = new Option(node.name, node.id);
+        const opt2 = new Option(node.name, node.id);
+        startSel.add(opt1);
+        endSel.add(opt2);
+    });
+
+    // Defaults
+    startSel.value = 1;
+    endSel.value = 6;
+}
+
+function getLookAtQuaternion(eye, center, up = [0, 0, 1]) {
+    const forward = new THREE.Vector3(center.x - eye.x, center.y - eye.y, center.z - eye.z).normalize();
+    const upVec = new THREE.Vector3(up[0], up[1], up[2]).normalize();
+    const right = new THREE.Vector3().crossVectors(forward, upVec).normalize();
+    const actualUp = new THREE.Vector3().crossVectors(right, forward).normalize();
+    const rotMat = new THREE.Matrix4().makeBasis(right, actualUp, forward.negate());
+    return new THREE.Quaternion().setFromRotationMatrix(rotMat);
+}
