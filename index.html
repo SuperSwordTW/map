@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Indoor Cinematic Navigator</title>
+    
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="#">
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="ui-container">
+        <h1>Cinematic Navigator</h1>
+        <button id="start-btn">Start Cinematic Tour</button>
+        <p class="status" id="status-text">Map Loaded. Click start.</p>
+    </div>
+
+    <div id="dev-hud" style="
+    display: none; 
+    position: absolute; 
+    top: 20px; 
+    right: 20px; 
+    background: rgba(0, 0, 0, 0.85); 
+    color: #00ffcc; 
+    padding: 15px; 
+    font-family: monospace; 
+    font-size: 12px; 
+    border-radius: 8px; 
+    z-index: 9999;
+    border: 1px solid #00ffcc;
+">
+    <div style="margin-bottom: 10px; font-weight: bold; text-align: center;">DEV MODE ACTIVE</div>
+    <div style="display: grid; grid-template-columns: 70px 1fr; gap: 5px; align-items: center;">
+        <span>Lng:</span><input type="text" id="hud-lng" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+        <span>Lat:</span><input type="text" id="hud-lat" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+        <span>Pitch:</span><input type="text" id="hud-pitch" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+        <span>Bear:</span><input type="text" id="hud-bear" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+        <span>Alt:</span><input type="text" id="hud-alt" readonly style="background:transparent; border:none; color:#ff9900; font-weight:bold; width:70px;">
+    </div>
+    <div style="margin-top: 10px; font-size: 10px; color: #888;">Click values to highlight & Ctrl+C</div>
+</div>
+
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    
+    <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
+    
+    <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+    
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+    <script src="main.js"></script>
+</body>
+</html>
