@@ -8,7 +8,7 @@
 const MODEL_ORIGIN = [121.58595, 24.9870];
 const MODEL_ALTITUDE = 125;
 const MODEL_ROTATE = [Math.PI / 2, -Math.PI / 6 + 0.05, 0];
-const MODEL_SCALE = [3, 3, 3]; // Adjust based on your model's unit scale
+const MODEL_SCALE = [30, 30, 30]; // Adjust based on your model's unit scale
 
 // ==========================================
 // 2. MAP INITIALIZATION
@@ -37,6 +37,7 @@ const map = new maplibregl.Map({
     center: [121.585150, 24.989265],
     zoom: 17.81,
     pitch: 60,
+    maxPitch: 85,
     bearing: -17.6,
     antialias: true,
     doubleClickZoom: false
@@ -50,14 +51,68 @@ const map = new maplibregl.Map({
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-        { id: 1, name: "校門口", coords: [121.586012, 24.986974, 3.80], neighbors: [4,2] },
-        { id: 2, name: "福利社", coords: [121.586088, 24.987667, 3.80], neighbors: [1] },
-        { id: 3, name: "學務處",     coords: [121.585874, 24.987540, 3.80], neighbors: [4] },
-        { id: 4, name: "校長室",     coords: [121.585305, 24.987318, 3.80], neighbors: [1,3] },
+        { id: 1, name: "校門口",        coords: [121.586012, 24.986974, 3.80], neighbors: [4,2] },
+        { id: 2, name: "福利社",        coords: [121.586088, 24.987667, 3.80], neighbors: [1] },
+        { id: 3, name: "學務處",        coords: [121.585874, 24.987540, 3.80], neighbors: [4] },
+        { id: 4, name: "校長室",        coords: [121.585305, 24.987318, 3.80], neighbors: [1,3] },
         { id: 5, name: "Intersection",  coords: [121.5859, 24.9873, 1.5], neighbors: [] },
         { id: 6, name: "Cafeteria",     coords: [121.5861, 24.9875, 1.5], neighbors: [] },
-        { id: 7, name: "Gate 5",        coords: [121.5853, 24.9876, 1.5], neighbors: [] }
+        { id: 7, name: "Gate 5",        coords: [121.5853, 24.9876, 1.5], neighbors: [] },
+        { id: 8, name: "拉瓦節(化學實驗室)",        coords: [121.586247, 24.987289, 18.50], neighbors: [] },
+        { id: 9, name: "亞佛加厥(理化實驗室)",      coords: [121.586247, 24.987289, 9.50], neighbors: [] },
+        { id: 10, name: "愛因斯坦(物理實驗室)",     coords: [121.586247, 24.987289, 0.50], neighbors: [] },
+        { id: 11, name: "孟德爾(生物實驗室)",     coords: [121.586247, 24.987289, -9.50], neighbors: [] },
+        { id: 12, name: "道爾吞(116)",     coords: [121.586247, 24.987289, 18.50], neighbors: [] },
     ];
+
+    // ==========================================
+    // 5.5 AUTOMATIC NODE SCALING
+    // ==========================================
+    // This function automatically moves the nodes if you change MODEL_SCALE
+(function scaleNodesToModel() {
+        const REF_SCALE = [3, 3, 3]; 
+
+        // Check if scaling is needed
+        if (MODEL_SCALE[0] === REF_SCALE[0] && 
+            MODEL_SCALE[1] === REF_SCALE[1] && 
+            MODEL_SCALE[2] === REF_SCALE[2]) return;
+
+        console.log(`[Auto-Scale] Scaling nodes from ${REF_SCALE} to ${MODEL_SCALE}`);
+
+        // 1. Use GROUND ZERO as the anchor for scaling calculations.
+        // This prevents the "Deep Underground" bug when the model is floating.
+        const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
+
+        NAVIGATION_NODES.forEach(node => {
+            // 2. Convert Node to Mercator
+            const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat(node.coords, node.coords[2]);
+
+            // 3. Calculate Vector (Distance from Ground Origin)
+            const dx = nodeMerc.x - originMerc.x;
+            const dy = nodeMerc.y - originMerc.y;
+            const dz = nodeMerc.z - originMerc.z;
+
+            // 4. Calculate Ratios
+            const ratioX = MODEL_SCALE[0] / REF_SCALE[0];
+            const ratioY = MODEL_SCALE[1] / REF_SCALE[1];
+            const ratioZ = MODEL_SCALE[2] / REF_SCALE[2];
+
+            // 5. Apply Scale
+            const newX = originMerc.x + (dx * ratioX);
+            const newY = originMerc.y + (dy * ratioY);
+            const newZ = originMerc.z + (dz * ratioZ);
+
+            // 6. Convert back to Lng/Lat/Alt
+            const newMerc = new maplibregl.MercatorCoordinate(newX, newY, newZ);
+            const newLngLat = newMerc.toLngLat();
+            const metersPerUnit = newMerc.meterInMercatorCoordinateUnits();
+            const newAlt = newMerc.z / metersPerUnit;
+
+            // 7. Update Node
+            // console.log(`Node ${node.id} moved: Alt ${node.coords[2]} -> ${newAlt.toFixed(2)}`);
+            node.coords = [newLngLat.lng, newLngLat.lat, newAlt];
+        });
+    })();
 
 
     // #path
@@ -129,8 +184,14 @@ const customLayer = {
         const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
         const originScale = originMerc.meterInMercatorCoordinateUnits();
 
+        // --- NEW: CALCULATE SCALE FACTOR ---
+        // Your original sizes (1.2m radius) were designed for Scale 3.
+        // We calculate 's' to multiply sizes if the model gets bigger.
+        const REF_SCALE = 3; 
+        const s = MODEL_SCALE[0] / REF_SCALE; 
+
         NAVIGATION_NODES.forEach(node => {
-            // Calculate Position
+            // Calculate Position (Already handled by your auto-scaler, but we map it here)
             const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat(
                 [node.coords[0], node.coords[1]], 
                 node.coords[2] 
@@ -140,12 +201,13 @@ const customLayer = {
             const y = -(nodeMerc.y - originMerc.y) / originScale; 
             const z = (nodeMerc.z - originMerc.z) / originScale;
 
-            // Sphere
-            const geometry = new THREE.SphereGeometry(1.2, 32, 32);
+            // --- SPHERE SCALING ---
+            // Multiply radius (1.2) by 's'
+            const geometry = new THREE.SphereGeometry(1.2 * s, 32, 32);
             const material = new THREE.MeshBasicMaterial({ color: 0xff9900 });
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(x, y, z);
-            // METADATA FOR RAYCASTING
+            
             sphere.userData = { 
                 isNode: true, 
                 id: node.id, 
@@ -157,28 +219,23 @@ const customLayer = {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             
-            // Resolution: 2048px width (Crisper Text)
             canvas.width = 2048;
             canvas.height = 512;
             
-            context.font = "Bold 180px Arial"; // Much larger font size
+            context.font = "Bold 180px Arial";
             context.fillStyle = "white";
             context.textAlign = "center";
             context.textBaseline = "middle";
             context.strokeStyle = 'black';
-            context.lineWidth = 12; // Thicker outline
+            context.lineWidth = 12;
             
             context.strokeText(node.name, 1024, 256);
             context.fillText(node.name, 1024, 256);
             
             const texture = new THREE.CanvasTexture(canvas);
-            // Critical: LinearFilter keeps it sharp when scaled down
-            texture.minFilter = THREE.LinearFilter; 
-            
             texture.minFilter = THREE.LinearMipmapLinearFilter; 
             texture.magFilter = THREE.LinearFilter;
             texture.generateMipmaps = true;
-
             texture.anisotropy = 16;
 
             const labelMat = new THREE.MeshBasicMaterial({ 
@@ -189,12 +246,15 @@ const customLayer = {
                 side: THREE.DoubleSide
             });
 
-            // Geometry: 12 meters wide
-            const labelGeo = new THREE.PlaneGeometry(12, 3);
+            // --- LABEL SCALING ---
+            // Multiply Width (12) and Height (3) by 's'
+            const labelGeo = new THREE.PlaneGeometry(12 * s, 3 * s);
             const labelMesh = new THREE.Mesh(labelGeo, labelMat);
             
-            // Lift it higher (z + 4.5) so it doesn't clip into the floor
-            labelMesh.position.set(x, y, z + 4.5); 
+            // --- OFFSET SCALING ---
+            // Multiply the vertical lift (4.5) by 's'
+            // Otherwise, on a huge model, the text would be inside the sphere
+            labelMesh.position.set(x, y, z + (4.5 * s)); 
             
             this.textLabels.push(labelMesh);
             this.sceneNodes.add(labelMesh);
@@ -388,24 +448,44 @@ document.getElementById('start-btn').addEventListener('click', () => {
 
 let currentAnimFrame = null;
 
+// --- NEW HELPER: Calculates a coordinate X meters away at a specific bearing ---
+function getDestination(lng, lat, distanceMeters, bearing) {
+    const R = 6371e3; // Earth radius in meters
+    const angDist = distanceMeters / R;
+    const radBearing = bearing * (Math.PI / 180);
+    const radLat1 = lat * (Math.PI / 180);
+    const radLng1 = lng * (Math.PI / 180);
+
+    const radLat2 = Math.asin(Math.sin(radLat1) * Math.cos(angDist) +
+                    Math.cos(radLat1) * Math.sin(angDist) * Math.cos(radBearing));
+    
+    const radLng2 = radLng1 + Math.atan2(Math.sin(radBearing) * Math.sin(angDist) * Math.cos(radLat1),
+                             Math.cos(angDist) - Math.sin(radLat1) * Math.sin(radLat2));
+    
+    return [(radLng2 * 180 / Math.PI), (radLat2 * 180 / Math.PI)];
+}
+
 function animateCamera(path, duration) {
-    // 1. Cancel any existing animation to prevent conflicts/crashes
-    if (currentAnimFrame) {
+    if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
         cancelAnimationFrame(currentAnimFrame);
     }
+    map.stop(); 
 
     const start = performance.now();
     const totalPoints = path.length - 1;
+
+    let smoothedBearing = 0;
+    if (path.length > 1) {
+        smoothedBearing = calculateBearing(path[0][0], path[0][1], path[1][0], path[1][1]);
+    }
 
     function frame(time) {
         const elapsed = time - start;
         const progress = Math.min(elapsed / duration, 1); 
 
-        // 1. Calculate Position on Path
         const currentFloatIndex = progress * totalPoints;
         const currentIndex = Math.floor(currentFloatIndex);
         
-        // Safety Check: If path is invalid or cleared, stop immediately
         if (!path[currentIndex]) return;
 
         const nextIndex = Math.min(currentIndex + 1, totalPoints);
@@ -414,34 +494,48 @@ function animateCamera(path, duration) {
         const p1 = path[currentIndex];
         const p2 = path[nextIndex];
 
-        // Interpolate current coordinates
-        const camLng = p1[0] + (p2[0] - p1[0]) * ratio;
-        const camLat = p1[1] + (p2[1] - p1[1]) * ratio;
+        // 1. Position Interpolation
+        const currentLng = p1[0] + (p2[0] - p1[0]) * ratio;
+        const currentLat = p1[1] + (p2[1] - p1[1]) * ratio;
         
-        // 2. Look Ahead Calculation
-        const lookAheadIndex = Math.min(currentIndex + 3, totalPoints);
+        // 2. TARGET BEARING (Where we WANT to look)
+        // CHANGE: Reduced from 20 to 5.
+        // This ensures the camera doesn't start turning until it is 
+        // ~25% (5/20) of the way from the corner, preventing the "cutting corner" effect.
+        const lookAheadIndex = Math.min(currentIndex + 5, totalPoints);
+        
         const target = path[lookAheadIndex];
+        const targetBearing = calculateBearing(currentLng, currentLat, target[0], target[1]);
 
-        const bearing = calculateBearing(camLng, camLat, target[0], target[1]);
+        // 3. SMOOTHING LOGIC
+        let diff = targetBearing - smoothedBearing;
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
 
-        // 3. Update Map
-        map.flyTo({
-            center: [camLng, camLat],
-            bearing: bearing,
-            pitch: 0,
-            zoom: 19
+        // Slightly faster reaction (0.06) to compensate for the later trigger
+        smoothedBearing += diff * 0.06; 
+
+        // 4. RECALIBRATION
+        const offsetDist = 400;
+        const focusPoint = getDestination(currentLng, currentLat, offsetDist, smoothedBearing);
+
+        // CHANGE: Switched back to jumpTo. 
+        // 'flyTo' adds unwanted inertia that messes up the turning timing.
+        map.jumpTo({
+            center: focusPoint,
+            bearing: smoothedBearing, 
+            zoom: 17.1,
+            pitch: 73
         });
 
         if (progress < 1) {
-            // Store the ID so we can cancel it later
             currentAnimFrame = requestAnimationFrame(frame);
         } else {
             console.log("Cinematic Flight Complete");
-            currentAnimFrame = null; // Reset when done
+            currentAnimFrame = null; 
         }
     }
     
-    // Start the loop
     currentAnimFrame = requestAnimationFrame(frame);
 }
 
