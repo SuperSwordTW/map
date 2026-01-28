@@ -13,6 +13,36 @@ const MODEL_SCALE = [30, 30, 30]; // Adjust based on your model's unit scale
 let currentFadeFrame = null; // NEW: Tracks the fade animation to kill it
 let currentAnimFrame = null; // (Existing: Tracks camera movement)
 
+const nextBtn = document.createElement('button');
+nextBtn.innerText = "Go to Next Floor";
+nextBtn.id = "next-floor-btn";
+Object.assign(nextBtn.style, {
+    position: 'absolute',
+    bottom: '30px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '12px 24px',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    backgroundColor: '#ff9900',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50px',
+    cursor: 'pointer',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+    display: 'none', // Hidden by default
+    zIndex: '9999'
+});
+document.body.appendChild(nextBtn);
+
+// State variables for step-by-step navigation
+let globalPathSegments = [];
+let currentSegmentIndex = 0;
+
+nextBtn.addEventListener('click', () => {
+    loadNextPathSegment();
+});
+
 const FLOOR_MODELS = {
     13: { name: "丁棟7F", url: './floors/13F.glb' },
     12: { name: "丁棟6F+圖書館2F", url: './floors/12F.glb' },
@@ -39,7 +69,7 @@ const map = new maplibregl.Map({
                 'id': 'background',
                 'type': 'background',
                 'paint': {
-                    'background-color': '#6adaff'
+                    'background-color': '#ffffff'
                 }
             }
         ],
@@ -68,14 +98,14 @@ const map = new maplibregl.Map({
         //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
         //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 丁棟右下棟 丁棟左下棟
         //-------------13樓-------------
-        { id: 1, name: "韋格納", coords: [121.586024, 24.987772, 30.0], neighbors: [2,55], story: 13, building: 4 },
+        { id: 1, name: "韋格納", coords: [121.586024, 24.987772, 30.0], neighbors: [2], story: 13, building: 4 },
         { id: 2, name: "柯西", coords: [121.586125, 24.987733, 30.0], neighbors: [1,3], story: 13, building: 4 },
         { id: 3, name: "數學科辦公室(一)", coords: [121.586201, 24.987696, 30.0], neighbors: [2,4], story: 13, building: 4 },
         { id: 4, name: "南丁格爾", coords: [121.586238, 24.987628, 30.0], neighbors: [3,5], story: 13, building: 4 },
-        { id: 5, name: "孫子", coords: [121.586280, 24.987516, 30.0], neighbors: [4,60], story: 13, building: 4 },
+        { id: 5, name: "孫子", coords: [121.586280, 24.987516, 30.0], neighbors: [4], story: 13, building: 4 },
         //樓梯
         { id: 55, name: "丁棟右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [5,56], story: 13, building: 4, stair: 1 },
-        { id: 60, name: "丁棟中樓梯(7F)", coords: [121.585821, 24.987704, 30.0], neighbors: [1,61], story: 13, building: 4, stair: 1 },
+        { id: 60, name: "丁棟中樓梯(7F)", coords: [121.585821, 24.987704, 30.0], neighbors: [1], story: 13, building: 4, stair: 1 },
         //-------------12樓-------------
         { id: 6, name: "李清照", coords: [121.586024, 24.987772, 21.0], neighbors: [7,61], story: 12, building: 4 },
         { id: 7, name: "胡適", coords: [121.586125, 24.987733, 21.0], neighbors: [6,8], story: 12, building: 4 },
@@ -122,8 +152,8 @@ const map = new maplibregl.Map({
         { id: 58, name: "丁棟右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
         { id: 63, name: "丁棟中樓梯(4F)", coords: [121.585821, 24.987704, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
 
-        { id: 1, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 1, name: "學務處", coords: [121.585874, 24.987540, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 67, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 68, name: "學務處", coords: [121.585874, 24.987540, 3.0], neighbors: [], story: 10, building: 4 },
         //...
         //-------------9樓-------------
         { id: 27, name: "莊子", coords: [121.586024, 24.987772, -6.0], neighbors: [], story: 9, building: 4 },
@@ -208,6 +238,27 @@ const map = new maplibregl.Map({
             // console.log(`Node ${node.id} moved: Alt ${node.coords[2]} -> ${newAlt.toFixed(2)}`);
             node.coords = [newLngLat.lng, newLngLat.lat, newAlt];
         });
+    })();
+
+    (function makeGraphUndirected() {
+        const nodeMap = {};
+        // 1. Map IDs to Nodes for O(1) lookup
+        NAVIGATION_NODES.forEach(node => nodeMap[node.id] = node);
+
+        // 2. Iterate and back-link
+        NAVIGATION_NODES.forEach(node => {
+            if (!node.neighbors) node.neighbors = []; // Safety check
+
+            node.neighbors.forEach(neighborId => {
+                const neighbor = nodeMap[neighborId];
+                
+                // If neighbor exists and doesn't already list this node...
+                if (neighbor && !neighbor.neighbors.includes(node.id)) {
+                    neighbor.neighbors.push(node.id);
+                }
+            });
+        });
+        console.log("[Graph] Edges converted to undirected.");
     })();
 
 
@@ -545,69 +596,143 @@ function filterNodesByStory(targetStory) {
     map.triggerRepaint();
 }
 
+// ==========================================
+// NEW: PATH SEGMENTATION LOGIC
+// ==========================================
+
+function groupNodesByStory(nodePath) {
+    if (!nodePath || nodePath.length === 0) return [];
+    
+    // 1. First, split the path into raw floor segments (Existing logic)
+    const rawSegments = [];
+    let currentSegment = [nodePath[0]];
+    
+    for (let i = 1; i < nodePath.length; i++) {
+        const prevNode = nodePath[i-1];
+        const currentNode = nodePath[i];
+
+        // If story changes, close current segment and start new one
+        if (prevNode.story !== currentNode.story) {
+            rawSegments.push(currentSegment);
+            currentSegment = [];
+        }
+        currentSegment.push(currentNode);
+    }
+    rawSegments.push(currentSegment);
+
+    // 2. NEW: Filter out "Transit-Only" Floors
+    // We keep a segment ONLY if:
+    // A. It is the START floor (Index 0)
+    // B. It is the DESTINATION floor (Last Index)
+    // C. It contains at least one node that is NOT a stair (e.g. a hallway or room)
+    
+    const optimizedSegments = rawSegments.filter((segment, index) => {
+        const isStart = (index === 0);
+        const isEnd = (index === rawSegments.length - 1);
+        
+        // Check if this segment has any "useful" nodes (non-stairs)
+        // Note: In your data, normal nodes don't have the 'stair' property, so !n.stair is true.
+        // Stair nodes have 'stair: 1', so !n.stair is false.
+        const hasActivity = segment.some(n => !n.stair);
+
+        return isStart || isEnd || hasActivity;
+    });
+    
+    return optimizedSegments;
+}
+
+function loadNextPathSegment() {
+    currentSegmentIndex++;
+    
+    if (currentSegmentIndex >= globalPathSegments.length) {
+        // End of journey
+        nextBtn.style.display = 'none';
+        document.getElementById('status-text').innerText = "Arrived at Destination.";
+        return;
+    }
+
+    const segmentNodes = globalPathSegments[currentSegmentIndex];
+    const targetStory = segmentNodes[0].story;
+    const isLastSegment = (currentSegmentIndex === globalPathSegments.length - 1);
+
+    // 1. Transition Floor Model
+    transitionToFloor(targetStory);
+
+    filterNodesByStory(targetStory);
+
+    // 2. Update Button Text for the *next* step (if valid)
+    if (!isLastSegment) {
+        const currentStory = globalPathSegments[currentSegmentIndex][0].story;
+        const nextStory = globalPathSegments[currentSegmentIndex + 1][0].story;
+        const StoryDiff = nextStory - currentStory;
+        if (StoryDiff > 0){
+            nextBtn.innerText = `往上 ${StoryDiff} 層`;
+        }
+        else if (StoryDiff < 0){
+            nextBtn.innerText = `往下 ${Math.abs(StoryDiff)} 層`;
+        }
+        nextBtn.style.display = 'block';
+    } else {
+        nextBtn.style.display = 'none'; // Reached final floor
+    }
+
+    // 3. Extract Coords for Visuals
+    const coords = segmentNodes.map(n => n.coords);
+
+    // 4. Move Camera to start of this segment
+    const startCoord = coords[0];
+    map.jumpTo({
+        center: [startCoord[0], startCoord[1]],
+        zoom: 16.3,
+        bearing: map.getBearing(),
+        pitch: 0
+    });
+
+    // 5. Draw Path & Animate
+    updatePathVisuals(coords);
+
+    const isCinematicEnabled = document.getElementById('anim-toggle').checked;
+
+    if (isCinematicEnabled) {
+        // Optional: Smooth and Animate
+        const smoothPath = getSmoothPath(coords);
+        animateCamera(smoothPath, 4000); // 4 seconds per floor
+    }
+
+    document.getElementById('status-text').innerText = `Navigating ${targetStory}F...`;
+}
+
+// ==========================================
+// START BUTTON LISTENER (REPLACEMENT)
+// ==========================================
+
 document.getElementById('start-btn').addEventListener('click', () => {
-    // 1. Get User Selection
     const startId = parseInt(document.getElementById('start-select').value);
     const endId = parseInt(document.getElementById('end-select').value);
-    const useAnimation = document.getElementById('anim-toggle').checked;
 
     if (startId === endId) {
         alert("Start and Destination cannot be the same.");
         return;
     }
 
-    const rawPath = findPath(startId, endId);
+    // 1. Get Path (Now returns Nodes)
+    const rawNodes = findPath(startId, endId);
     
-    if (rawPath.length > 0) {
-        
-        // --- STEP 1: Handle Floor Transition ---
-        const startNode = NAVIGATION_NODES.find(n => n.id === startId);
-        if (startNode) {
-            // 1. Swap the Building Model
-            transitionToFloor(startNode.story);
-
-            // 2. NEW: Filter Nodes to show ONLY this floor
-            filterNodesByStory(startNode.story);
-            
-            // --- STEP 2: Fly Camera to Start Node ---
-            map.flyTo({
-                center: [startNode.coords[0], startNode.coords[1]],
-                zoom: 16.5,     
-                pitch: 0,       
-                bearing: -17.6,  
-                speed: 1.5,      
-                curve: 1         
-            });
-        }
-
-        // Cancel any running path animation
+    if (rawNodes.length > 0) {
+        // 2. Reset Animation
         if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
             cancelAnimationFrame(currentAnimFrame);
             currentAnimFrame = null;
         }
 
-        // --- STEP 3: Handle Path Display ---
-        if (useAnimation) {
-            const smoothPath = getSmoothPath(rawPath);
-            NAV_PATH.length = 0; 
-            smoothPath.forEach(p => NAV_PATH.push(p));
-            updatePathVisuals(NAV_PATH);
-            
-            document.getElementById('status-text').innerText = "Moving to start...";
+        // 3. Process Segments
+        globalPathSegments = groupNodesByStory(rawNodes);
+        currentSegmentIndex = -1; // Reset index
 
-            // Wait for the FlyTo to finish before starting the path flight
-            map.once('moveend', () => {
-                console.log("Arrived at start. Beginning tour...");
-                animateCamera([...NAV_PATH], 5000);
-                document.getElementById('status-text').innerText = "Flying to destination...";
-            });
+        console.log("Path Segments:", globalPathSegments);
 
-        } else {
-            // Static Mode
-            updatePathVisuals(rawPath);
-            console.log("Path displayed (Static).");
-            document.getElementById('status-text').innerText = "Path displayed.";
-        }
+        // 4. Start the first segment immediately
+        loadNextPathSegment();
     }
 });
 
@@ -687,7 +812,7 @@ function animateCamera(path, duration) {
         map.jumpTo({
             center: focusPoint,
             bearing: smoothedBearing, 
-            zoom: 16.5,
+            zoom: 16.3,
             pitch: 0
         });
 
@@ -847,12 +972,15 @@ function getIntersects(mouseNDC, camera) {
     const HIT_RADIUS = 0.05; 
 
     nodes.forEach(node => {
+        // === NEW CODE STARTS HERE ===
+        // If the node was hidden by filterNodesByStory, skip it immediately
+        if (!node.visible) return; 
+        // === NEW CODE ENDS HERE ===
+
         // 1. Get local position
         const pos = node.position.clone();
         
         // 2. Project to NDC (Normalized Device Coordinates: -1 to +1)
-        // We rely on the fact that 'camera.projectionMatrix' was set to the 
-        // node layer's matrix in the last render frame.
         pos.applyMatrix4(camera.projectionMatrix);
 
         // 3. Check if it's in front of the camera (z < 1) and visible
@@ -874,24 +1002,42 @@ function getIntersects(mouseNDC, camera) {
 
 // 1. MOUSE DOWN - Select Node
 canvas.addEventListener('mousedown', (e) => {
-    if (!isDevMode) return;
+    // Only run this logic if we are in Dev Mode
+    if (!isDevMode) return; 
 
-    // Convert mouse pixels to NDC (-1 to +1)
     const rect = canvas.getBoundingClientRect();
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    // Find clicked node
     if (window.threeLayer && window.threeLayer.camera) {
         const hit = getIntersects(mouse, window.threeLayer.camera);
-
         if (hit) {
+            // Drag Logic
             selectedNode = hit;
-            map.dragPan.disable(); // Stop map panning
-            
-            // Visual Feedback
-            selectedNode.material.color.set(0xff0000); 
+            map.dragPan.disable();
+            selectedNode.material.color.set(0xff0000);
             console.log(`Selected: ${selectedNode.userData.name}`);
+        }
+    }
+});
+
+map.on('click', (e) => {
+    // If in Dev Mode, don't open popups (let mousedown handle selection)
+    if (isDevMode) return;
+
+    const mouse = new THREE.Vector2();
+    const canvas = map.getCanvas();
+    const rect = canvas.getBoundingClientRect();
+
+    // Convert MapLibre screen point to NDC (-1 to +1)
+    mouse.x = (e.point.x / rect.width) * 2 - 1;
+    mouse.y = -(e.point.y / rect.height) * 2 + 1;
+
+    // Check 3D Intersection
+    if (window.threeLayer && window.threeLayer.camera) {
+        const hit = getIntersects(mouse, window.threeLayer.camera);
+        if (hit) {
+            openPanorama(hit.userData);
         }
     }
 });
@@ -951,19 +1097,16 @@ function getDistance(coordA, coordB) {
 
 // A* Algorithm
 function findPath(startId, endId) {
-    // 1. Setup Node Map for easy lookup
     const nodeMap = {};
     NAVIGATION_NODES.forEach(n => nodeMap[n.id] = n);
 
     const startNode = nodeMap[startId];
     const endNode = nodeMap[endId];
 
-    // 2. Initialize Sets
     let openSet = [startNode];
-    let cameFrom = {}; // To reconstruction path
-    
-    let gScore = {}; // Cost from start to node
-    let fScore = {}; // Estimated total cost (g + h)
+    let cameFrom = {}; 
+    let gScore = {}; 
+    let fScore = {}; 
 
     NAVIGATION_NODES.forEach(n => {
         gScore[n.id] = Infinity;
@@ -974,23 +1117,20 @@ function findPath(startId, endId) {
     fScore[startId] = getDistance(startNode.coords, endNode.coords);
 
     while (openSet.length > 0) {
-        // Get node with lowest fScore
         let current = openSet.reduce((a, b) => fScore[a.id] < fScore[b.id] ? a : b);
 
         if (current.id === endId) {
+            // [CHANGE] Now returns Node Objects, not just coordinates
             return reconstructPath(cameFrom, current.id, nodeMap);
         }
 
-        // Remove current from openSet
         openSet = openSet.filter(n => n.id !== current.id);
 
-        // Check neighbors
         current.neighbors.forEach(neighborId => {
             const neighbor = nodeMap[neighborId];
             const tentativeGScore = gScore[current.id] + getDistance(current.coords, neighbor.coords);
 
             if (tentativeGScore < gScore[neighborId]) {
-                // This path is better
                 cameFrom[neighborId] = current.id;
                 gScore[neighborId] = tentativeGScore;
                 fScore[neighborId] = gScore[neighborId] + getDistance(neighbor.coords, endNode.coords);
@@ -1007,10 +1147,11 @@ function findPath(startId, endId) {
 }
 
 function reconstructPath(cameFrom, currentId, nodeMap) {
-    const totalPath = [nodeMap[currentId].coords];
+    // [CHANGE] Returns array of NODE OBJECTS
+    const totalPath = [nodeMap[currentId]];
     while (currentId in cameFrom) {
         currentId = cameFrom[currentId];
-        totalPath.unshift(nodeMap[currentId].coords);
+        totalPath.unshift(nodeMap[currentId]);
     }
     return totalPath;
 }
@@ -1246,3 +1387,65 @@ function toggleNetworkVisuals(show) {
     scene.add(lineSegments);
     map.triggerRepaint();
 }
+
+// ==========================================
+// 9. 360 PANORAMA LOGIC
+// ==========================================
+
+let panoViewer = null;
+
+function openPanorama(nodeData) {
+    const modal = document.getElementById('pano-modal');
+    const title = document.getElementById('pano-title');
+    
+    // 1. Show Modal
+    modal.style.display = 'flex';
+    title.innerText = nodeData.name; // Display Node Name
+
+    // 2. Destroy previous viewer if exists
+    if (panoViewer) {
+        panoViewer.destroy();
+        panoViewer = null;
+    }
+
+    // 3. Construct Image Path
+    // ASSUMPTION: Images are in 'images/' folder and named by ID (e.g., "1.jpg", "55.jpg")
+    // If you want to use names, change to: `images/${nodeData.name}.jpg`
+    const imagePath = `images/${nodeData.id}.jpg`; 
+
+    console.log("Loading 360 Image:", imagePath);
+
+    // 4. Initialize Pannellum
+    // We wrap this in a try-catch or error handler in case image is missing
+    try {
+        panoViewer = pannellum.viewer('panorama-container', {
+            type: 'equirectangular',
+            panorama: imagePath,
+            autoLoad: true,
+            compass: true,
+            showControls: true,
+            theme: 'dark',
+            errorMessage: "Image not found: " + imagePath // Custom error message
+        });
+    } catch (e) {
+        console.error("Pannellum Error:", e);
+    }
+}
+
+// Make this globally available so the HTML button can call it
+window.closePanorama = function() {
+    const modal = document.getElementById('pano-modal');
+    modal.style.display = 'none';
+    
+    if (panoViewer) {
+        panoViewer.destroy();
+        panoViewer = null;
+    }
+};
+
+// Close modal if clicking outside the content box
+document.getElementById('pano-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'pano-modal') {
+        window.closePanorama();
+    }
+});

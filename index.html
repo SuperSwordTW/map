@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Indoor Cinematic Navigator</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     
     <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
     
@@ -35,30 +38,38 @@
     </div>
 
     <div id="dev-hud" style="
-    display: none; 
-    position: absolute; 
-    top: 20px; 
-    right: 20px; 
-    background: rgba(0, 0, 0, 0.85); 
-    color: #00ffcc; 
-    padding: 15px; 
-    font-family: monospace; 
-    font-size: 12px; 
-    border-radius: 8px; 
-    z-index: 9999;
-    border: 1px solid #00ffcc;
-">
-    <div style="margin-bottom: 10px; font-weight: bold; text-align: center;">DEV MODE ACTIVE</div>
-    <div style="display: grid; grid-template-columns: 70px 1fr; gap: 5px; align-items: center;">
-        <span>Lng:</span><input type="text" id="hud-lng" readonly style="background:transparent; border:none; color:#fff; width:100px;">
-        <span>Lat:</span><input type="text" id="hud-lat" readonly style="background:transparent; border:none; color:#fff; width:100px;">
-        <span>Pitch:</span><input type="text" id="hud-pitch" readonly style="background:transparent; border:none; color:#fff; width:100px;">
-        <span>Zoom:</span><input type="text" id="hud-zoom" readonly style="background:transparent; border:none; color:#fff; width:70px;">
-        <span>Bear:</span><input type="text" id="hud-bear" readonly style="background:transparent; border:none; color:#fff; width:100px;">
-        <span>Alt:</span><input type="text" id="hud-alt" readonly style="background:transparent; border:none; color:#ff9900; font-weight:bold; width:70px;">
+        display: none; 
+        position: absolute; 
+        top: 20px; 
+        right: 20px; 
+        background: rgba(0, 0, 0, 0.85); 
+        color: #00ffcc; 
+        padding: 15px; 
+        font-family: monospace; 
+        font-size: 12px; 
+        border-radius: 8px; 
+        z-index: 9999;
+        border: 1px solid #00ffcc;
+    ">
+        <div style="margin-bottom: 10px; font-weight: bold; text-align: center;">DEV MODE ACTIVE</div>
+            <div style="display: grid; grid-template-columns: 70px 1fr; gap: 5px; align-items: center;">
+                <span>Lng:</span><input type="text" id="hud-lng" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+                <span>Lat:</span><input type="text" id="hud-lat" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+                <span>Pitch:</span><input type="text" id="hud-pitch" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+                <span>Zoom:</span><input type="text" id="hud-zoom" readonly style="background:transparent; border:none; color:#fff; width:70px;">
+                <span>Bear:</span><input type="text" id="hud-bear" readonly style="background:transparent; border:none; color:#fff; width:100px;">
+                <span>Alt:</span><input type="text" id="hud-alt" readonly style="background:transparent; border:none; color:#ff9900; font-weight:bold; width:70px;">
+            </div>
+        <div style="margin-top: 10px; font-size: 10px; color: #888;">Click values to highlight & Ctrl+C</div>
     </div>
-    <div style="margin-top: 10px; font-size: 10px; color: #888;">Click values to highlight & Ctrl+C</div>
-</div>
+
+    <div id="pano-modal" style="display: none;">
+        <div class="pano-content">
+            <button id="close-pano" onclick="closePanorama()">×</button>
+            <div id="panorama-container"></div>
+            <div id="pano-title">Location Name</div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     

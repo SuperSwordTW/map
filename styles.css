@@ -54,3 +54,72 @@ button:hover {
     margin-top: 10px;
     color: #aaa;
 }
+
+#pano-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000; /* On top of everything */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pano-content {
+    position: relative;
+    width: 80%;
+    max-width: 1000px;
+    height: 80%; /* Adjust height as needed */
+    background: #000;
+    border: 2px solid #00d2ff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+}
+
+#panorama-container {
+    width: 100%;
+    height: 100%;
+}
+
+#close-pano {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 1px solid white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 2; /* Ensure it's above the image */
+    border-radius: 50%;
+    line-height: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
+
+#close-pano:hover {
+    background: red;
+    border-color: red;
+}
+
+#pano-title {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 15px;
+    border-radius: 4px;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 2;
+}
