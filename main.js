@@ -10,6 +10,20 @@ const MODEL_ALTITUDE = 125;
 const MODEL_ROTATE = [Math.PI / 2, -Math.PI / 6 + 0.05, 0];
 const MODEL_SCALE = [30, 30, 30]; // Adjust based on your model's unit scale
 
+let currentFadeFrame = null; // NEW: Tracks the fade animation to kill it
+let currentAnimFrame = null; // (Existing: Tracks camera movement)
+
+const FLOOR_MODELS = {
+    13: { name: "丁棟7F", url: './floors/13F.glb' },
+    12: { name: "丁棟6F+圖書館2F", url: './floors/12F.glb' },
+    11: { name: "丁棟5F+圖書館1F", url: './floors/11F.glb' },
+    10: { name: "丁棟4F+乙棟7F", url: './floors/10F.glb' },
+    9:  { name: "丁棟3F+乙棟6F", url: './floors/9F.glb' },
+    8:  { name: "丁棟2F+乙棟5F", url: './floors/8F.glb' },
+    7:  { name: "丁棟1F+乙棟4F", url: './floors/7F.glb' },
+    // Add other floors here...
+};
+
 // ==========================================
 // 2. MAP INITIALIZATION
 // ==========================================
@@ -25,7 +39,7 @@ const map = new maplibregl.Map({
                 'id': 'background',
                 'type': 'background',
                 'paint': {
-                    'background-color': '#ffffff' // Dark Gray/Black Background
+                    'background-color': '#6adaff'
                 }
             }
         ],
@@ -34,11 +48,11 @@ const map = new maplibregl.Map({
         'glyphs': 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
     },
     // style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-    center: [121.585150, 24.989265],
-    zoom: 17.81,
-    pitch: 60,
+    center: [121.584167, 24.992288],
+    zoom: 16.11,
+    pitch: 67.76,
     maxPitch: 85,
-    bearing: -17.6,
+    bearing: -20.71,
     antialias: true,
     doubleClickZoom: false
 });
@@ -51,18 +65,100 @@ const map = new maplibregl.Map({
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-        { id: 1, name: "校門口",        coords: [121.586012, 24.986974, 3.80], neighbors: [4,2] },
-        { id: 2, name: "福利社",        coords: [121.586088, 24.987667, 3.80], neighbors: [1] },
-        { id: 3, name: "學務處",        coords: [121.585874, 24.987540, 3.80], neighbors: [4] },
-        { id: 4, name: "校長室",        coords: [121.585305, 24.987318, 3.80], neighbors: [1,3] },
-        { id: 5, name: "Intersection",  coords: [121.5859, 24.9873, 1.5], neighbors: [] },
-        { id: 6, name: "Cafeteria",     coords: [121.5861, 24.9875, 1.5], neighbors: [] },
-        { id: 7, name: "Gate 5",        coords: [121.5853, 24.9876, 1.5], neighbors: [] },
-        { id: 8, name: "拉瓦節(化學實驗室)",        coords: [121.586247, 24.987289, 18.50], neighbors: [] },
-        { id: 9, name: "亞佛加厥(理化實驗室)",      coords: [121.586247, 24.987289, 9.50], neighbors: [] },
-        { id: 10, name: "愛因斯坦(物理實驗室)",     coords: [121.586247, 24.987289, 0.50], neighbors: [] },
-        { id: 11, name: "孟德爾(生物實驗室)",     coords: [121.586247, 24.987289, -9.50], neighbors: [] },
-        { id: 12, name: "道爾吞(116)",     coords: [121.586247, 24.987289, 18.50], neighbors: [] },
+        //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+        //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 丁棟右下棟 丁棟左下棟
+        //-------------13樓-------------
+        { id: 1, name: "韋格納", coords: [121.586024, 24.987772, 30.0], neighbors: [2,55], story: 13, building: 4 },
+        { id: 2, name: "柯西", coords: [121.586125, 24.987733, 30.0], neighbors: [1,3], story: 13, building: 4 },
+        { id: 3, name: "數學科辦公室(一)", coords: [121.586201, 24.987696, 30.0], neighbors: [2,4], story: 13, building: 4 },
+        { id: 4, name: "南丁格爾", coords: [121.586238, 24.987628, 30.0], neighbors: [3,5], story: 13, building: 4 },
+        { id: 5, name: "孫子", coords: [121.586280, 24.987516, 30.0], neighbors: [4,60], story: 13, building: 4 },
+        //樓梯
+        { id: 55, name: "丁棟右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [5,56], story: 13, building: 4, stair: 1 },
+        { id: 60, name: "丁棟中樓梯(7F)", coords: [121.585821, 24.987704, 30.0], neighbors: [1,61], story: 13, building: 4, stair: 1 },
+        //-------------12樓-------------
+        { id: 6, name: "李清照", coords: [121.586024, 24.987772, 21.0], neighbors: [7,61], story: 12, building: 4 },
+        { id: 7, name: "胡適", coords: [121.586125, 24.987733, 21.0], neighbors: [6,8], story: 12, building: 4 },
+        { id: 8, name: "自然科辦公室(一)", coords: [121.586201, 24.987696, 21.0], neighbors: [7,9], story: 12, building: 4 },
+        { id: 9, name: "笛卡爾", coords: [121.586238, 24.987628, 21.0], neighbors: [8,10], story: 12, building: 4 },
+        { id: 10, name: "高斯",  coords: [121.586280, 24.987516, 21.0], neighbors: [9,11,56], story: 12, building: 4 },
+        { id: 11, name: "道爾吞", coords: [121.586269 , 24.987412, 21.0], neighbors: [10,12,56], story: 12, building: 4 },
+        { id: 12, name: "拉瓦節(化學實驗室)", coords: [121.586247, 24.987289, 21.0], neighbors: [11], story: 12, building: 4 },
+        //樓梯
+        { id: 56, name: "丁棟右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [10,11,55,57], story: 12, building: 4, stair: 1 },
+        { id: 61, name: "丁棟中樓梯(6F)", coords: [121.585821, 24.987704, 21.0], neighbors: [6,60,62], story: 12, building: 4, stair: 1 },
+        //...
+        //-------------11樓-------------
+        { id: 13, name: "曹雪芹", coords: [121.586024, 24.987772, 12.0], neighbors: [14,36,62], story: 11, building: 4 },
+        { id: 14, name: "張愛玲", coords: [121.586125, 24.987733, 12.0], neighbors: [13,15], story: 11, building: 4 },
+        { id: 15, name: "數學科辦公室(二)", coords: [121.586201, 24.987696, 12.0], neighbors: [14,16], story: 11, building: 4 },
+        { id: 16, name: "海佩蒂雅", coords: [121.586238, 24.987628, 12.0], neighbors: [15,17], story: 11, building: 4 },
+        { id: 17, name: "尤拉", coords: [121.586280, 24.987516, 12.0], neighbors: [16,18,57], story: 11, building: 4 },
+        { id: 18, name: "吳健雄", coords: [121.586269 , 24.987412, 12.0], neighbors: [17,19,57], story: 11, building: 4 },
+        { id: 19, name: "亞佛加厥(理化實驗室)", coords: [121.586247, 24.987289, 12.0], neighbors: [18], story: 11, building: 4 },
+
+        { id: 34, name: "英文科辦公室(一)", coords: [121.585748, 24.988078, 12.0], neighbors: [35], story: 11, building: 4 },
+        { id: 35, name: "Shakespeare", coords: [121.585792, 24.988017, 12.0], neighbors: [34,36], story: 11, building: 4 },
+        { id: 36, name: "Yeats", coords: [121.585834, 24.987900, 12.0], neighbors: [13,35,62], story: 11, building: 4 },
+        //樓梯
+        { id: 57, name: "丁棟右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [17,18,56,58], story: 11, building: 4, stair: 1 },
+        { id: 62, name: "丁棟中樓梯(5F)", coords: [121.585821, 24.987704, 12.0], neighbors: [13,36,61,63], story: 11, building: 4, stair: 1 },
+        //...
+        //-------------10樓-------------
+        { id: 20, name: "李白", coords: [121.586024, 24.987772, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 21, name: "蘇東坡", coords: [121.586125, 24.987733, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 22, name: "國文科辦公室(一)", coords: [121.586201, 24.987696, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 23, name: "祖沖之", coords: [121.586238, 24.987628, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 24, name: "福利社", coords: [121.586280, 24.987516, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 25, name: "伽利略(物理實驗室)", coords: [121.586269 , 24.987412, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 26, name: "愛因斯坦(物理實驗室)", coords: [121.586247, 24.987289, 3.0], neighbors: [], story: 10, building: 4 },
+
+        { id: 37, name: "徐霞客", coords: [121.585587, 24.988160, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 38, name: "洪堡德", coords: [121.585667, 24.988123, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 39, name: "英文科辦公室(二)", coords: [121.585748, 24.988078, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 40, name: "Chomsky", coords: [121.585792, 24.988017, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 41, name: "Woolf", coords: [121.585834, 24.987900, 3.0], neighbors: [], story: 10, building: 4 },
+        //樓梯
+        { id: 58, name: "丁棟右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
+        { id: 63, name: "丁棟中樓梯(4F)", coords: [121.585821, 24.987704, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
+
+        { id: 1, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 1, name: "學務處", coords: [121.585874, 24.987540, 3.0], neighbors: [], story: 10, building: 4 },
+        //...
+        //-------------9樓-------------
+        { id: 27, name: "莊子", coords: [121.586024, 24.987772, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 28, name: "孔子", coords: [121.586125, 24.987733, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 29, name: "生物科準備室", coords: [121.586201, 24.987696, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 30, name: "牛頓", coords: [121.586238, 24.987628, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 31, name: "杜聰明", coords: [121.586280, 24.987516, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 32, name: "虎克(生物實驗室)", coords: [121.586269 , 24.987412, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 33, name: "孟德爾(生物實驗室)", coords: [121.586247, 24.987289, -6.0], neighbors: [], story: 9, building: 4 },
+
+        { id: 42, name: "希羅多德", coords: [121.585587, 24.988160, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 43, name: "李特爾", coords: [121.585667, 24.988123, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 44, name: "教學研究室", coords: [121.585748, 24.988078, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 45, name: "Hawthorne", coords: [121.585792, 24.988017, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 46, name: "Dickinson", coords: [121.585834, 24.987900, -6.0], neighbors: [], story: 9, building: 4 },
+        //樓梯
+        { id: 59, name: "丁棟右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
+        { id: 64, name: "丁棟中樓梯(3F)", coords: [121.585821, 24.987704, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
+        //...
+        //-------------8樓-------------
+        { id: 47, name: "梁啟超", coords: [121.585587, 24.988160, -15.0], neighbors: [], story: 8, building: 4 },
+        { id: 48, name: "司馬遷", coords: [121.585667, 24.988123, -15.0], neighbors: [], story: 8, building: 4 },
+        { id: 49, name: "國文科辦公室(二)", coords: [121.585748, 24.988078, -15.0], neighbors: [], story: 8, building: 4 },
+        { id: 50, name: "孫逸仙", coords: [121.585792, 24.988017, -15.0], neighbors: [], story: 8, building: 4 },
+        { id: 51, name: "涂林", coords: [121.585834, 24.987900, -15.0], neighbors: [], story: 8, building: 4 },
+        //樓梯
+        { id: 65, name: "丁棟中樓梯(2F)", coords: [121.585821, 24.987704, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
+        //...
+        //-------------7樓-------------
+        { id: 52, name: "健康中心", coords: [121.585748, 24.988078, -24.0], neighbors: [], story: 7, building: 4 },
+        { id: 53, name: "貝登堡", coords: [121.585792, 24.988017, -24.0], neighbors: [], story: 7, building: 4 },
+        { id: 54, name: "討論室", coords: [121.585834, 24.987900, -24.0], neighbors: [], story: 7, building: 4 },
+        //樓梯
+        { id: 66, name: "丁棟中樓梯(1F)", coords: [121.585821, 24.987704, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
+        //...
     ];
 
     // ==========================================
@@ -159,25 +255,35 @@ const customLayer = {
         this.textLabels = [];
         window.threeLayer = this;
 
-        // 1. Load 3D Model
+        // 1. Load MAIN Building
+        this.mainBuildingGroup = new THREE.Group(); // Create a group to hold the main building
+        this.sceneModel.add(this.mainBuildingGroup);
+        
+        // Group to hold the specific floor model when loaded
+        this.currentFloorGroup = new THREE.Group();
+        this.sceneModel.add(this.currentFloorGroup);
+
         const loader = new THREE.GLTFLoader();
         loader.load('./building.glb', (gltf) => {
             gltf.scene.traverse((child) => {
                 if (child.isMesh) {
                     const oldMat = child.material;
+                    // NEW: Enable transparent flag so we can fade it later
                     child.material = new THREE.MeshBasicMaterial({
                         map: oldMat.map || null,
                         color: oldMat.color || 0xffffff,
                         side: THREE.DoubleSide,
-                        toneMapped: false
+                        transparent: true, // CRITICAL for fading
+                        opacity: 1.0       // Start fully visible
                     });
-                    if (child.material.map) child.material.map.encoding = THREE.sRGBEncoding;
-
+                    
+                    // Add edges
                     const edges = new THREE.EdgesGeometry(child.geometry, 15);
-                    child.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 })));
+                    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 1.0 }));
+                    child.add(line);
                 }
             });
-            this.sceneModel.add(gltf.scene);
+            this.mainBuildingGroup.add(gltf.scene);
         });
 
         // 2. Create 3D Nodes
@@ -211,7 +317,8 @@ const customLayer = {
             sphere.userData = { 
                 isNode: true, 
                 id: node.id, 
-                name: node.name 
+                name: node.name,
+                story: node.story
             };
             this.sceneNodes.add(sphere);
 
@@ -415,38 +522,94 @@ function updatePathVisuals(newPathCoords) {
     map.triggerRepaint();
 }
 
+function filterNodesByStory(targetStory) {
+    if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
+
+    window.threeLayer.sceneNodes.children.forEach(child => {
+        // Check if this object is a Node Sphere
+        if (child.userData.isNode) {
+            // Determine visibility
+            // If targetStory is null, show everything. Otherwise match the story.
+            const shouldShow = (targetStory === null) || (child.userData.story === targetStory);
+            
+            // 1. Hide/Show the Sphere
+            child.visible = shouldShow;
+            
+            // 2. Hide/Show the text label (if it exists)
+            if (child.userData.labelMesh) {
+                child.userData.labelMesh.visible = shouldShow;
+            }
+        }
+    });
+    
+    map.triggerRepaint();
+}
+
 document.getElementById('start-btn').addEventListener('click', () => {
     // 1. Get User Selection
     const startId = parseInt(document.getElementById('start-select').value);
     const endId = parseInt(document.getElementById('end-select').value);
+    const useAnimation = document.getElementById('anim-toggle').checked;
 
     if (startId === endId) {
         alert("Start and Destination cannot be the same.");
         return;
     }
 
-    // 2. Run A* Algorithm (Get raw sharp path)
     const rawPath = findPath(startId, endId);
     
     if (rawPath.length > 0) {
-        // 3. SMOOTH THE PATH
-        // We convert the sharp A* path into a curved cinematic path
-        const smoothPath = getSmoothPath(rawPath);
+        
+        // --- STEP 1: Handle Floor Transition ---
+        const startNode = NAVIGATION_NODES.find(n => n.id === startId);
+        if (startNode) {
+            // 1. Swap the Building Model
+            transitionToFloor(startNode.story);
 
-        // 4. Update Global Variable (and Visuals)
-        NAV_PATH.length = 0; 
-        smoothPath.forEach(p => NAV_PATH.push(p));
+            // 2. NEW: Filter Nodes to show ONLY this floor
+            filterNodesByStory(startNode.story);
+            
+            // --- STEP 2: Fly Camera to Start Node ---
+            map.flyTo({
+                center: [startNode.coords[0], startNode.coords[1]],
+                zoom: 16.5,     
+                pitch: 0,       
+                bearing: -17.6,  
+                speed: 1.5,      
+                curve: 1         
+            });
+        }
 
-        // Update the Blue Line on the map
-        updatePathVisuals(NAV_PATH);
+        // Cancel any running path animation
+        if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
+            cancelAnimationFrame(currentAnimFrame);
+            currentAnimFrame = null;
+        }
 
-        // 5. Start Camera Animation
-        console.log("Starting Cinematic Route with points:", NAV_PATH.length);
-        animateCamera([...NAV_PATH], 5000);
+        // --- STEP 3: Handle Path Display ---
+        if (useAnimation) {
+            const smoothPath = getSmoothPath(rawPath);
+            NAV_PATH.length = 0; 
+            smoothPath.forEach(p => NAV_PATH.push(p));
+            updatePathVisuals(NAV_PATH);
+            
+            document.getElementById('status-text').innerText = "Moving to start...";
+
+            // Wait for the FlyTo to finish before starting the path flight
+            map.once('moveend', () => {
+                console.log("Arrived at start. Beginning tour...");
+                animateCamera([...NAV_PATH], 5000);
+                document.getElementById('status-text').innerText = "Flying to destination...";
+            });
+
+        } else {
+            // Static Mode
+            updatePathVisuals(rawPath);
+            console.log("Path displayed (Static).");
+            document.getElementById('status-text').innerText = "Path displayed.";
+        }
     }
 });
-
-let currentAnimFrame = null;
 
 // --- NEW HELPER: Calculates a coordinate X meters away at a specific bearing ---
 function getDestination(lng, lat, distanceMeters, bearing) {
@@ -516,7 +679,7 @@ function animateCamera(path, duration) {
         smoothedBearing += diff * 0.06; 
 
         // 4. RECALIBRATION
-        const offsetDist = 400;
+        const offsetDist = 0;
         const focusPoint = getDestination(currentLng, currentLat, offsetDist, smoothedBearing);
 
         // CHANGE: Switched back to jumpTo. 
@@ -524,8 +687,8 @@ function animateCamera(path, duration) {
         map.jumpTo({
             center: focusPoint,
             bearing: smoothedBearing, 
-            zoom: 17.1,
-            pitch: 73
+            zoom: 16.5,
+            pitch: 0
         });
 
         if (progress < 1) {
@@ -582,9 +745,11 @@ window.addEventListener('keydown', (e) => {
         
         if (isDevMode) {
             console.log("Dev Mode: ON");
+            toggleNetworkVisuals(true);
             requestAnimationFrame(devGameLoop);
         } else {
             console.log("Dev Mode: OFF");
+            toggleNetworkVisuals(false);
         }
         return; // Stop processing 'd' as a movement key during toggle
     }
@@ -644,7 +809,7 @@ function devGameLoop() {
     if (lngInput) {
         document.getElementById('hud-lng').value = center.lng.toFixed(6);
         document.getElementById('hud-lat').value = center.lat.toFixed(6);
-        
+        document.getElementById('hud-zoom').value = map.getZoom().toFixed(2);
         document.getElementById('hud-pitch').value = pitch;
         document.getElementById('hud-bear').value = bearing;
     }
@@ -757,15 +922,17 @@ canvas.addEventListener('mousemove', (e) => {
 // 3. MOUSE UP - Release
 canvas.addEventListener('mouseup', () => {
     if (selectedNode) {
-        // Reset Color
         selectedNode.material.color.set(0xff9900);
         
-        // Log final Altitude for copying
         const finalAlt = selectedNode.position.z.toFixed(4);
         console.log(`NEW ALTITUDE for ${selectedNode.userData.name}: ${finalAlt}`);
         
+        if (isDevMode) {
+            toggleNetworkVisuals(true);
+        }
+
         selectedNode = null;
-        map.dragPan.enable(); // Re-enable map
+        map.dragPan.enable(); 
     }
 });
 
@@ -872,4 +1039,210 @@ function getLookAtQuaternion(eye, center, up = [0, 0, 1]) {
     const actualUp = new THREE.Vector3().crossVectors(right, forward).normalize();
     const rotMat = new THREE.Matrix4().makeBasis(right, actualUp, forward.negate());
     return new THREE.Quaternion().setFromRotationMatrix(rotMat);
+}
+
+// ==========================================
+// 8. FLOOR TRANSITION LOGIC
+// ==========================================
+
+let activeFloorMesh = null;
+
+function transitionToFloor(story) {
+    const layer = window.threeLayer;
+    if (!layer || !FLOOR_MODELS[story]) return;
+
+    // ===============================================
+    // 1. KILL ZOMBIE ANIMATIONS (Critical Fix)
+    // ===============================================
+    if (typeof currentFadeFrame !== 'undefined' && currentFadeFrame) {
+        cancelAnimationFrame(currentFadeFrame);
+        currentFadeFrame = null;
+    }
+
+    // ===============================================
+    // 2. INSTANTLY HIDE OLD BUILDING
+    // ===============================================
+    if (layer.mainBuildingGroup) {
+        // Force visibility OFF
+        layer.mainBuildingGroup.visible = false;
+        
+        // Double Tap: Traverse and force children off just in case
+        layer.mainBuildingGroup.traverse(c => {
+            if (c.isMesh) c.visible = false;
+        });
+    }
+
+    // Force map to clear the old building NOW
+    map.triggerRepaint();
+
+    const floorConfig = FLOOR_MODELS[story];
+    console.log(`Swapping to ${floorConfig.name} (Instant)...`);
+
+    const loader = new THREE.GLTFLoader();
+    
+    loader.load(floorConfig.url, (gltf) => {
+        // ===============================================
+        // 3. SETUP NEW FLOOR (Solid & Visible)
+        // ===============================================
+        gltf.scene.traverse((child) => {
+            if (child.isMesh) {
+                const oldMat = child.material;
+                
+                // 1. Determine Opacity Settings from the Original Model
+                // We check if the original material was transparent or if opacity is < 1
+                const isTransparent = oldMat.transparent || (oldMat.opacity < 1.0);
+                const originalOpacity = oldMat.opacity;
+
+                // 2. Create Basic Material (Flat shading) using ORIGINAL transparency
+                child.material = new THREE.MeshBasicMaterial({
+                    map: oldMat.map || null,
+                    color: oldMat.color || 0xffffff,
+                    side: THREE.DoubleSide,
+                    
+                    // --- USE ORIGINAL SETTINGS ---
+                    transparent: isTransparent,
+                    opacity: originalOpacity, 
+                    
+                    // Use alphaTest if your texture has transparency (like fences/leaves)
+                    alphaTest: oldMat.alphaTest || 0,
+                    
+                    // Only write to depth buffer if it's mostly opaque
+                    // (Prevents transparent windows from hiding things behind them)
+                    depthWrite: originalOpacity > 0.5 
+                });
+
+                // 3. Add Black Edges
+                // Optional: Reduce edge opacity if the object itself is transparent (like glass)
+                const edgeOpacity = originalOpacity < 0.5 ? 0.3 : 1.0;
+
+                const edges = new THREE.EdgesGeometry(child.geometry, 15);
+                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ 
+                    color: 0x000000, 
+                    transparent: true, 
+                    opacity: edgeOpacity, 
+                    depthWrite: false // Edges shouldn't occlude other objects
+                }));
+                child.add(line);
+            }
+        });
+
+        // ===============================================
+        // 4. SWAP AND RENDER
+        // ===============================================
+        layer.currentFloorGroup.clear();
+        layer.currentFloorGroup.add(gltf.scene);
+        
+        // Safety Check: Ensure Old Building didn't sneak back on
+        if (layer.mainBuildingGroup) {
+            layer.mainBuildingGroup.visible = false;
+        }
+
+        // Force map to show the new floor
+        map.triggerRepaint();
+    });
+}
+
+// Helper to reset view (Optional: call this if you want to go back to full view)
+function resetToFullBuilding() {
+    const layer = window.threeLayer;
+    if(!layer) return;
+    
+    layer.mainBuildingGroup.visible = true;
+    layer.currentFloorGroup.clear();
+    
+    layer.mainBuildingGroup.traverse(child => {
+        if (child.material) child.material.opacity = 1.0;
+    });
+    map.triggerRepaint();
+}
+
+// ==========================================
+// 5.9 DEV MODE VISUALS (NETWORK GRAPH)
+// ==========================================
+
+function toggleNetworkVisuals(show) {
+    if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
+    const scene = window.threeLayer.sceneNodes;
+
+    // 1. Always remove existing graph first to prevent duplicates
+    const existingGraph = scene.children.find(c => c.name === 'dev-network-graph');
+    if (existingGraph) {
+        scene.remove(existingGraph);
+        if (existingGraph.geometry) existingGraph.geometry.dispose();
+    }
+
+    // If turning off, just repaint and exit
+    if (!show) {
+        map.triggerRepaint();
+        return;
+    }
+
+    // 2. Build new graph
+    const points = [];
+    const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
+    const originScale = originMerc.meterInMercatorCoordinateUnits();
+
+    // Helper: Project Lng/Lat/Alt to Three.js World Space
+    const toVec3 = (coords) => {
+        const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat([coords[0], coords[1]], coords[2]);
+        const x = (nodeMerc.x - originMerc.x) / originScale;
+        const y = -(nodeMerc.y - originMerc.y) / originScale;
+        const z = (nodeMerc.z - originMerc.z) / originScale;
+        return new THREE.Vector3(x, y, z);
+    };
+
+    // Map for fast lookup
+    const nodeMap = {};
+    NAVIGATION_NODES.forEach(n => nodeMap[n.id] = n);
+
+    // 3. Generate Lines for every neighbor connection
+    NAVIGATION_NODES.forEach(node => {
+        if (!node.neighbors || node.neighbors.length === 0) return;
+        
+        // We use the current Three.js position if the node has been initialized,
+        // otherwise calculate from coords (fallback)
+        let startVec;
+        
+        // Find the specific sphere mesh for this node to get its *current* dragged position
+        const nodeMesh = scene.children.find(c => c.userData.id === node.id);
+        if (nodeMesh) {
+            startVec = nodeMesh.position.clone();
+        } else {
+            startVec = toVec3(node.coords);
+        }
+
+        node.neighbors.forEach(neighborId => {
+            const neighbor = nodeMap[neighborId];
+            if (neighbor) {
+                let endVec;
+                const neighborMesh = scene.children.find(c => c.userData.id === neighborId);
+                
+                if (neighborMesh) {
+                    endVec = neighborMesh.position.clone();
+                } else {
+                    endVec = toVec3(neighbor.coords);
+                }
+
+                // Add pair of vertices for LineSegments
+                points.push(startVec);
+                points.push(endVec);
+            }
+        });
+    });
+
+    // 4. Create Mesh
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    // Neon Green color to distinguish from the blue path
+    const material = new THREE.LineBasicMaterial({ 
+        color: 0x39ff14, 
+        linewidth: 1, 
+        opacity: 0.6, 
+        transparent: true 
+    });
+    
+    const lineSegments = new THREE.LineSegments(geometry, material);
+    lineSegments.name = 'dev-network-graph';
+
+    scene.add(lineSegments);
+    map.triggerRepaint();
 }
