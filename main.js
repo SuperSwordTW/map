@@ -6,10 +6,11 @@
 // Coordinates: [Longitude, Latitude]
 // #model
 const MODEL_ORIGIN = [121.58595, 24.9870];
-const MODEL_ALTITUDE = 125;
+const MODEL_ALTITUDE = 1250;
 const MODEL_ROTATE = [Math.PI / 2, -Math.PI / 6 + 0.05, 0];
 const MODEL_SCALE = [30, 30, 30]; // Adjust based on your model's unit scale
 
+let currentFocusAltitude = MODEL_ALTITUDE;
 let currentFadeFrame = null; // NEW: Tracks the fade animation to kill it
 let currentAnimFrame = null; // (Existing: Tracks camera movement)
 
@@ -54,6 +55,26 @@ const FLOOR_MODELS = {
     // Add other floors here...
 };
 
+const FLOOR_ZOOMS = {
+    13:15.41,
+    12:15.41,
+    11:15.43,
+    10:15.56,
+    9:15.56,
+    8:15.54,
+    7:15.85,
+};
+
+const FLOOR_ZOOMS_MOBILE = {
+    13: 14.81, 
+    12: 14.86,
+    11: 14.92,
+    10: 15.03,
+    9:  15.05,
+    8:  15.17,
+    7:  15.15,
+};
+
 // ==========================================
 // 2. MAP INITIALIZATION
 // ==========================================
@@ -78,14 +99,75 @@ const map = new maplibregl.Map({
         'glyphs': 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
     },
     // style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-    center: [121.584167, 24.992288],
-    zoom: 16.11,
+    center: [121.573962, 25.015205],
+    zoom: 14.46,
     pitch: 67.76,
     maxPitch: 85,
     bearing: -20.71,
     antialias: true,
-    doubleClickZoom: false
+    doubleClickZoom: false,
+    dragRotate: false
 });
+
+const ROTATION_SENSITIVITY = 0.2; // 0.2 = 20% of original speed. Adjust this!
+let isRightDragging = false;
+let prevMousePos = { x: 0, y: 0 };
+
+// 1. Listen for Right Mouse Down
+map.on('mousedown', (e) => {
+    // Button 2 is Right Click. logical OR handles Ctrl+LeftClick (Mac style)
+    if (e.originalEvent.button === 2 || (e.originalEvent.ctrlKey && e.originalEvent.button === 0)) {
+        isRightDragging = true;
+        prevMousePos = { x: e.point.x, y: e.point.y };
+        
+        // Visual feedback
+        map.getCanvas().style.cursor = 'grabbing';
+        
+        // Prevent the browser context menu from popping up
+        map.getCanvas().addEventListener('contextmenu', preventDefaultMenu);
+    }
+});
+
+// 2. Calculate Rotation on Move
+map.on('mousemove', (e) => {
+    if (!isRightDragging) return;
+
+    // Calculate how far mouse moved
+    const dx = e.point.x - prevMousePos.x;
+    const dy = e.point.y - prevMousePos.y;
+
+    // Apply Sensitivity Factor
+    // Note: MapLibre native uses Bearing (Rotation) for X, Pitch for Y
+    const newBearing = map.getBearing() + (dx * ROTATION_SENSITIVITY);
+    const newPitch = map.getPitch() - (dy * ROTATION_SENSITIVITY);
+
+    // Apply new values (without animation for instant feel)
+    map.jumpTo({
+        bearing: newBearing,
+        pitch: newPitch,
+        center: map.getCenter(), // Keeps rotation centered on map center
+        zoom: map.getZoom(),
+        animate: false
+    });
+
+    prevMousePos = { x: e.point.x, y: e.point.y };
+});
+
+// 3. Clean up on Release
+map.on('mouseup', stopDrag);
+map.on('mouseout', stopDrag); // Stop if mouse leaves map area
+
+function stopDrag() {
+    if (isRightDragging) {
+        isRightDragging = false;
+        map.getCanvas().style.cursor = '';
+        map.getCanvas().removeEventListener('contextmenu', preventDefaultMenu);
+    }
+}
+
+function preventDefaultMenu(e) {
+    e.preventDefault();
+}
 
 
     // ==========================================
@@ -96,99 +178,110 @@ const map = new maplibregl.Map({
     // #node
     const NAVIGATION_NODES = [
         //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
-        //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 丁棟右下棟 丁棟左下棟
+        //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 67~74丁棟右下棟 丁棟左下棟
         //-------------13樓-------------
-        { id: 1, name: "韋格納", coords: [121.586024, 24.987772, 30.0], neighbors: [2], story: 13, building: 4 },
-        { id: 2, name: "柯西", coords: [121.586125, 24.987733, 30.0], neighbors: [1,3], story: 13, building: 4 },
-        { id: 3, name: "數學科辦公室(一)", coords: [121.586201, 24.987696, 30.0], neighbors: [2,4], story: 13, building: 4 },
-        { id: 4, name: "南丁格爾", coords: [121.586238, 24.987628, 30.0], neighbors: [3,5], story: 13, building: 4 },
-        { id: 5, name: "孫子", coords: [121.586280, 24.987516, 30.0], neighbors: [4], story: 13, building: 4 },
+        { id: 1, name: "韋格納", coords: [121.585997, 24.987735, 30.0], neighbors: [2], story: 13, building: 4 },
+        { id: 2, name: "柯西", coords: [121.586070, 24.987698, 30.0], neighbors: [1,3], story: 13, building: 4 },
+        { id: 3, name: "數學科辦公室(一)", coords: [121.586162, 24.987663, 30.0], neighbors: [2,4], story: 13, building: 4 },
+        { id: 4, name: "南丁格爾", coords: [121.586200, 24.987595, 30.0], neighbors: [3,5], story: 13, building: 4 },
+        { id: 5, name: "孫子", coords: [121.586224, 24.987540, 30.0], neighbors: [4], story: 13, building: 4 },
         //樓梯
-        { id: 55, name: "丁棟右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [5,56], story: 13, building: 4, stair: 1 },
-        { id: 60, name: "丁棟中樓梯(7F)", coords: [121.585821, 24.987704, 30.0], neighbors: [1], story: 13, building: 4, stair: 1 },
+        { id: 55, name: "丁棟中右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [5,56], story: 13, building: 4, stair: 1 },
+        { id: 60, name: "丁棟中左樓梯(7F)", coords: [121.585783, 24.987650, 30.0], neighbors: [1], story: 13, building: 4, stair: 1 },
         //-------------12樓-------------
-        { id: 6, name: "李清照", coords: [121.586024, 24.987772, 21.0], neighbors: [7,61], story: 12, building: 4 },
-        { id: 7, name: "胡適", coords: [121.586125, 24.987733, 21.0], neighbors: [6,8], story: 12, building: 4 },
-        { id: 8, name: "自然科辦公室(一)", coords: [121.586201, 24.987696, 21.0], neighbors: [7,9], story: 12, building: 4 },
-        { id: 9, name: "笛卡爾", coords: [121.586238, 24.987628, 21.0], neighbors: [8,10], story: 12, building: 4 },
-        { id: 10, name: "高斯",  coords: [121.586280, 24.987516, 21.0], neighbors: [9,11,56], story: 12, building: 4 },
-        { id: 11, name: "道爾吞", coords: [121.586269 , 24.987412, 21.0], neighbors: [10,12,56], story: 12, building: 4 },
-        { id: 12, name: "拉瓦節(化學實驗室)", coords: [121.586247, 24.987289, 21.0], neighbors: [11], story: 12, building: 4 },
+        { id: 6, name: "李清照", coords: [121.585997, 24.987735, 21.0], neighbors: [7,61], story: 12, building: 4 },
+        { id: 7, name: "胡適", coords: [121.586070, 24.987698, 21.0], neighbors: [6,8], story: 12, building: 4 },
+        { id: 8, name: "自然科辦公室(一)", coords: [121.586162, 24.987663, 21.0], neighbors: [7,9], story: 12, building: 4 },
+        { id: 9, name: "笛卡爾", coords: [121.586200, 24.987595, 21.0], neighbors: [8,10], story: 12, building: 4 },
+        { id: 10, name: "高斯",  coords: [121.586224, 24.987540, 21.0], neighbors: [9,11,56], story: 12, building: 4 },
+        { id: 11, name: "道爾吞", coords: [121.586241, 24.987418, 21.0], neighbors: [10,12,56], story: 12, building: 4 },
+        { id: 12, name: "拉瓦節(化學實驗室)", coords: [121.586209, 24.987327, 21.0], neighbors: [11], story: 12, building: 4 },
+
+        { id: 67, name: "亞當斯密", coords: [121.585933, 24.987558, 21.0], neighbors: [68], story: 12, building: 4 },
+        { id: 68, name: "蘇格拉底", coords: [121.586020, 24.987470, 21.0], neighbors: [69], story: 12, building: 4 },
+        { id: 69, name: "霍金", coords: [121.586018, 24.987332, 21.0], neighbors: [], story: 12, building: 4 },
+
         //樓梯
-        { id: 56, name: "丁棟右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [10,11,55,57], story: 12, building: 4, stair: 1 },
-        { id: 61, name: "丁棟中樓梯(6F)", coords: [121.585821, 24.987704, 21.0], neighbors: [6,60,62], story: 12, building: 4, stair: 1 },
+        { id: 56, name: "丁棟中右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [10,11,55,57], story: 12, building: 4, stair: 1 },
+        { id: 61, name: "丁棟中左樓梯(6F)", coords: [121.585783, 24.987650, 21.0], neighbors: [6,60,62], story: 12, building: 4, stair: 1 },
         //...
         //-------------11樓-------------
-        { id: 13, name: "曹雪芹", coords: [121.586024, 24.987772, 12.0], neighbors: [14,36,62], story: 11, building: 4 },
-        { id: 14, name: "張愛玲", coords: [121.586125, 24.987733, 12.0], neighbors: [13,15], story: 11, building: 4 },
-        { id: 15, name: "數學科辦公室(二)", coords: [121.586201, 24.987696, 12.0], neighbors: [14,16], story: 11, building: 4 },
-        { id: 16, name: "海佩蒂雅", coords: [121.586238, 24.987628, 12.0], neighbors: [15,17], story: 11, building: 4 },
-        { id: 17, name: "尤拉", coords: [121.586280, 24.987516, 12.0], neighbors: [16,18,57], story: 11, building: 4 },
-        { id: 18, name: "吳健雄", coords: [121.586269 , 24.987412, 12.0], neighbors: [17,19,57], story: 11, building: 4 },
-        { id: 19, name: "亞佛加厥(理化實驗室)", coords: [121.586247, 24.987289, 12.0], neighbors: [18], story: 11, building: 4 },
+        { id: 13, name: "曹雪芹", coords: [121.585997, 24.987735, 12.0], neighbors: [14,36,62], story: 11, building: 4 },
+        { id: 14, name: "張愛玲", coords: [121.586070, 24.987698, 12.0], neighbors: [13,15], story: 11, building: 4 },
+        { id: 15, name: "數學科辦公室(二)", coords: [121.586162, 24.987663, 12.0], neighbors: [14,16], story: 11, building: 4 },
+        { id: 16, name: "海佩蒂雅", coords: [121.586200, 24.987595, 12.0], neighbors: [15,17], story: 11, building: 4 },
+        { id: 17, name: "尤拉", coords: [121.586224, 24.987540, 12.0], neighbors: [16,18,57], story: 11, building: 4 },
+        { id: 18, name: "吳健雄", coords: [121.586241, 24.987418, 12.0], neighbors: [17,19,57], story: 11, building: 4 },
+        { id: 19, name: "亞佛加厥(理化實驗室)", coords: [121.586209, 24.987327, 12.0], neighbors: [18], story: 11, building: 4 },
 
-        { id: 34, name: "英文科辦公室(一)", coords: [121.585748, 24.988078, 12.0], neighbors: [35], story: 11, building: 4 },
-        { id: 35, name: "Shakespeare", coords: [121.585792, 24.988017, 12.0], neighbors: [34,36], story: 11, building: 4 },
-        { id: 36, name: "Yeats", coords: [121.585834, 24.987900, 12.0], neighbors: [13,35,62], story: 11, building: 4 },
+        { id: 34, name: "英文科辦公室(一)", coords: [121.585699, 24.988053, 12.0], neighbors: [35], story: 11, building: 4 },
+        { id: 35, name: "Shakespeare", coords: [121.585746, 24.987986, 12.0], neighbors: [34,36], story: 11, building: 4 },
+        { id: 36, name: "Yeats", coords: [121.585809, 24.987907, 12.0], neighbors: [13,35,62], story: 11, building: 4 },
+
+        { id: 70, name: "湯姆林森", coords: [121.585933, 24.987558, 12.0], neighbors: [71], story: 11, building: 4 },
+        { id: 71, name: "亞里斯多德", coords: [121.586020, 24.987470, 12.0], neighbors: [72], story: 11, building: 4 },
+        { id: 72, name: "諾貝爾", coords: [121.586018, 24.987332, 12.0], neighbors: [], story: 11, building: 4 },
         //樓梯
-        { id: 57, name: "丁棟右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [17,18,56,58], story: 11, building: 4, stair: 1 },
-        { id: 62, name: "丁棟中樓梯(5F)", coords: [121.585821, 24.987704, 12.0], neighbors: [13,36,61,63], story: 11, building: 4, stair: 1 },
+        { id: 57, name: "丁棟中右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [17,18,56,58], story: 11, building: 4, stair: 1 },
+        { id: 62, name: "丁棟中左樓梯(5F)", coords: [121.585783, 24.987650, 12.0], neighbors: [13,36,61,63], story: 11, building: 4, stair: 1 },
         //...
         //-------------10樓-------------
-        { id: 20, name: "李白", coords: [121.586024, 24.987772, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 21, name: "蘇東坡", coords: [121.586125, 24.987733, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 22, name: "國文科辦公室(一)", coords: [121.586201, 24.987696, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 23, name: "祖沖之", coords: [121.586238, 24.987628, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 24, name: "福利社", coords: [121.586280, 24.987516, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 25, name: "伽利略(物理實驗室)", coords: [121.586269 , 24.987412, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 26, name: "愛因斯坦(物理實驗室)", coords: [121.586247, 24.987289, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 20, name: "李白", coords: [121.585997, 24.987735, 3.0], neighbors: [21,41,63], story: 10, building: 4 },
+        { id: 21, name: "蘇東坡", coords: [121.586070, 24.987698, 3.0], neighbors: [22], story: 10, building: 4 },
+        { id: 22, name: "國文科辦公室(一)", coords: [121.586162, 24.987663, 3.0], neighbors: [23], story: 10, building: 4 },
+        { id: 23, name: "祖沖之", coords: [121.586200, 24.987595, 3.0], neighbors: [24], story: 10, building: 4 },
+        { id: 24, name: "福利社", coords: [121.586224, 24.987540, 3.0], neighbors: [25,58], story: 10, building: 4 },
+        { id: 25, name: "伽利略(物理實驗室)", coords: [121.586241, 24.987418, 3.0], neighbors: [26,58], story: 10, building: 4 },
+        { id: 26, name: "愛因斯坦(物理實驗室)", coords: [121.586209, 24.987327, 3.0], neighbors: [], story: 10, building: 4 },
 
-        { id: 37, name: "徐霞客", coords: [121.585587, 24.988160, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 38, name: "洪堡德", coords: [121.585667, 24.988123, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 39, name: "英文科辦公室(二)", coords: [121.585748, 24.988078, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 40, name: "Chomsky", coords: [121.585792, 24.988017, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 41, name: "Woolf", coords: [121.585834, 24.987900, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 37, name: "徐霞客", coords: [121.585550, 24.988139, 3.0], neighbors: [38], story: 10, building: 4 },
+        { id: 38, name: "洪堡德", coords: [121.585638, 24.988086, 3.0], neighbors: [39], story: 10, building: 4 },
+        { id: 39, name: "英文科辦公室(二)", coords: [121.585699, 24.988053, 3.0], neighbors: [40], story: 10, building: 4 },
+        { id: 40, name: "Chomsky", coords: [121.585746, 24.987986, 3.0], neighbors: [41], story: 10, building: 4 },
+        { id: 41, name: "Woolf", coords: [121.585809, 24.987907, 3.0], neighbors: [63], story: 10, building: 4 },
+
+        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [], story: 10, building: 4 },
         //樓梯
-        { id: 58, name: "丁棟右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
-        { id: 63, name: "丁棟中樓梯(4F)", coords: [121.585821, 24.987704, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
+        { id: 58, name: "丁棟中右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
+        { id: 63, name: "丁棟中左樓梯(4F)", coords: [121.585783, 24.987650, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
 
-        { id: 67, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
-        { id: 68, name: "學務處", coords: [121.585874, 24.987540, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 100, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
         //...
         //-------------9樓-------------
-        { id: 27, name: "莊子", coords: [121.586024, 24.987772, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 28, name: "孔子", coords: [121.586125, 24.987733, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 29, name: "生物科準備室", coords: [121.586201, 24.987696, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 30, name: "牛頓", coords: [121.586238, 24.987628, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 31, name: "杜聰明", coords: [121.586280, 24.987516, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 32, name: "虎克(生物實驗室)", coords: [121.586269 , 24.987412, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 33, name: "孟德爾(生物實驗室)", coords: [121.586247, 24.987289, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 27, name: "莊子", coords: [121.585997, 24.987735, -6.0], neighbors: [28,46,64], story: 9, building: 4 },
+        { id: 28, name: "孔子", coords: [121.586070, 24.987698, -6.0], neighbors: [29], story: 9, building: 4 },
+        { id: 29, name: "生物科準備室", coords: [121.586162, 24.987663, -6.0], neighbors: [30], story: 9, building: 4 },
+        { id: 30, name: "牛頓", coords: [121.586200, 24.987595, -6.0], neighbors: [31], story: 9, building: 4 },
+        { id: 31, name: "杜聰明", coords: [121.586224, 24.987540, -6.0], neighbors: [32,59], story: 9, building: 4 },
+        { id: 32, name: "虎克(生物實驗室)", coords: [121.586241, 24.987418, -6.0], neighbors: [33,59], story: 9, building: 4 },
+        { id: 33, name: "孟德爾(生物實驗室)", coords: [121.586209, 24.987327, -6.0], neighbors: [], story: 9, building: 4 },
 
-        { id: 42, name: "希羅多德", coords: [121.585587, 24.988160, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 43, name: "李特爾", coords: [121.585667, 24.988123, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 44, name: "教學研究室", coords: [121.585748, 24.988078, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 45, name: "Hawthorne", coords: [121.585792, 24.988017, -6.0], neighbors: [], story: 9, building: 4 },
-        { id: 46, name: "Dickinson", coords: [121.585834, 24.987900, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 42, name: "希羅多德", coords: [121.585550, 24.988139, -6.0], neighbors: [43], story: 9, building: 4 },
+        { id: 43, name: "李特爾", coords: [121.585638, 24.988086, -6.0], neighbors: [44], story: 9, building: 4 },
+        { id: 44, name: "教學研究室", coords: [121.585699, 24.988053, -6.0], neighbors: [45], story: 9, building: 4 },
+        { id: 45, name: "Hawthorne", coords: [121.585746, 24.987986, -6.0], neighbors: [46], story: 9, building: 4 },
+        { id: 46, name: "Dickinson", coords: [121.585809, 24.987907, -6.0], neighbors: [64], story: 9, building: 4 },
+
+        { id: 74, name: "桌球教室", coords: [121.585933, 24.987558, -6.0], neighbors: [], story: 9, building: 4 },
         //樓梯
-        { id: 59, name: "丁棟右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
-        { id: 64, name: "丁棟中樓梯(3F)", coords: [121.585821, 24.987704, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
+        { id: 59, name: "丁棟中右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
+        { id: 64, name: "丁棟中左樓梯(3F)", coords: [121.585783, 24.987650, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
         //...
         //-------------8樓-------------
-        { id: 47, name: "梁啟超", coords: [121.585587, 24.988160, -15.0], neighbors: [], story: 8, building: 4 },
-        { id: 48, name: "司馬遷", coords: [121.585667, 24.988123, -15.0], neighbors: [], story: 8, building: 4 },
-        { id: 49, name: "國文科辦公室(二)", coords: [121.585748, 24.988078, -15.0], neighbors: [], story: 8, building: 4 },
-        { id: 50, name: "孫逸仙", coords: [121.585792, 24.988017, -15.0], neighbors: [], story: 8, building: 4 },
-        { id: 51, name: "涂林", coords: [121.585834, 24.987900, -15.0], neighbors: [], story: 8, building: 4 },
+        { id: 47, name: "梁啟超", coords: [121.585550, 24.988139, -15.0], neighbors: [48], story: 8, building: 4 },
+        { id: 48, name: "司馬遷", coords: [121.585638, 24.988086, -15.0], neighbors: [49], story: 8, building: 4 },
+        { id: 49, name: "國文科辦公室(二)", coords: [121.585699, 24.988053, -15.0], neighbors: [50], story: 8, building: 4 },
+        { id: 50, name: "孫逸仙", coords: [121.585746, 24.987986, -15.0], neighbors: [51], story: 8, building: 4 },
+        { id: 51, name: "涂林", coords: [121.585809, 24.987907, -15.0], neighbors: [65], story: 8, building: 4 },
         //樓梯
-        { id: 65, name: "丁棟中樓梯(2F)", coords: [121.585821, 24.987704, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
+        { id: 65, name: "丁棟中左樓梯(2F)", coords: [121.585783, 24.987650, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
         //...
         //-------------7樓-------------
-        { id: 52, name: "健康中心", coords: [121.585748, 24.988078, -24.0], neighbors: [], story: 7, building: 4 },
-        { id: 53, name: "貝登堡", coords: [121.585792, 24.988017, -24.0], neighbors: [], story: 7, building: 4 },
-        { id: 54, name: "討論室", coords: [121.585834, 24.987900, -24.0], neighbors: [], story: 7, building: 4 },
+        { id: 52, name: "健康中心", coords: [121.585699, 24.988053, -24.0], neighbors: [53], story: 7, building: 4 },
+        { id: 53, name: "貝登堡", coords: [121.585746, 24.987986, -24.0], neighbors: [54], story: 7, building: 4 },
+        { id: 54, name: "討論室", coords: [121.585809, 24.987907, -24.0], neighbors: [66], story: 7, building: 4 },
         //樓梯
-        { id: 66, name: "丁棟中樓梯(1F)", coords: [121.585821, 24.987704, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
-        //...
+        { id: 66, name: "丁棟中左樓梯(1F)", coords: [121.585783, 24.987650, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
     ];
 
     // ==========================================
@@ -681,9 +774,16 @@ function loadNextPathSegment() {
 
     // 4. Move Camera to start of this segment
     const startCoord = coords[0];
+
+    // Check if screen width is less than 768px (Standard Mobile Breakpoint)
+    const isMobile = window.innerWidth < 768;
+    
+    // Select the appropriate array
+    const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
+
     map.jumpTo({
         center: [startCoord[0], startCoord[1]],
-        zoom: 16.3,
+        zoom: zoomLevel,
         bearing: map.getBearing(),
         pitch: 0
     });
@@ -696,7 +796,7 @@ function loadNextPathSegment() {
     if (isCinematicEnabled) {
         // Optional: Smooth and Animate
         const smoothPath = getSmoothPath(coords);
-        animateCamera(smoothPath, 4000); // 4 seconds per floor
+        animateCamera(smoothPath, 4000, targetStory); // 4 seconds per floor
     }
 
     document.getElementById('status-text').innerText = `Navigating ${targetStory}F...`;
@@ -753,7 +853,7 @@ function getDestination(lng, lat, distanceMeters, bearing) {
     return [(radLng2 * 180 / Math.PI), (radLat2 * 180 / Math.PI)];
 }
 
-function animateCamera(path, duration) {
+function animateCamera(path, duration, targetStory) {
     if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
         cancelAnimationFrame(currentAnimFrame);
     }
@@ -807,12 +907,18 @@ function animateCamera(path, duration) {
         const offsetDist = 0;
         const focusPoint = getDestination(currentLng, currentLat, offsetDist, smoothedBearing);
 
+        // Check if screen width is less than 768px (Standard Mobile Breakpoint)
+        const isMobile = window.innerWidth < 768;
+    
+        // Select the appropriate array
+        const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
+
         // CHANGE: Switched back to jumpTo. 
         // 'flyTo' adds unwanted inertia that messes up the turning timing.
         map.jumpTo({
             center: focusPoint,
             bearing: smoothedBearing, 
-            zoom: 16.3,
+            zoom: zoomLevel,
             pitch: 0
         });
 
@@ -847,7 +953,16 @@ function calculateBearing(startLng, startLat, destLng, destLat) {
 // ==========================================
 
 const devHud = document.getElementById('dev-hud');
-let isDevMode = false;
+const START_IN_DEV_MODE = false; 
+let isDevMode = START_IN_DEV_MODE;
+
+if (isDevMode) {
+    if(devHud) devHud.style.display = 'block';
+    // Start the game loop immediately
+    requestAnimationFrame(devGameLoop);
+    // Wait for map/three.js to initialize before showing debug lines
+    setTimeout(() => toggleNetworkVisuals(true), 1500);
+}
 
 // Configuration
 const FLY_SPEED = 3;      // Pan speed (pixels per frame)
@@ -1186,12 +1301,45 @@ function getLookAtQuaternion(eye, center, up = [0, 0, 1]) {
 // 8. FLOOR TRANSITION LOGIC
 // ==========================================
 
+function getGroundTarget(lngLatOrigin, altitude, pitch, bearing) {
+    if (pitch === 0 || altitude === 0) return lngLatOrigin;
+
+    // 1. Calculate how far we need to shift the center behind the model
+    // Basic Trignometry: tan(pitch) = dist / altitude
+    const pitchRad = pitch * (Math.PI / 180);
+    const offsetMeters = altitude * Math.tan(pitchRad);
+
+    // 2. Move the center point "forward" in the direction of the bearing
+    // We use your existing getDestination helper
+    return getDestination(lngLatOrigin[0], lngLatOrigin[1], offsetMeters, bearing);
+}
+
 let activeFloorMesh = null;
 
 function transitionToFloor(story) {
     const layer = window.threeLayer;
     if (!layer || !FLOOR_MODELS[story]) return;
 
+    const floorNode = NAVIGATION_NODES.find(n => n.story == story);
+    if (floorNode) {
+        currentFocusAltitude = floorNode.coords[2]; // Use the node's Z height
+        console.log(`Pivot Altitude updated to: ${currentFocusAltitude}m`);
+    } else {
+        currentFocusAltitude = MODEL_ALTITUDE; // Fallback
+    }
+
+    const startBearing = map.getBearing();
+    const startPitch = map.getPitch();
+    
+    // Calculate the offset ground target immediately
+    const groundTarget = getGroundTarget(MODEL_ORIGIN, currentFocusAltitude, startPitch, startBearing);
+
+    map.easeTo({
+        center: groundTarget, 
+        duration: 1200, 
+        padding: { top: 0, bottom: 0, left: 0, right: 0 }
+    });
+    
     // ===============================================
     // 1. KILL ZOMBIE ANIMATIONS (Critical Fix)
     // ===============================================
@@ -1206,7 +1354,7 @@ function transitionToFloor(story) {
     if (layer.mainBuildingGroup) {
         // Force visibility OFF
         layer.mainBuildingGroup.visible = false;
-        
+
         // Double Tap: Traverse and force children off just in case
         layer.mainBuildingGroup.traverse(c => {
             if (c.isMesh) c.visible = false;
@@ -1217,7 +1365,7 @@ function transitionToFloor(story) {
     map.triggerRepaint();
 
     const floorConfig = FLOOR_MODELS[story];
-    console.log(`Swapping to ${floorConfig.name} (Instant)...`);
+    console.log(`Swapping to ${floorConfig.name} (Instant)... ${story}`);
 
     const loader = new THREE.GLTFLoader();
     
@@ -1443,9 +1591,17 @@ window.closePanorama = function() {
     }
 };
 
-// Close modal if clicking outside the content box
-document.getElementById('pano-modal').addEventListener('click', (e) => {
-    if (e.target.id === 'pano-modal') {
-        window.closePanorama();
+document.getElementById('menu-btn').addEventListener('click', () => {
+    const ui = document.getElementById('ui-container');
+    const btn = document.getElementById('menu-btn');
+    
+    // Toggle the class instead of changing display style directly
+    ui.classList.toggle('collapsed');
+
+    // Optional: Rotate icon or change color when active
+    if (ui.classList.contains('collapsed')) {
+        btn.style.background = "rgba(34, 34, 34, 0.5)"; // Dimmer when closed
+    } else {
+        btn.style.background = "rgba(34, 34, 34, 0.9)";
     }
 });
