@@ -90,7 +90,7 @@ const map = new maplibregl.Map({
                 'id': 'background',
                 'type': 'background',
                 'paint': {
-                    'background-color': '#ffffff'
+                    'background-color': '#ffffff00'
                 }
             }
         ],
@@ -1591,17 +1591,3 @@ window.closePanorama = function() {
     }
 };
 
-document.getElementById('menu-btn').addEventListener('click', () => {
-    const ui = document.getElementById('ui-container');
-    const btn = document.getElementById('menu-btn');
-    
-    // Toggle the class instead of changing display style directly
-    ui.classList.toggle('collapsed');
-
-    // Optional: Rotate icon or change color when active
-    if (ui.classList.contains('collapsed')) {
-        btn.style.background = "rgba(34, 34, 34, 0.5)"; // Dimmer when closed
-    } else {
-        btn.style.background = "rgba(34, 34, 34, 0.9)";
-    }
-});
