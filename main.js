@@ -178,55 +178,68 @@ function preventDefaultMenu(e) {
     // #node
     const NAVIGATION_NODES = [
         //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
-        //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 67~74丁棟右下棟 丁棟左下棟
+        //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 67~74丁棟右下棟 75~88丁棟左下棟 89~93丁棟轉彎處
         //-------------13樓-------------
         { id: 1, name: "韋格納", coords: [121.585997, 24.987735, 30.0], neighbors: [2], story: 13, building: 4 },
-        { id: 2, name: "柯西", coords: [121.586070, 24.987698, 30.0], neighbors: [1,3], story: 13, building: 4 },
-        { id: 3, name: "數學科辦公室(一)", coords: [121.586162, 24.987663, 30.0], neighbors: [2,4], story: 13, building: 4 },
-        { id: 4, name: "南丁格爾", coords: [121.586200, 24.987595, 30.0], neighbors: [3,5], story: 13, building: 4 },
-        { id: 5, name: "孫子", coords: [121.586224, 24.987540, 30.0], neighbors: [4], story: 13, building: 4 },
+        { id: 2, name: "柯西", coords: [121.586070, 24.987698, 30.0], neighbors: [3], story: 13, building: 4 },
+        { id: 3, name: "數學科辦公室(一)", coords: [121.586162, 24.987663, 30.0], neighbors: [4], story: 13, building: 4 },
+        { id: 4, name: "南丁格爾", coords: [121.586200, 24.987595, 30.0], neighbors: [5], story: 13, building: 4 },
+        { id: 5, name: "孫子", coords: [121.586224, 24.987540, 30.0], neighbors: [55], story: 13, building: 4 },
+
+        { id: 75, name: "社會科辦公室", coords: [121.585695, 24.987695, 30.0], neighbors: [60], story: 13, building: 4 },
+
+        { id: 89, name: "丁棟轉彎處(7F)", coords: [121.585871, 24.987789, 30.0], neighbors: [1,60], story: 13, building: 4, turn: 1 },
         //樓梯
-        { id: 55, name: "丁棟中右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [5,56], story: 13, building: 4, stair: 1 },
-        { id: 60, name: "丁棟中左樓梯(7F)", coords: [121.585783, 24.987650, 30.0], neighbors: [1], story: 13, building: 4, stair: 1 },
+        { id: 55, name: "丁棟中右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [56], story: 13, building: 4, stair: 1 },
+        { id: 60, name: "丁棟中左樓梯(7F)", coords: [121.585783, 24.987650, 30.0], neighbors: [89], story: 13, building: 4, stair: 1 },
         //-------------12樓-------------
-        { id: 6, name: "李清照", coords: [121.585997, 24.987735, 21.0], neighbors: [7,61], story: 12, building: 4 },
-        { id: 7, name: "胡適", coords: [121.586070, 24.987698, 21.0], neighbors: [6,8], story: 12, building: 4 },
-        { id: 8, name: "自然科辦公室(一)", coords: [121.586162, 24.987663, 21.0], neighbors: [7,9], story: 12, building: 4 },
-        { id: 9, name: "笛卡爾", coords: [121.586200, 24.987595, 21.0], neighbors: [8,10], story: 12, building: 4 },
-        { id: 10, name: "高斯",  coords: [121.586224, 24.987540, 21.0], neighbors: [9,11,56], story: 12, building: 4 },
-        { id: 11, name: "道爾吞", coords: [121.586241, 24.987418, 21.0], neighbors: [10,12,56], story: 12, building: 4 },
-        { id: 12, name: "拉瓦節(化學實驗室)", coords: [121.586209, 24.987327, 21.0], neighbors: [11], story: 12, building: 4 },
+        { id: 6, name: "李清照", coords: [121.585997, 24.987735, 21.0], neighbors: [7], story: 12, building: 4 },
+        { id: 7, name: "胡適", coords: [121.586070, 24.987698, 21.0], neighbors: [8], story: 12, building: 4 },
+        { id: 8, name: "自然科辦公室(一)", coords: [121.586162, 24.987663, 21.0], neighbors: [9], story: 12, building: 4 },
+        { id: 9, name: "笛卡爾", coords: [121.586200, 24.987595, 21.0], neighbors: [10], story: 12, building: 4 },
+        { id: 10, name: "高斯",  coords: [121.586224, 24.987540, 21.0], neighbors: [11,56], story: 12, building: 4 },
+        { id: 11, name: "道爾吞", coords: [121.586241, 24.987418, 21.0], neighbors: [12,56], story: 12, building: 4 },
+        { id: 12, name: "拉瓦節(化學實驗室)", coords: [121.586209, 24.987327, 21.0], neighbors: [], story: 12, building: 4 },
 
         { id: 67, name: "亞當斯密", coords: [121.585933, 24.987558, 21.0], neighbors: [68], story: 12, building: 4 },
         { id: 68, name: "蘇格拉底", coords: [121.586020, 24.987470, 21.0], neighbors: [69], story: 12, building: 4 },
         { id: 69, name: "霍金", coords: [121.586018, 24.987332, 21.0], neighbors: [], story: 12, building: 4 },
 
+        { id: 76, name: "自然科辦公室(二)", coords: [121.585695, 24.987695, 21.0], neighbors: [61], story: 12, building: 4 },
+
+        { id: 90, name: "丁棟轉彎處(6F)", coords: [121.585871, 24.987789, 21.0], neighbors: [6,61], story: 12, building: 4, turn: 1 },
         //樓梯
-        { id: 56, name: "丁棟中右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [10,11,55,57], story: 12, building: 4, stair: 1 },
-        { id: 61, name: "丁棟中左樓梯(6F)", coords: [121.585783, 24.987650, 21.0], neighbors: [6,60,62], story: 12, building: 4, stair: 1 },
+        { id: 56, name: "丁棟中右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [55,57], story: 12, building: 4, stair: 1 },
+        { id: 61, name: "丁棟中左樓梯(6F)", coords: [121.585783, 24.987650, 21.0], neighbors: [60,62,67], story: 12, building: 4, stair: 1 },
         //...
         //-------------11樓-------------
-        { id: 13, name: "曹雪芹", coords: [121.585997, 24.987735, 12.0], neighbors: [14,36,62], story: 11, building: 4 },
-        { id: 14, name: "張愛玲", coords: [121.586070, 24.987698, 12.0], neighbors: [13,15], story: 11, building: 4 },
-        { id: 15, name: "數學科辦公室(二)", coords: [121.586162, 24.987663, 12.0], neighbors: [14,16], story: 11, building: 4 },
-        { id: 16, name: "海佩蒂雅", coords: [121.586200, 24.987595, 12.0], neighbors: [15,17], story: 11, building: 4 },
-        { id: 17, name: "尤拉", coords: [121.586224, 24.987540, 12.0], neighbors: [16,18,57], story: 11, building: 4 },
-        { id: 18, name: "吳健雄", coords: [121.586241, 24.987418, 12.0], neighbors: [17,19,57], story: 11, building: 4 },
-        { id: 19, name: "亞佛加厥(理化實驗室)", coords: [121.586209, 24.987327, 12.0], neighbors: [18], story: 11, building: 4 },
+        { id: 13, name: "曹雪芹", coords: [121.585997, 24.987735, 12.0], neighbors: [14,36], story: 11, building: 4 },
+        { id: 14, name: "張愛玲", coords: [121.586070, 24.987698, 12.0], neighbors: [15], story: 11, building: 4 },
+        { id: 15, name: "數學科辦公室(二)", coords: [121.586162, 24.987663, 12.0], neighbors: [16], story: 11, building: 4 },
+        { id: 16, name: "海佩蒂雅", coords: [121.586200, 24.987595, 12.0], neighbors: [17], story: 11, building: 4 },
+        { id: 17, name: "尤拉", coords: [121.586224, 24.987540, 12.0], neighbors: [18,57], story: 11, building: 4 },
+        { id: 18, name: "吳健雄", coords: [121.586241, 24.987418, 12.0], neighbors: [19,57], story: 11, building: 4 },
+        { id: 19, name: "亞佛加厥(理化實驗室)", coords: [121.586209, 24.987327, 12.0], neighbors: [], story: 11, building: 4 },
 
         { id: 34, name: "英文科辦公室(一)", coords: [121.585699, 24.988053, 12.0], neighbors: [35], story: 11, building: 4 },
-        { id: 35, name: "Shakespeare", coords: [121.585746, 24.987986, 12.0], neighbors: [34,36], story: 11, building: 4 },
-        { id: 36, name: "Yeats", coords: [121.585809, 24.987907, 12.0], neighbors: [13,35,62], story: 11, building: 4 },
+        { id: 35, name: "Shakespeare", coords: [121.585746, 24.987986, 12.0], neighbors: [36], story: 11, building: 4 },
+        { id: 36, name: "Yeats", coords: [121.585809, 24.987907, 12.0], neighbors: [], story: 11, building: 4 },
 
-        { id: 70, name: "湯姆林森", coords: [121.585933, 24.987558, 12.0], neighbors: [71], story: 11, building: 4 },
+        { id: 70, name: "湯姆林森", coords: [121.585933, 24.987558, 12.0], neighbors: [62,71], story: 11, building: 4 },
         { id: 71, name: "亞里斯多德", coords: [121.586020, 24.987470, 12.0], neighbors: [72], story: 11, building: 4 },
         { id: 72, name: "諾貝爾", coords: [121.586018, 24.987332, 12.0], neighbors: [], story: 11, building: 4 },
+
+        { id: 77, name: "聯合社辦", coords: [121.585459, 24.987808, 12.0], neighbors: [78], story: 11, building: 4 },
+        { id: 78, name: "戴維斯", coords: [121.585513, 24.987784, 12.0], neighbors: [79], story: 11, building: 4 },
+        { id: 79, name: "布魯姆", coords: [121.585564, 24.987754, 12.0], neighbors: [62], story: 11, building: 4 },
+
+        { id: 91, name: "丁棟轉彎處(5F)", coords: [121.585871, 24.987789, 12.0], neighbors: [13,36,62], story: 11, building: 4, turn: 1 },
         //樓梯
-        { id: 57, name: "丁棟中右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [17,18,56,58], story: 11, building: 4, stair: 1 },
-        { id: 62, name: "丁棟中左樓梯(5F)", coords: [121.585783, 24.987650, 12.0], neighbors: [13,36,61,63], story: 11, building: 4, stair: 1 },
+        { id: 57, name: "丁棟中右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [56,58], story: 11, building: 4, stair: 1 },
+        { id: 62, name: "丁棟中左樓梯(5F)", coords: [121.585783, 24.987650, 12.0], neighbors: [61,63], story: 11, building: 4, stair: 1 },
         //...
         //-------------10樓-------------
-        { id: 20, name: "李白", coords: [121.585997, 24.987735, 3.0], neighbors: [21,41,63], story: 10, building: 4 },
+        { id: 20, name: "李白", coords: [121.585997, 24.987735, 3.0], neighbors: [21,41], story: 10, building: 4 },
         { id: 21, name: "蘇東坡", coords: [121.586070, 24.987698, 3.0], neighbors: [22], story: 10, building: 4 },
         { id: 22, name: "國文科辦公室(一)", coords: [121.586162, 24.987663, 3.0], neighbors: [23], story: 10, building: 4 },
         { id: 23, name: "祖沖之", coords: [121.586200, 24.987595, 3.0], neighbors: [24], story: 10, building: 4 },
@@ -238,17 +251,23 @@ function preventDefaultMenu(e) {
         { id: 38, name: "洪堡德", coords: [121.585638, 24.988086, 3.0], neighbors: [39], story: 10, building: 4 },
         { id: 39, name: "英文科辦公室(二)", coords: [121.585699, 24.988053, 3.0], neighbors: [40], story: 10, building: 4 },
         { id: 40, name: "Chomsky", coords: [121.585746, 24.987986, 3.0], neighbors: [41], story: 10, building: 4 },
-        { id: 41, name: "Woolf", coords: [121.585809, 24.987907, 3.0], neighbors: [63], story: 10, building: 4 },
+        { id: 41, name: "Woolf", coords: [121.585809, 24.987907, 3.0], neighbors: [], story: 10, building: 4 },
 
-        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [], story: 7, building: 4 },
+
+        { id: 80, name: "學生會辦", coords: [121.585459, 24.987808, 3.0], neighbors: [81], story: 10, building: 4 },
+        { id: 81, name: "皮亞傑", coords: [121.585513, 24.987784, 3.0], neighbors: [82], story: 10, building: 4 },
+        { id: 82, name: "杜威", coords: [121.585564, 24.987754, 3.0], neighbors: [63], story: 10, building: 4 },
+
+        { id: 92, name: "丁棟轉彎處(4F)", coords: [121.585871, 24.987789, 3.0], neighbors: [20,41,63], story: 10, building: 4, turn: 1 },
         //樓梯
         { id: 58, name: "丁棟中右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
         { id: 63, name: "丁棟中左樓梯(4F)", coords: [121.585783, 24.987650, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
 
-        { id: 100, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 101, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
         //...
         //-------------9樓-------------
-        { id: 27, name: "莊子", coords: [121.585997, 24.987735, -6.0], neighbors: [28,46,64], story: 9, building: 4 },
+        { id: 27, name: "莊子", coords: [121.585997, 24.987735, -6.0], neighbors: [28,46], story: 9, building: 4 },
         { id: 28, name: "孔子", coords: [121.586070, 24.987698, -6.0], neighbors: [29], story: 9, building: 4 },
         { id: 29, name: "生物科準備室", coords: [121.586162, 24.987663, -6.0], neighbors: [30], story: 9, building: 4 },
         { id: 30, name: "牛頓", coords: [121.586200, 24.987595, -6.0], neighbors: [31], story: 9, building: 4 },
@@ -260,9 +279,14 @@ function preventDefaultMenu(e) {
         { id: 43, name: "李特爾", coords: [121.585638, 24.988086, -6.0], neighbors: [44], story: 9, building: 4 },
         { id: 44, name: "教學研究室", coords: [121.585699, 24.988053, -6.0], neighbors: [45], story: 9, building: 4 },
         { id: 45, name: "Hawthorne", coords: [121.585746, 24.987986, -6.0], neighbors: [46], story: 9, building: 4 },
-        { id: 46, name: "Dickinson", coords: [121.585809, 24.987907, -6.0], neighbors: [64], story: 9, building: 4 },
+        { id: 46, name: "Dickinson", coords: [121.585809, 24.987907, -6.0], neighbors: [], story: 9, building: 4 },
 
-        { id: 74, name: "桌球教室", coords: [121.585933, 24.987558, -6.0], neighbors: [], story: 9, building: 4 },
+        { id: 74, name: "桌球教室", coords: [121.585933, 24.987558, -6.0], neighbors: [64], story: 9, building: 4 },
+
+        { id: 83, name: "海外辦公室", coords: [121.585513, 24.987784, -6.0], neighbors: [84], story: 9, building: 4 },
+        { id: 84, name: "翻轉教室", coords: [121.585564, 24.987754, -6.0], neighbors: [64], story: 9, building: 4 },
+
+        { id: 93, name: "丁棟轉彎處(3F)", coords: [121.585871, 24.987789, -6.0], neighbors: [27,46,64], story: 9, building: 4, turn: 1 },
         //樓梯
         { id: 59, name: "丁棟中右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
         { id: 64, name: "丁棟中左樓梯(3F)", coords: [121.585783, 24.987650, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
@@ -272,18 +296,25 @@ function preventDefaultMenu(e) {
         { id: 48, name: "司馬遷", coords: [121.585638, 24.988086, -15.0], neighbors: [49], story: 8, building: 4 },
         { id: 49, name: "國文科辦公室(二)", coords: [121.585699, 24.988053, -15.0], neighbors: [50], story: 8, building: 4 },
         { id: 50, name: "孫逸仙", coords: [121.585746, 24.987986, -15.0], neighbors: [51], story: 8, building: 4 },
-        { id: 51, name: "涂林", coords: [121.585809, 24.987907, -15.0], neighbors: [65], story: 8, building: 4 },
+        { id: 51, name: "涂林", coords: [121.585809, 24.987907, -15.0], neighbors: [86], story: 8, building: 4 },
+
+        { id: 85, name: "貝爾", coords: [121.585564, 24.987754, -15.0], neighbors: [65], story: 8, building: 4 },
+        { id: 86, name: "迦納", coords: [121.585886, 24.987710, -15.0], neighbors: [65], story: 8, building: 4 },
+
         //樓梯
         { id: 65, name: "丁棟中左樓梯(2F)", coords: [121.585783, 24.987650, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
         //...
         //-------------7樓-------------
         { id: 52, name: "健康中心", coords: [121.585699, 24.988053, -24.0], neighbors: [53], story: 7, building: 4 },
         { id: 53, name: "貝登堡", coords: [121.585746, 24.987986, -24.0], neighbors: [54], story: 7, building: 4 },
-        { id: 54, name: "討論室", coords: [121.585809, 24.987907, -24.0], neighbors: [66], story: 7, building: 4 },
+        { id: 54, name: "討論室", coords: [121.585809, 24.987907, -24.0], neighbors: [88], story: 7, building: 4 },
+
+        { id: 87, name: "傑弗遜", coords: [121.585695, 24.987695, -24.0], neighbors: [66], story: 7, building: 4 },
+        { id: 88, name: "教學研究室", coords: [121.585886, 24.987710, -24.0], neighbors: [66], story: 7, building: 4 },
         //樓梯
         { id: 66, name: "丁棟中左樓梯(1F)", coords: [121.585783, 24.987650, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
+        //...
     ];
-
     // ==========================================
     // 5.5 AUTOMATIC NODE SCALING
     // ==========================================
@@ -354,6 +385,30 @@ function preventDefaultMenu(e) {
         console.log("[Graph] Edges converted to undirected.");
     })();
 
+    function checkDuplicateIds(nodes) {
+        const seenIds = new Set();
+        const duplicates = [];
+
+        nodes.forEach(node => {
+            if (seenIds.has(node.id)) {
+                duplicates.push(node);
+            } else {
+                seenIds.add(node.id);
+            }
+        });
+
+        if (duplicates.length > 0) {
+            console.error("❌ Duplicate IDs found in NAVIGATION_NODES:");
+            duplicates.forEach(dup => {
+                console.log(`ID: ${dup.id}, Name: "${dup.name}", Story: ${dup.story}`);
+            });
+        } else {
+            console.log("✅ No duplicate IDs found.");
+        }
+    }
+
+    checkDuplicateIds(NAVIGATION_NODES);
+
 
     // #path
     // We will use this path for the animation (based on the nodes above)
@@ -398,6 +453,14 @@ const customLayer = {
         this.sceneNodes = new THREE.Scene();
         this.textLabels = [];
         window.threeLayer = this;
+
+        const ambientLight = new THREE.AmbientLight(0x333333, 5.0); 
+        this.sceneModel.add(ambientLight);
+
+        // 2. Directional Light: Mimics the sun, provides structure and shine
+        const dirLight = new THREE.DirectionalLight(0xffffff, 5.0);
+        dirLight.position.set(500, 500, 500); // Positions the light above and to the right
+        this.sceneModel.add(dirLight);
 
         // 1. Load MAIN Building
         this.mainBuildingGroup = new THREE.Group(); // Create a group to hold the main building
@@ -454,7 +517,10 @@ const customLayer = {
             // --- SPHERE SCALING ---
             // Multiply radius (1.2) by 's'
             const geometry = new THREE.SphereGeometry(1.2 * s, 32, 32);
-            const material = new THREE.MeshBasicMaterial({ color: 0xff9900 });
+            const material = new THREE.MeshBasicMaterial({
+                 color: 0xff9900,
+                 toneMapped: false
+            });
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(x, y, z);
             
@@ -494,7 +560,8 @@ const customLayer = {
                 transparent: true,
                 depthTest: false,
                 depthWrite: false,
-                side: THREE.DoubleSide
+                side: THREE.DoubleSide,
+                toneMapped: false
             });
 
             // --- LABEL SCALING ---
@@ -523,7 +590,7 @@ const customLayer = {
         });
         this.sceneNodes.add(new THREE.Line(
             new THREE.BufferGeometry().setFromPoints(pathPoints),
-            new THREE.LineBasicMaterial({ color: 0x00d2ff, linewidth: 3 })
+            new THREE.LineBasicMaterial({ color: 0x00d2ff, linewidth: 3, toneMapped: false })
         ));
 
         this.map = map;
@@ -1375,43 +1442,42 @@ function transitionToFloor(story) {
         // ===============================================
         gltf.scene.traverse((child) => {
             if (child.isMesh) {
-                const oldMat = child.material;
-                
-                // 1. Determine Opacity Settings from the Original Model
-                // We check if the original material was transparent or if opacity is < 1
-                const isTransparent = oldMat.transparent || (oldMat.opacity < 1.0);
-                const originalOpacity = oldMat.opacity;
+                // 1. Get a reference to the material exported from Blender for THIS specific block
+                const mat = child.material;
 
-                // 2. Create Basic Material (Flat shading) using ORIGINAL transparency
-                child.material = new THREE.MeshBasicMaterial({
-                    map: oldMat.map || null,
-                    color: oldMat.color || 0xffffff,
-                    side: THREE.DoubleSide,
+                // 2. Enable transparency globally for all blocks that need it
+                // We check if the opacity is less than 1 or if the flag is already set
+                if (mat.opacity < 1.0 || mat.transparent) {
+                    mat.transparent = true;
                     
-                    // --- USE ORIGINAL SETTINGS ---
-                    transparent: isTransparent,
-                    opacity: originalOpacity, 
-                    
-                    // Use alphaTest if your texture has transparency (like fences/leaves)
-                    alphaTest: oldMat.alphaTest || 0,
-                    
-                    // Only write to depth buffer if it's mostly opaque
-                    // (Prevents transparent windows from hiding things behind them)
-                    depthWrite: originalOpacity > 0.5 
+                    // Adjust depthWrite: Opaque-ish things write to depth, 
+                    // very transparent things (like glass) do not to avoid glitches
+                    mat.depthWrite = mat.opacity > 0.5; 
+                }
+
+                // 3. Preserve the specific PBR values for this individual block
+                // This ensures Block A stays shiny (Roughness 0.1) while Block B can stay matte
+                mat.roughness = mat.roughness !== undefined ? mat.roughness : 0.5;
+                mat.metalness = mat.metalness !== undefined ? mat.metalness : 0.0;
+                
+                // 4. Handle lighting for every block
+                mat.side = THREE.DoubleSide; // Ensure we see both sides of every block
+                child.castShadow = true;      // Every block can cast shadows
+                child.receiveShadow = true;   // Every block can receive shadows
+
+                // 5. Texture Orientation (Safe for all blocks)
+                // If a block happens to have a map, we fix it; if not, this loop just skips it
+                const textureKeys = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap'];
+                textureKeys.forEach((key) => {
+                    if (mat[key] && mat[key].isTexture) {
+                        mat[key].flipY = false; // Standard for GLB imports
+                        if (key === 'map' || key === 'emissiveMap') {
+                            mat[key].colorSpace = THREE.SRGBColorSpace;
+                        }
+                    }
                 });
 
-                // 3. Add Black Edges
-                // Optional: Reduce edge opacity if the object itself is transparent (like glass)
-                const edgeOpacity = originalOpacity < 0.5 ? 0.3 : 1.0;
-
-                const edges = new THREE.EdgesGeometry(child.geometry, 15);
-                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ 
-                    color: 0x000000, 
-                    transparent: true, 
-                    opacity: edgeOpacity, 
-                    depthWrite: false // Edges shouldn't occlude other objects
-                }));
-                child.add(line);
+                mat.needsUpdate = true;
             }
         });
 
@@ -1420,6 +1486,12 @@ function transitionToFloor(story) {
         // ===============================================
         layer.currentFloorGroup.clear();
         layer.currentFloorGroup.add(gltf.scene);
+
+        layer.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        layer.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        layer.renderer.toneMappingExposure = 0.5;
+        layer.renderer.shadowMap.enabled = true;
+        layer.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         
         // Safety Check: Ensure Old Building didn't sneak back on
         if (layer.mainBuildingGroup) {
