@@ -1344,6 +1344,7 @@ function initDropdowns() {
     const endSel = document.getElementById('end-select');
     
     NAVIGATION_NODES.forEach(node => {
+        if (node.stair == 1 || node.turn == 1) return;
         const opt1 = new Option(node.name, node.id);
         const opt2 = new Option(node.name, node.id);
         startSel.add(opt1);
