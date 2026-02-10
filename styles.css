@@ -152,3 +152,50 @@ button:hover {
     transparent 100%
   );
 }
+
+/* 1. Remove truncation (...) and allow text to show fully */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: white !important;
+    line-height: 38px !important;
+    padding-left: 12px !important;
+    padding-right: 30px !important; /* Leave room for the arrow */
+    text-align: left !important;    /* Force text to the left */
+    overflow: visible !important;   /* Stop the text from hiding */
+    text-overflow: clip !important; /* Remove the "..." */
+    white-space: nowrap !important;
+}
+
+/* 2. Fix the container alignment */
+.select2-container .select2-selection--single {
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #333 !important;
+    border: 1px solid #555 !important;
+    width: 100% !important; /* Ensure it fills the UI container */
+}
+
+/* 3. Adjust the arrow position so it doesn't overlap text */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 5px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Style for the Optgroup Header (Floor Name) */
+.select2-results__group {
+    background-color: #444 !important; /* Slightly lighter than the background */
+    color: #00ffcc !important;         /* Matches your DEV HUD color */
+    padding: 4px 10px !important;
+    font-weight: bold !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+}
+
+/* Add a small indent to the items under the floor header */
+.select2-results__option[aria-selected] {
+    padding-left: 20px !important;
+}

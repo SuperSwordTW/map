@@ -55,6 +55,16 @@ const FLOOR_MODELS = {
     // Add other floors here...
 };
 
+const FLOOR_NAMES = {
+    13: {name: "丁棟7F"},
+    12: {name: "丁棟6F"},
+    11: {name: "丁棟5F"},
+    10: {name: "丁棟4F、乙棟7F"},
+    9: {name: "丁棟3F、乙棟6F"},
+    8: {name: "丁棟2F、乙棟5F"},
+    7: {name: "丁棟1F、乙棟4F"}
+}
+
 const FLOOR_ZOOMS = {
     13:15.41,
     12:15.41,
@@ -1342,18 +1352,52 @@ function reconstructPath(cameFrom, currentId, nodeMap) {
 function initDropdowns() {
     const startSel = document.getElementById('start-select');
     const endSel = document.getElementById('end-select');
-    
+
+    const groups = {};
     NAVIGATION_NODES.forEach(node => {
         if (node.stair == 1 || node.turn == 1) return;
-        const opt1 = new Option(node.name, node.id);
-        const opt2 = new Option(node.name, node.id);
-        startSel.add(opt1);
-        endSel.add(opt2);
+        const floorName = FLOOR_NAMES[node.story].name;
+        if (!groups[floorName]) {
+            groups[floorName] = [];
+        }
+        groups[floorName].push(node);
+    });
+
+    // 2. Function to populate a select element with optgroups
+    const populate = (selector) => {
+        // Clear existing options
+        selector.innerHTML = '';
+        
+        // Sort floors numerically (highest to lowest)
+        const sortedFloors = Object.keys(groups).sort((a, b) => parseInt(b) - parseInt(a));
+
+        sortedFloors.forEach(floor => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = `${floor}`;
+            
+            groups[floor].forEach(node => {
+                const opt = new Option(node.name, node.id);
+                optgroup.appendChild(opt);
+            });
+            selector.appendChild(optgroup);
+        });
+    };
+
+    populate(startSel);
+    populate(endSel);
+
+    $(document).ready(function() {
+        $('#start-select').select2({
+        });
+        $('#end-select').select2({
+        });
     });
 
     // Defaults
     startSel.value = 1;
     endSel.value = 6;
+
+    $('#start-select, #end-select').trigger('change');
 }
 
 function getLookAtQuaternion(eye, center, up = [0, 0, 1]) {
