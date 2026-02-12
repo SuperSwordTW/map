@@ -52,6 +52,11 @@ const FLOOR_MODELS = {
     9:  { name: "丁棟3F+乙棟6F", url: './floors/9F.glb' },
     8:  { name: "丁棟2F+乙棟5F", url: './floors/8F.glb' },
     7:  { name: "丁棟1F+乙棟4F", url: './floors/7F.glb' },
+    6:  { name: "乙棟3F", url: './floors/6F.glb' },
+    5:  { name: "乙棟2F", url: './floors/5F.glb' },
+    
+    3: { name: "體育館", url: './floors/3F.glb' },
+    2: { name: "游泳池", url: './floors/2F.glb' },
     // Add other floors here...
 };
 
@@ -62,10 +67,13 @@ const FLOOR_NAMES = {
     10: {name: "丁棟4F、乙棟7F"},
     9: {name: "丁棟3F、乙棟6F"},
     8: {name: "丁棟2F、乙棟5F"},
-    7: {name: "丁棟1F、乙棟4F"}
+    7: {name: "丁棟1F、乙棟4F"},
+    6: {name: "乙棟3F"},
+    5: {name: "乙棟2F"},
 }
 
 const FLOOR_ZOOMS = {
+    100: 14.46, //Full view
     13:15.41,
     12:15.41,
     11:15.43,
@@ -76,6 +84,7 @@ const FLOOR_ZOOMS = {
 };
 
 const FLOOR_ZOOMS_MOBILE = {
+    100: 13.53, //Full view
     13: 14.81, 
     12: 14.86,
     11: 14.92,
@@ -89,9 +98,13 @@ const FLOOR_ZOOMS_MOBILE = {
 // 2. MAP INITIALIZATION
 // ==========================================
 
+const isMobile = window.innerWidth < 768;
+
+const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[100] : FLOOR_ZOOMS[100];
+
 const map = new maplibregl.Map({
     container: 'map',
-    // NEW STYLE URL (Free, reliable, has fonts)
+    attributionControl: false,
     style: {
         'version': 8,
         'sources': {},
@@ -110,9 +123,11 @@ const map = new maplibregl.Map({
     },
     // style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
     center: [121.573962, 25.015205],
-    zoom: 14.46,
+    zoom: zoomLevel,
     pitch: 67.76,
     maxPitch: 85,
+    maxZoom: 20,
+    minZoom: 13.65,
     bearing: -20.71,
     antialias: true,
     doubleClickZoom: false,
@@ -187,8 +202,19 @@ function preventDefaultMenu(e) {
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-        //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
-        //id 1~33丁棟右上棟 34~54丁棟左上棟 55~59丁棟右樓梯 60~66丁棟中樓梯 67~74丁棟右下棟 75~88丁棟左下棟 89~93丁棟轉彎處
+           //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+        /*id 1~33丁棟右上棟
+            34~54丁棟左上棟
+            55~59丁棟右樓梯
+            60~66丁棟中樓梯
+            67~74丁棟右下棟
+            75~88丁棟左下棟
+            89~93丁棟轉彎處
+            94~109丙棟 
+            110校門口
+            111~116丙棟樓梯
+
+        */
         //-------------13樓-------------
         { id: 1, name: "韋格納", coords: [121.585997, 24.987735, 30.0], neighbors: [2], story: 13, building: 4 },
         { id: 2, name: "柯西", coords: [121.586070, 24.987698, 30.0], neighbors: [3], story: 13, building: 4 },
@@ -199,6 +225,7 @@ function preventDefaultMenu(e) {
         { id: 75, name: "社會科辦公室", coords: [121.585695, 24.987695, 30.0], neighbors: [60], story: 13, building: 4 },
 
         { id: 89, name: "丁棟轉彎處(7F)", coords: [121.585871, 24.987789, 30.0], neighbors: [1,60], story: 13, building: 4, turn: 1 },
+        
         //樓梯
         { id: 55, name: "丁棟中右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [56], story: 13, building: 4, stair: 1 },
         { id: 60, name: "丁棟中左樓梯(7F)", coords: [121.585783, 24.987650, 30.0], neighbors: [89], story: 13, building: 4, stair: 1 },
@@ -221,6 +248,7 @@ function preventDefaultMenu(e) {
         //樓梯
         { id: 56, name: "丁棟中右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [55,57], story: 12, building: 4, stair: 1 },
         { id: 61, name: "丁棟中左樓梯(6F)", coords: [121.585783, 24.987650, 21.0], neighbors: [60,62,67], story: 12, building: 4, stair: 1 },
+        { id: 111, name: "丙棟樓梯(6F)", coords: [121.585400, 24.987152, 21.0], neighbors: [112], story: 12, building: 3, stair: 1 },
         //...
         //-------------11樓-------------
         { id: 13, name: "曹雪芹", coords: [121.585997, 24.987735, 12.0], neighbors: [14,36], story: 11, building: 4 },
@@ -244,10 +272,12 @@ function preventDefaultMenu(e) {
         { id: 79, name: "布魯姆", coords: [121.585564, 24.987754, 12.0], neighbors: [62], story: 11, building: 4 },
 
         { id: 91, name: "丁棟轉彎處(5F)", coords: [121.585871, 24.987789, 12.0], neighbors: [13,36,62], story: 11, building: 4, turn: 1 },
+
+        { id: 94, name: "圖書館", coords: [121.585556, 24.987457, 12.0], neighbors: [62], story: 11, building: 3 },
         //樓梯
         { id: 57, name: "丁棟中右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [56,58], story: 11, building: 4, stair: 1 },
         { id: 62, name: "丁棟中左樓梯(5F)", coords: [121.585783, 24.987650, 12.0], neighbors: [61,63], story: 11, building: 4, stair: 1 },
-        //...
+        { id: 112, name: "丙棟樓梯(5F)", coords: [121.585400, 24.987152, 12.0], neighbors: [113], story: 11, building: 3, stair: 1 },
         //-------------10樓-------------
         { id: 20, name: "李白", coords: [121.585997, 24.987735, 3.0], neighbors: [21,41], story: 10, building: 4 },
         { id: 21, name: "蘇東坡", coords: [121.586070, 24.987698, 3.0], neighbors: [22], story: 10, building: 4 },
@@ -263,19 +293,23 @@ function preventDefaultMenu(e) {
         { id: 40, name: "Chomsky", coords: [121.585746, 24.987986, 3.0], neighbors: [41], story: 10, building: 4 },
         { id: 41, name: "Woolf", coords: [121.585809, 24.987907, 3.0], neighbors: [], story: 10, building: 4 },
 
-        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [], story: 7, building: 4 },
+        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [], story: 10, building: 4 },
 
         { id: 80, name: "學生會辦", coords: [121.585459, 24.987808, 3.0], neighbors: [81], story: 10, building: 4 },
         { id: 81, name: "皮亞傑", coords: [121.585513, 24.987784, 3.0], neighbors: [82], story: 10, building: 4 },
         { id: 82, name: "杜威", coords: [121.585564, 24.987754, 3.0], neighbors: [63], story: 10, building: 4 },
 
         { id: 92, name: "丁棟轉彎處(4F)", coords: [121.585871, 24.987789, 3.0], neighbors: [20,41,63], story: 10, building: 4, turn: 1 },
+
+        { id: 95, name: "校長室", coords: [121.585163, 24.987259, 3.0], neighbors: [96], story: 10, building: 3 },
+        { id: 96, name: "簡報室", coords: [121.585227, 24.987232, 3.0], neighbors: [97], story: 10, building: 3 },
+        { id: 97, name: "校史館", coords: [121.585286, 24.987191, 3.0], neighbors: [98], story: 10, building: 3 },
+        { id: 98, name: "穿堂", coords: [121.585549, 24.987377, 3.0], neighbors: [63], story: 10, building: 3 },
+        { id: 110, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [98], story: 10, building: 4 },
         //樓梯
         { id: 58, name: "丁棟中右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
         { id: 63, name: "丁棟中左樓梯(4F)", coords: [121.585783, 24.987650, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
-
-        { id: 101, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [], story: 10, building: 4 },
-        //...
+        { id: 113, name: "丙棟樓梯(4F)", coords: [121.585400, 24.987152, 3.0], neighbors: [97,98,114], story: 10, building: 3, stair: 1 },
         //-------------9樓-------------
         { id: 27, name: "莊子", coords: [121.585997, 24.987735, -6.0], neighbors: [28,46], story: 9, building: 4 },
         { id: 28, name: "孔子", coords: [121.586070, 24.987698, -6.0], neighbors: [29], story: 9, building: 4 },
@@ -297,10 +331,17 @@ function preventDefaultMenu(e) {
         { id: 84, name: "翻轉教室", coords: [121.585564, 24.987754, -6.0], neighbors: [64], story: 9, building: 4 },
 
         { id: 93, name: "丁棟轉彎處(3F)", coords: [121.585871, 24.987789, -6.0], neighbors: [27,46,64], story: 9, building: 4, turn: 1 },
+
+        { id: 99, name: "教務處", coords: [121.585163, 24.987259, -6.0], neighbors: [100], story: 9, building: 3 },
+        { id: 100, name: "總務處", coords: [121.585286, 24.987191, -6.0], neighbors: [101], story: 9, building: 3 },
+        { id: 101, name: "會計室", coords: [121.585429, 24.987201, -6.0], neighbors: [102], story: 9, building: 3 },
+        { id: 102, name: "總務處(二)", coords: [121.585460, 24.987264, -6.0], neighbors: [103], story: 9, building: 3 },
+        { id: 103, name: "人事室", coords: [121.585549, 24.987377, -6.0], neighbors: [104], story: 9, building: 3 },
+        { id: 104, name: "電腦教室", coords: [121.585579, 24.987470, -6.0], neighbors: [64], story: 9, building: 3 },
         //樓梯
         { id: 59, name: "丁棟中右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
         { id: 64, name: "丁棟中左樓梯(3F)", coords: [121.585783, 24.987650, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
-        //...
+        { id: 114, name: "丙棟樓梯(3F)", coords: [121.585400, 24.987152, -6.0], neighbors: [100,101,115], story: 9, building: 3, stair: 1 },
         //-------------8樓-------------
         { id: 47, name: "梁啟超", coords: [121.585550, 24.988139, -15.0], neighbors: [48], story: 8, building: 4 },
         { id: 48, name: "司馬遷", coords: [121.585638, 24.988086, -15.0], neighbors: [49], story: 8, building: 4 },
@@ -311,9 +352,14 @@ function preventDefaultMenu(e) {
         { id: 85, name: "貝爾", coords: [121.585564, 24.987754, -15.0], neighbors: [65], story: 8, building: 4 },
         { id: 86, name: "迦納", coords: [121.585886, 24.987710, -15.0], neighbors: [65], story: 8, building: 4 },
 
+        { id: 105, name: "教學媒體製作室", coords: [121.585163, 24.987259, -15.0], neighbors: [106], story: 8, building: 3 },
+        { id: 106, name: "雙語教育教室", coords: [121.585286, 24.987191, -15.0], neighbors: [107], story: 8, building: 3 },
+        { id: 107, name: "視聽教室", coords: [121.585429, 24.987201, -15.0], neighbors: [108], story: 8, building: 3 },
+        { id: 108, name: "翻譯室", coords: [121.585460, 24.987264, -15.0], neighbors: [109], story: 8, building: 3 },
+        { id: 109, name: "國際會議廳", coords: [121.585549, 24.987377, -15.0], neighbors: [65], story: 8, building: 3 },
         //樓梯
         { id: 65, name: "丁棟中左樓梯(2F)", coords: [121.585783, 24.987650, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
-        //...
+        { id: 115, name: "丙棟樓梯(2F)", coords: [121.585400, 24.987152, -15.0], neighbors: [106,107,116], story: 8, building: 3, stair: 1 },
         //-------------7樓-------------
         { id: 52, name: "健康中心", coords: [121.585699, 24.988053, -24.0], neighbors: [53], story: 7, building: 4 },
         { id: 53, name: "貝登堡", coords: [121.585746, 24.987986, -24.0], neighbors: [54], story: 7, building: 4 },
@@ -323,7 +369,7 @@ function preventDefaultMenu(e) {
         { id: 88, name: "教學研究室", coords: [121.585886, 24.987710, -24.0], neighbors: [66], story: 7, building: 4 },
         //樓梯
         { id: 66, name: "丁棟中左樓梯(1F)", coords: [121.585783, 24.987650, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
-        //...
+        { id: 116, name: "停車場", coords: [121.585400, 24.987152, -24.0], neighbors: [], story: 7, building: 3, stair: 1 },
     ];
     // ==========================================
     // 5.5 AUTOMATIC NODE SCALING
@@ -484,19 +530,24 @@ const customLayer = {
         loader.load('./building.glb', (gltf) => {
             gltf.scene.traverse((child) => {
                 if (child.isMesh) {
-                    const oldMat = child.material;
-                    // NEW: Enable transparent flag so we can fade it later
-                    child.material = new THREE.MeshBasicMaterial({
-                        map: oldMat.map || null,
-                        color: oldMat.color || 0xffffff,
-                        side: THREE.DoubleSide,
-                        transparent: true, // CRITICAL for fading
-                        opacity: 1.0       // Start fully visible
-                    });
-                    
-                    // Add edges
+                    // 1. Keep the original PBR material from Blender
+                    // but enable transparency so you can fade it later
+                    child.material.transparent = true;
+                    child.material.opacity = 1.0;
+                    child.material.side = THREE.DoubleSide; // If you still need both sides visible
+
+                    child.material.polygonOffset = true;
+                    child.material.polygonOffsetFactor = 1;
+                    child.material.polygonOffsetUnits = 1;
+
+                    child.material.needsUpdate = true;
+
+                    // 2. Add edges (Optional, keeping your current logic)
                     const edges = new THREE.EdgesGeometry(child.geometry, 15);
-                    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 1.0 }));
+                    const line = new THREE.LineSegments(
+                        edges, 
+                        new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 1.0 })
+                    );
                     child.add(line);
                 }
             });
@@ -514,6 +565,7 @@ const customLayer = {
         const s = MODEL_SCALE[0] / REF_SCALE; 
 
         NAVIGATION_NODES.forEach(node => {
+            if (node.turn) return;
             // Calculate Position (Already handled by your auto-scaler, but we map it here)
             const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat(
                 [node.coords[0], node.coords[1]], 
@@ -607,8 +659,14 @@ const customLayer = {
         this.renderer = new THREE.WebGLRenderer({
             canvas: map.getCanvas(),
             context: gl,
-            antialias: true
+            antialias: true,
+            logarithmicDepthBuffer: true
         });
+        this.renderer.autoClear = false;
+
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 0.5; // Increased from 0.5 to prevent "Black" look
         this.renderer.autoClear = false;
     },
 
@@ -670,9 +728,55 @@ map.on('load', () => {
 
     initDropdowns();
 
+    filterNodesByStory(0);
+
+    // Gets the 'start' and 'end' parameters from the URL query string (e.g., ?start=1&end=5)
+    function getNavParamsFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            start: params.get('start'), // returns the ID string or null
+            end: params.get('end')     
+        };
+    }
+
+    const urlNodes = getNavParamsFromURL();
+
+    if (urlNodes.start || urlNodes.end) {
+        console.log(`URL Path requested: ${urlNodes.start} to ${urlNodes.end}`);
+
+        const startId = parseInt(urlNodes.start);
+        const endId = parseInt(urlNodes.end);
+
+        if (startId === endId) {
+            alert("Start and Destination cannot be the same.");
+        }
+
+        $('#start-select').val(startId).trigger('change');
+        $('#end-select').val(endId).trigger('change');
+
+        // 1. Get Path (Now returns Nodes)
+        const rawNodes = findPath(startId, endId);
+    
+        if (rawNodes.length > 0) {
+            // 2. Reset Animation
+            if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
+                cancelAnimationFrame(currentAnimFrame);
+                currentAnimFrame = null;
+            }
+
+            // 3. Process Segments
+            globalPathSegments = groupNodesByStory(rawNodes);
+            currentSegmentIndex = -1; // Reset index
+
+            console.log("Path Segments:", globalPathSegments);
+
+            // 4. Start the first segment immediately
+            loadNextPathSegment();
+        }
+    }
+
     console.log("Map Layers Initialized");
 });
-
 
 // ==========================================
 // 4. CINEMATIC CAMERA LOGIC & PATH UPDATE
@@ -766,6 +870,7 @@ function filterNodesByStory(targetStory) {
     map.triggerRepaint();
 }
 
+
 // ==========================================
 // NEW: PATH SEGMENTATION LOGIC
 // ==========================================
@@ -858,7 +963,7 @@ function loadNextPathSegment() {
     // Select the appropriate array
     const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
 
-    map.jumpTo({
+    map.flyTo({
         center: [startCoord[0], startCoord[1]],
         zoom: zoomLevel,
         bearing: map.getBearing(),
@@ -870,13 +975,26 @@ function loadNextPathSegment() {
 
     const isCinematicEnabled = document.getElementById('anim-toggle').checked;
 
-    if (isCinematicEnabled) {
-        // Optional: Smooth and Animate
-        const smoothPath = getSmoothPath(coords);
-        animateCamera(smoothPath, 4000, targetStory); // 4 seconds per floor
-    }
+    map.once('moveend', () => {
+
+        if (isCinematicEnabled) {
+            // Optional: Smooth and Animate
+            const smoothPath = getSmoothPath(coords);
+            animateCamera(smoothPath, 4000, targetStory); // 4 seconds per floor
+        }
+
+        map.setMinZoom(14.81);
+    });
+
 
     document.getElementById('status-text').innerText = `Navigating ${targetStory}F...`;
+}
+
+function closeMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    if (menuToggle) {
+        menuToggle.checked = false;
+    }
 }
 
 // ==========================================
@@ -911,6 +1029,8 @@ document.getElementById('start-btn').addEventListener('click', () => {
         // 4. Start the first segment immediately
         loadNextPathSegment();
     }
+
+    closeMenu();
 });
 
 // --- NEW HELPER: Calculates a coordinate X meters away at a specific bearing ---
@@ -1356,11 +1476,11 @@ function initDropdowns() {
     const groups = {};
     NAVIGATION_NODES.forEach(node => {
         if (node.stair == 1 || node.turn == 1) return;
-        const floorName = FLOOR_NAMES[node.story].name;
-        if (!groups[floorName]) {
-            groups[floorName] = [];
+        const floor = node.story;
+        if (!groups[floor]) {
+            groups[floor] = [];
         }
-        groups[floorName].push(node);
+        groups[floor].push(node);
     });
 
     // 2. Function to populate a select element with optgroups
@@ -1373,7 +1493,7 @@ function initDropdowns() {
 
         sortedFloors.forEach(floor => {
             const optgroup = document.createElement('optgroup');
-            optgroup.label = `${floor}`;
+            optgroup.label = FLOOR_NAMES[floor].name;
             
             groups[floor].forEach(node => {
                 const opt = new Option(node.name, node.id);
@@ -1440,17 +1560,7 @@ function transitionToFloor(story) {
         currentFocusAltitude = MODEL_ALTITUDE; // Fallback
     }
 
-    const startBearing = map.getBearing();
-    const startPitch = map.getPitch();
     
-    // Calculate the offset ground target immediately
-    const groundTarget = getGroundTarget(MODEL_ORIGIN, currentFocusAltitude, startPitch, startBearing);
-
-    map.easeTo({
-        center: groundTarget, 
-        duration: 1200, 
-        padding: { top: 0, bottom: 0, left: 0, right: 0 }
-    });
     
     // ===============================================
     // 1. KILL ZOMBIE ANIMATIONS (Critical Fix)
@@ -1471,6 +1581,8 @@ function transitionToFloor(story) {
         layer.mainBuildingGroup.traverse(c => {
             if (c.isMesh) c.visible = false;
         });
+
+        console.log("Old building hidden immediately.");
     }
 
     // Force map to clear the old building NOW
@@ -1708,3 +1820,89 @@ window.closePanorama = function() {
     }
 };
 
+function copyRouteLink() {
+    const startId = document.getElementById('start-select').value;
+    const endId = document.getElementById('end-select').value;
+
+    if (!startId || !endId) {
+        alert("Please select a start and destination first.");
+        return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('start', startId);
+    url.searchParams.set('end', endId);
+    const fullUrl = url.toString();
+
+    // --- Robust Copy Logic ---
+    if (navigator.clipboard && window.isSecureContext) {
+        // Modern approach for HTTPS/Localhost
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            showCopyFeedback();
+        }).catch(err => {
+            console.error('Modern copy failed:', err);
+            fallbackCopy(fullUrl);
+        });
+    } else {
+        // Fallback approach for HTTP or non-secure contexts
+        fallbackCopy(fullUrl);
+    }
+}
+
+// Fallback using a hidden textarea
+function fallbackCopy(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Ensure the textarea is not visible or disruptive
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    
+    textArea.focus();
+    textArea.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopyFeedback();
+        } else {
+            alert("Unable to copy. Please copy manually: " + text);
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        alert("Manual link: " + text);
+    }
+
+    document.body.removeChild(textArea);
+}
+
+// Helper for visual feedback on the button
+function showCopyFeedback() {
+    const shareBtn = document.getElementById('share-btn');
+    const btnText = shareBtn?.querySelector('span');
+    if (!shareBtn || !btnText) return;
+
+    const originalText = btnText.innerText;
+    
+    // 1. Change text and add "success" state
+    btnText.innerText = "Link Copied!";
+    shareBtn.classList.add('copy-success');
+
+    setTimeout(() => {
+        // 2. Restore text and remove "success" state
+        btnText.innerText = originalText;
+        shareBtn.classList.remove('copy-success');
+    }, 2000);
+}
+
+// Attachment (remains largely the same, but calling showCopyFeedback inside copyRouteLink)
+const shareBtnElement = document.getElementById('share-btn');
+if (shareBtnElement) {
+    shareBtnElement.addEventListener('click', () => {
+        // I assume copyRouteLink is your function that handles the clipboard logic
+        if (typeof copyRouteLink === "function") copyRouteLink(); 
+        showCopyFeedback();
+    });
+}

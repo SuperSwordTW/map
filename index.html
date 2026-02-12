@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>3D Indoor Cinematic Navigator</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
@@ -25,25 +25,55 @@
 
     <div id="map"></div>
 
-    <div id="ui-container">
-        <h1>Cinematic Navigator</h1>
+    <div class="main-wrapper">
+        <label class="main" for="menu-toggle">
+            Menu
+            <div class="bar">
+                <span class="top bar-list"></span>
+                <span class="middle bar-list"></span>
+                <span class="bottom bar-list"></span>
+            </div>
+        </label>
+        
+        <input class="inp" type="checkbox" id="menu-toggle" />
 
-        <div style="margin-bottom: 10px;">
-            <label style="font-size: 12px; color: #aaa;">Start:</label>
-            <select id="start-select" style="width: 100%;"></select>
-            
-            <label style="font-size: 12px; color: #aaa;">Destination:</label>
-            <select id="end-select" style="width: 100%;"></select>
-        </div>
+        <section class="menu-container">
+            <div id="ui-container">
+                <h1>Cinematic Navigator</h1>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 12px; color: #aaa;">Start:</label>
+                    <select id="start-select" style="width: 100%;"></select>
+                    
+                    <label style="font-size: 12px; color: #aaa;">Destination:</label>
+                    <select id="end-select" style="width: 100%;"></select>
+                </div>
 
-        <div style="margin-bottom: 15px; display: flex; align-items: center; background: #222; padding: 5px; border-radius: 4px;">
-            <input type="checkbox" id="anim-toggle" style="margin-right: 8px;">
-            <label for="anim-toggle" style="font-size: 12px; color: #fff; cursor: pointer; user-select: none;">Enable Cinematic Flight</label>
-        </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="anim-toggle">
+                    <label for="anim-toggle">Enable Cinematic Flight</label>
+                </div>
 
-        <button id="start-btn">Start Cinematic Tour</button>
-        <p class="status" id="status-text">Map Loaded. Select route & click start.</p>
+                <button id="start-btn" class="btn">
+                    <div>START</div>
+                    <svg fill="none" viewBox="0 0 24 24" height="25px" width="25px" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" stroke="white" d="M11.6801 14.62L14.2401 12.06L11.6801 9.5"></path>
+                        <path stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" stroke="white" d="M4 12.0601H14.17"></path>
+                        <path stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" stroke="white" d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20"></path>
+                    </svg>
+                </button>
+                <p class="status" id="status-text">Map Loaded. Select route & click start.</p>
+                <button id="share-btn" class="cta">
+                    <span>Share Route</span>
+                    <svg width="15px" height="10px" viewBox="0 0 13 10">
+                        <path d="M1,5 L11,5"></path>
+                        <polyline points="8 1 12 5 8 9"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </section>
     </div>
+
+    
 
     <div id="dev-hud" style="
         display: none; 

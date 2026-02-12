@@ -14,18 +14,6 @@ body, html {
     width: 100%;
 }
 
-#ui-container {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    z-index: 10;
-    max-width: 300px;
-}
-
 h1 {
     font-size: 18px;
     margin: 0 0 10px 0;
@@ -170,9 +158,24 @@ button:hover {
     height: 38px !important;
     display: flex !important;
     align-items: center !important;
-    background-color: #333 !important;
-    border: 1px solid #555 !important;
-    width: 100% !important; /* Ensure it fills the UI container */
+    /* Matches the dark purple glass effect of your menu */
+    background-color: rgba(60, 40, 70, 0.8) !important; 
+    /* Matches the subtle white border of your menu */
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    /* Increased to 2rem to match your START button's roundness */
+    border-radius: 2rem !important; 
+    width: 100% !important;
+    transition: all 0.3s ease;
+}
+
+.select2-container--open .select2-search__field {
+    border-radius: 20px !important; /* Adjust this for more/less roundness */
+    padding: 3px 15px !important;   /* Adds breathing room for the rounded edges */
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #7209b7 !important;
+    box-shadow: 0 0 8px rgba(114, 9, 183, 0.4);
 }
 
 /* 3. Adjust the arrow position so it doesn't overlap text */
@@ -197,5 +200,340 @@ button:hover {
 
 /* Add a small indent to the items under the floor header */
 .select2-results__option[aria-selected] {
+    background-color: #5c3b5d !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
     padding-left: 20px !important;
+}
+
+/* Container for positioning */
+.main-wrapper {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  width: 14rem;
+}
+
+/* The Button Part */
+.main {
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: white;
+  /* Glassy purple */
+  background-color: rgba(87, 48, 179, 0.85) !important; 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  
+  padding: 3px 15px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  cursor: pointer;
+  justify-content: center;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.main .bar {
+  position: absolute;
+  right: 15px; /* Aligns with the padding of the button */
+  justify-content: center;
+  display: flex;
+  height: 50%;
+  width: 20px;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+/* Hide the checkbox */
+.inp {
+  display: none !important;
+}
+
+/* Dropdown Panel */
+.menu-container {
+  /* Semi-transparent dark background */
+  background-color: rgba(76, 51, 80, 0.75) !important; 
+  
+  /* The Glassmorphism Effect */
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%); /* For Safari support */
+  
+  /* Subtle border to define the edges */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  color: white;
+  border-radius: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+/* Expansion Logic - Triggered when input is checked */
+.inp:checked ~ .menu-container {
+  max-height: 600px; /* Large enough to hold your UI */
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* Fix Inner Content */
+#ui-container {
+  padding: 15px;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  background: transparent !important; /* Ensures the glass effect shows through */
+}
+
+#ui-container div[style*="background: #222"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hamburger to X Animation */
+.inp:checked ~ .main .top {
+  transform: translateY(6px) rotate(45deg);
+}
+.inp:checked ~ .main .middle {
+  opacity: 0;
+}
+.inp:checked ~ .main .bottom {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+
+/* Hamburger Icon */
+.bar {
+  display: flex;
+  height: 50%;
+  width: 20px;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bar-list {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 50px;
+  background-color: white;
+  transition: all 0.4s;
+}
+
+#start-btn.btn {
+  --color: #7209b7;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all .5s;
+  border: none;
+  background-color: transparent;
+  width: 100%; /* Ensures it fits your menu width */
+  padding: 0;  /* Reset default padding to let the inner div handle it */
+  margin-top: 25px;
+  margin-bottom: 20px;
+}
+
+#start-btn.btn div {
+  letter-spacing: 2px;
+  font-weight: bold;
+  background: var(--color);
+  border-radius: 2rem;
+  color: white;
+  padding: 0.8rem;
+  width: 100%;
+  z-index: 2;
+}
+
+#start-btn.btn::before {
+  content: '';
+  z-index: 1;
+  background-color: var(--color);
+  border: 2px solid white;
+  border-radius: 2rem;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform: rotate(10deg);
+  transition: .5s;
+  opacity: 0.2;
+}
+
+#start-btn.btn:hover {
+  cursor: pointer;
+  filter: brightness(1.2);
+  transform: scale(1.05);
+  background-color: transparent; /* Prevent background flicker */
+}
+
+#start-btn.btn:hover::before {
+  transform: rotate(0deg);
+  opacity: 1;
+}
+
+#start-btn.btn svg {
+  transform: translateX(-200%);
+  transition: .5s;
+  width: 0;
+  opacity: 0;
+  position: absolute;
+  right: 20px;
+  z-index: 3;
+}
+
+#start-btn.btn:hover svg {
+  width: 25px;
+  transform: translateX(0%);
+  opacity: 1;
+}
+
+#start-btn.btn:active {
+  filter: brightness(1.4);
+}
+
+.cta {
+  position: relative;
+  margin: 15px auto 0 auto;
+  padding: 12px 18px;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto; /* Overriding your global button width: 100% */
+}
+
+.cta:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  border-radius: 50px;
+  background: rgba(223, 206, 255, 0.3); /* Subtle purple wash */
+  width: 45px;
+  height: 45px;
+  transition: all 0.3s ease;
+}
+
+.cta span {
+  position: relative;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin-left: 5px;
+}
+
+.cta svg {
+  position: relative;
+  top: 0;
+  margin-left: 10px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke: #ffffff;
+  stroke-width: 2;
+  transform: translateX(-5px);
+  transition: all 0.3s ease;
+}
+
+.cta:hover:before {
+  width: 100%;
+  background: #3f36b6; /* Matches your "Start" button color */
+}
+
+.cta:hover svg {
+  transform: translateX(0);
+}
+
+.cta:active {
+  transform: scale(0.95);
+}
+
+/* Ensure the global button hover from styles.css doesn't override this */
+button.cta:hover {
+    background: none !important;
+}
+
+.cta.copy-success:before {
+    background: #28a745 !important;
+    width: 100%; /* Keeps it expanded while showing the message */
+}
+
+.cta.copy-success span {
+    color: white;
+}
+
+/* Container for the checkbox and label */
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    
+    /* Rounded corners and matching color */
+    background: rgba(255, 255, 255, 0.05); /* Soft glass look */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 2rem; /* Perfectly rounded ends */
+    
+    /* Spacing and layout */
+    margin-bottom: 15px;
+    padding: 8px 15px;
+    transition: background 0.3s ease;
+}
+
+.checkbox-wrapper:hover {
+    background: rgba(255, 255, 255, 0.1); /* Subtle highlight on hover */
+}
+
+/* Hide the default checkbox */
+.checkbox-wrapper input[type="checkbox"] {
+    display: none;
+}
+
+/* Create the custom checkbox (the circle/box) */
+.checkbox-wrapper label::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%; /* This makes it a circle */
+    margin-right: 10px;
+    transition: all 0.2s ease;
+}
+
+/* Style for when the checkbox is checked */
+.checkbox-wrapper input[type="checkbox"]:checked + label::before {
+    background: #7209b7; /* Matches your Menu/Start button color */
+    border-color: #00ffcc; /* Cyan border for a "active" look */
+    box-shadow: 0 0 8px rgba(114, 9, 183, 0.6);
+}
+
+/* Label text style */
+.checkbox-wrapper label {
+    font-size: 12px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
 }
