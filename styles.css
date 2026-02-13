@@ -159,7 +159,7 @@ button:hover {
     display: flex !important;
     align-items: center !important;
     /* Matches the dark purple glass effect of your menu */
-    background-color: rgba(60, 40, 70, 0.8) !important; 
+    background-color: rgba(58, 40, 70, 0.8) !important; 
     /* Matches the subtle white border of your menu */
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     /* Increased to 2rem to match your START button's roundness */
@@ -190,8 +190,8 @@ button:hover {
 
 /* Style for the Optgroup Header (Floor Name) */
 .select2-results__group {
-    background-color: #444 !important; /* Slightly lighter than the background */
-    color: #00ffcc !important;         /* Matches your DEV HUD color */
+    background-color: #b08bb8 !important; /* Slightly lighter than the background */
+    color: #ffffff !important;         /* Matches your DEV HUD color */
     padding: 4px 10px !important;
     font-weight: bold !important;
     font-size: 11px !important;
@@ -222,7 +222,7 @@ button:hover {
   letter-spacing: 2px;
   color: white;
   /* Glassy purple */
-  background-color: rgba(87, 48, 179, 0.85) !important; 
+  background-color: #7209b7 !important; 
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   
@@ -524,9 +524,9 @@ button.cta:hover {
 
 /* Style for when the checkbox is checked */
 .checkbox-wrapper input[type="checkbox"]:checked + label::before {
-    background: #7209b7; /* Matches your Menu/Start button color */
-    border-color: #00ffcc; /* Cyan border for a "active" look */
-    box-shadow: 0 0 8px rgba(114, 9, 183, 0.6);
+    background: rgba(202, 129, 235, 0.6); /* Matches your Menu/Start button color */
+    border-color: #ffffff00; /* Cyan border for a "active" look */
+    box-shadow: 0 0 8px #6f4d7b;
 }
 
 /* Label text style */

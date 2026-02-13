@@ -786,34 +786,38 @@ map.on('load', () => {
 function getSmoothPath(geoCoords) {
     if (geoCoords.length < 2) return geoCoords;
 
-    const smoothedVectors = [];
+    // 1. Convert Lng/Lat/Alt to Mercator-based meters for accurate 3D curve math
+    // This handles the scale difference between degrees and meters automatically.
+    const vectorPoints = geoCoords.map(p => {
+        const merc = maplibregl.MercatorCoordinate.fromLngLat([p[0], p[1]], p[2]);
+        // We use relative units; multiplying by 1,000,000 prevents precision loss 
+        // while keeping X, Y, and Z in the same spatial magnitude.
+        return new THREE.Vector3(merc.x * 1000000, merc.y * 1000000, merc.z * 1000000);
+    });
 
-    // We simply draw straight lines between points, but break them into small chunks
-    // so the animation loop has plenty of data to work with.
-    for (let i = 0; i < geoCoords.length - 1; i++) {
-        const start = geoCoords[i];
-        const end = geoCoords[i + 1];
-
-        // Create 20 points between each node for smooth camera movement
-        // (Increase this number if nodes are very far apart)
-        const segments = 20; 
-        
-        for (let j = 0; j < segments; j++) {
-            const t = j / segments;
-            
-            // Linear Interpolation (Math for "Straight Line")
-            const lng = start[0] + (end[0] - start[0]) * t;
-            const lat = start[1] + (end[1] - start[1]) * t;
-            const alt = start[2] + (end[2] - start[2]) * t;
-            
-            smoothedVectors.push([lng, lat, alt]);
-        }
-    }
+    // 2. Create the Curve
+    const curve = new THREE.CatmullRomCurve3(vectorPoints);
     
-    // Add the final point
-    smoothedVectors.push(geoCoords[geoCoords.length - 1]);
+    // 'centripetal' is superior to 'catmullrom' for navigation. 
+    // It prevents the path from "looping" or over-swinging at sharp floor turns.
+    curve.curveType = 'centripetal'; 
+    
+    // 3. Resample
+    // 20-30 points per segment is usually plenty for a "silky" feel without 
+    // bloating the geometry buffer.
+    const totalPoints = (geoCoords.length - 1) * 30;
+    const smoothedVectors = curve.getPoints(totalPoints);
 
-    return smoothedVectors;
+    // 4. Convert back to [Lng, Lat, Alt]
+    return smoothedVectors.map(v => {
+        // Reverse the Mercator projection
+        const merc = new maplibregl.MercatorCoordinate(v.x / 1000000, v.y / 1000000, v.z / 1000000);
+        const lngLat = merc.toLngLat();
+        const metersPerUnit = merc.meterInMercatorCoordinateUnits();
+        const alt = merc.z / metersPerUnit;
+
+        return [lngLat.lng, lngLat.lat, alt];
+    });
 }
 
 // Helper: Update the Blue Line in Three.js
@@ -830,7 +834,11 @@ function updatePathVisuals(newPathCoords) {
     const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
     const originScale = originMerc.meterInMercatorCoordinateUnits();
 
-    const pathPoints = newPathCoords.map(coord => {
+    // --- SMOOTHING ADDED HERE ---
+    // We pass the raw coordinates through getSmoothPath to generate 20 points per segment
+    const smoothedCoords = getSmoothPath(newPathCoords);
+
+    const pathPoints = smoothedCoords.map(coord => {
         const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2]);
         const x = (nodeMerc.x - originMerc.x) / originScale;
         const y = -(nodeMerc.y - originMerc.y) / originScale;
