@@ -494,7 +494,7 @@ button.cta:hover {
     border-radius: 2rem; /* Perfectly rounded ends */
     
     /* Spacing and layout */
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     padding: 8px 15px;
     transition: background 0.3s ease;
 }
@@ -531,7 +531,7 @@ button.cta:hover {
 
 /* Label text style */
 .checkbox-wrapper label {
-    font-size: 12px;
+    font-size: 14px;
     color: #fff;
     cursor: pointer;
     display: flex;

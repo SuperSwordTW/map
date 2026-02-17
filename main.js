@@ -202,7 +202,7 @@ function preventDefaultMenu(e) {
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-           //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+        //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
         /*id 1~33丁棟右上棟
             34~54丁棟左上棟
             55~59丁棟右樓梯
@@ -213,7 +213,10 @@ function preventDefaultMenu(e) {
             94~109丙棟 
             110校門口
             111~116丙棟樓梯
-
+            117~119丙棟中心
+            120~122丙棟轉彎處
+            123~129乙棟樓梯
+            130~145乙棟
         */
         //-------------13樓-------------
         { id: 1, name: "韋格納", coords: [121.585997, 24.987735, 30.0], neighbors: [2], story: 13, building: 4 },
@@ -301,15 +304,23 @@ function preventDefaultMenu(e) {
 
         { id: 92, name: "丁棟轉彎處(4F)", coords: [121.585871, 24.987789, 3.0], neighbors: [20,41,63], story: 10, building: 4, turn: 1 },
 
-        { id: 95, name: "校長室", coords: [121.585163, 24.987259, 3.0], neighbors: [96], story: 10, building: 3 },
-        { id: 96, name: "簡報室", coords: [121.585227, 24.987232, 3.0], neighbors: [97], story: 10, building: 3 },
-        { id: 97, name: "校史館", coords: [121.585286, 24.987191, 3.0], neighbors: [98], story: 10, building: 3 },
-        { id: 98, name: "穿堂", coords: [121.585549, 24.987377, 3.0], neighbors: [63], story: 10, building: 3 },
+        { id: 95, name: "校長室", coords: [121.585163, 24.987259, 3.0], neighbors: [117], story: 10, building: 3 },
+        { id: 96, name: "簡報室", coords: [121.585227, 24.987232, 3.0], neighbors: [117], story: 10, building: 3 },
+        { id: 97, name: "校史館", coords: [121.585286, 24.987191, 3.0], neighbors: [117], story: 10, building: 3 },
+        { id: 98, name: "穿堂", coords: [121.585549, 24.987377, 3.0], neighbors: [117], story: 10, building: 3 },
         { id: 110, name: "校門口", coords: [121.586012, 24.986974, 3.0], neighbors: [98], story: 10, building: 4 },
+
+        { id: 117, name: "丙棟中心(4F)", coords: [121.585338, 24.987269, 3.0], neighbors: [113], story: 10, building: 3, turn: 1 },
+        { id: 120, name: "丙棟轉彎處(4F)", coords: [121.585564, 24.987538, 3.0], neighbors: [63,98,117], story: 10, building: 3, turn: 1 },
+
+        { id: 130, name: "莫札特", coords: [121.584737, 24.987549, 3.0], neighbors: [131], story: 10, building: 2 },
+        { id: 131, name: "藝能科辦公室", coords: [121.584889, 24.987494, 3.0], neighbors: [123], story: 10, building: 2 },
+        { id: 132, name: "卓別林", coords: [121.584667, 24.987512, 3.0], neighbors: [123], story: 10, building: 2 },
         //樓梯
         { id: 58, name: "丁棟中右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
         { id: 63, name: "丁棟中左樓梯(4F)", coords: [121.585783, 24.987650, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
-        { id: 113, name: "丙棟樓梯(4F)", coords: [121.585400, 24.987152, 3.0], neighbors: [97,98,114], story: 10, building: 3, stair: 1 },
+        { id: 113, name: "丙棟樓梯(4F)", coords: [121.585400, 24.987152, 3.0], neighbors: [114], story: 10, building: 3, stair: 1 },
+        { id: 123, name: "乙棟樓梯(7F)", coords: [121.585025, 24.987388, 3.0], neighbors: [117,124], story: 10, building: 2, stair: 1 },
         //-------------9樓-------------
         { id: 27, name: "莊子", coords: [121.585997, 24.987735, -6.0], neighbors: [28,46], story: 9, building: 4 },
         { id: 28, name: "孔子", coords: [121.586070, 24.987698, -6.0], neighbors: [29], story: 9, building: 4 },
@@ -332,16 +343,25 @@ function preventDefaultMenu(e) {
 
         { id: 93, name: "丁棟轉彎處(3F)", coords: [121.585871, 24.987789, -6.0], neighbors: [27,46,64], story: 9, building: 4, turn: 1 },
 
-        { id: 99, name: "教務處", coords: [121.585163, 24.987259, -6.0], neighbors: [100], story: 9, building: 3 },
-        { id: 100, name: "總務處", coords: [121.585286, 24.987191, -6.0], neighbors: [101], story: 9, building: 3 },
-        { id: 101, name: "會計室", coords: [121.585429, 24.987201, -6.0], neighbors: [102], story: 9, building: 3 },
-        { id: 102, name: "總務處(二)", coords: [121.585460, 24.987264, -6.0], neighbors: [103], story: 9, building: 3 },
-        { id: 103, name: "人事室", coords: [121.585549, 24.987377, -6.0], neighbors: [104], story: 9, building: 3 },
-        { id: 104, name: "電腦教室", coords: [121.585579, 24.987470, -6.0], neighbors: [64], story: 9, building: 3 },
+        { id: 99, name: "教務處", coords: [121.585163, 24.987259, -6.0], neighbors: [118], story: 9, building: 3 },
+        { id: 100, name: "總務處", coords: [121.585286, 24.987191, -6.0], neighbors: [118], story: 9, building: 3 },
+        { id: 101, name: "會計室", coords: [121.585429, 24.987201, -6.0], neighbors: [118], story: 9, building: 3 },
+        { id: 102, name: "總務處(二)", coords: [121.585460, 24.987264, -6.0], neighbors: [118], story: 9, building: 3 },
+        { id: 103, name: "人事室", coords: [121.585549, 24.987377, -6.0], neighbors: [118], story: 9, building: 3 },
+        { id: 104, name: "無名教室", coords: [121.585579, 24.987470, -6.0], neighbors: [118], story: 9, building: 3 },
+
+        { id: 118, name: "丙棟中心(3F)", coords: [121.585338, 24.987269, -6.0], neighbors: [114], story: 9, building: 3, turn: 1 },
+        { id: 121, name: "丙棟轉彎處(3F)", coords: [121.585564, 24.987538, -6.0], neighbors: [64,118], story: 9, building: 3, turn: 1 },
+
+        { id: 133, name: "張大千", coords: [121.584737, 24.987549, -6.0], neighbors: [134], story: 9, building: 2 },
+        { id: 134, name: "賽尚", coords: [121.584889, 24.987494, -6.0], neighbors: [124], story: 9, building: 2 },
+        { id: 135, name: "陸羽軒", coords: [121.584667, 24.987512, -6.0], neighbors: [136], story: 9, building: 2 },
+        { id: 136, name: "多功能教室", coords: [121.584811, 24.987445, -6.0], neighbors: [124], story: 9, building: 2 },
         //樓梯
         { id: 59, name: "丁棟中右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
         { id: 64, name: "丁棟中左樓梯(3F)", coords: [121.585783, 24.987650, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
-        { id: 114, name: "丙棟樓梯(3F)", coords: [121.585400, 24.987152, -6.0], neighbors: [100,101,115], story: 9, building: 3, stair: 1 },
+        { id: 114, name: "丙棟樓梯(3F)", coords: [121.585400, 24.987152, -6.0], neighbors: [115], story: 9, building: 3, stair: 1 },
+        { id: 124, name: "乙棟樓梯(6F)", coords: [121.585025, 24.987388, -6.0], neighbors: [118,125], story: 9, building: 2, stair: 1 },
         //-------------8樓-------------
         { id: 47, name: "梁啟超", coords: [121.585550, 24.988139, -15.0], neighbors: [48], story: 8, building: 4 },
         { id: 48, name: "司馬遷", coords: [121.585638, 24.988086, -15.0], neighbors: [49], story: 8, building: 4 },
@@ -352,14 +372,24 @@ function preventDefaultMenu(e) {
         { id: 85, name: "貝爾", coords: [121.585564, 24.987754, -15.0], neighbors: [65], story: 8, building: 4 },
         { id: 86, name: "迦納", coords: [121.585886, 24.987710, -15.0], neighbors: [65], story: 8, building: 4 },
 
-        { id: 105, name: "教學媒體製作室", coords: [121.585163, 24.987259, -15.0], neighbors: [106], story: 8, building: 3 },
-        { id: 106, name: "雙語教育教室", coords: [121.585286, 24.987191, -15.0], neighbors: [107], story: 8, building: 3 },
-        { id: 107, name: "視聽教室", coords: [121.585429, 24.987201, -15.0], neighbors: [108], story: 8, building: 3 },
-        { id: 108, name: "翻譯室", coords: [121.585460, 24.987264, -15.0], neighbors: [109], story: 8, building: 3 },
-        { id: 109, name: "國際會議廳", coords: [121.585549, 24.987377, -15.0], neighbors: [65], story: 8, building: 3 },
+        { id: 105, name: "教學媒體製作室", coords: [121.585163, 24.987259, -15.0], neighbors: [119], story: 8, building: 3 },
+        { id: 106, name: "雙語教育教室", coords: [121.585286, 24.987191, -15.0], neighbors: [119], story: 8, building: 3 },
+        { id: 107, name: "視聽教室", coords: [121.585429, 24.987201, -15.0], neighbors: [119], story: 8, building: 3 },
+        { id: 108, name: "翻譯室", coords: [121.585460, 24.987264, -15.0], neighbors: [119], story: 8, building: 3 },
+        { id: 109, name: "國際會議廳", coords: [121.585549, 24.987377, -15.0], neighbors: [119], story: 8, building: 3 },
+
+        { id: 119, name: "丙棟中心(2F)", coords: [121.585338, 24.987269, -15.0], neighbors: [115], story: 8, building: 3, turn: 1 },
+        { id: 122, name: "丙棟轉彎處(2F)", coords: [121.585564, 24.987538, -15.0], neighbors: [65,119], story: 8, building: 3, turn: 1 },
+
+        { id: 137, name: "禮儀教室", coords: [121.584677, 24.987564, -15.0], neighbors: [138], story: 8, building: 2 },
+        { id: 138, name: "畢昇", coords: [121.584737, 24.987549, -15.0], neighbors: [139], story: 8, building: 2 },
+        { id: 139, name: "查德威克", coords: [121.584889, 24.987494, -15.0], neighbors: [125], story: 8, building: 2 },
+        { id: 140, name: "伊尹", coords: [121.584667, 24.987512, -15.0], neighbors: [141], story: 8, building: 2 },
+        { id: 141, name: "家長會辦", coords: [121.584811, 24.987445, -15.0], neighbors: [125], story: 8, building: 2 },
         //樓梯
         { id: 65, name: "丁棟中左樓梯(2F)", coords: [121.585783, 24.987650, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
-        { id: 115, name: "丙棟樓梯(2F)", coords: [121.585400, 24.987152, -15.0], neighbors: [106,107,116], story: 8, building: 3, stair: 1 },
+        { id: 115, name: "丙棟樓梯(2F)", coords: [121.585400, 24.987152, -15.0], neighbors: [116], story: 8, building: 3, stair: 1 },
+        { id: 125, name: "乙棟樓梯(5F)", coords: [121.585025, 24.987388, -15.0], neighbors: [119,126], story: 8, building: 2, stair: 1 },
         //-------------7樓-------------
         { id: 52, name: "健康中心", coords: [121.585699, 24.988053, -24.0], neighbors: [53], story: 7, building: 4 },
         { id: 53, name: "貝登堡", coords: [121.585746, 24.987986, -24.0], neighbors: [54], story: 7, building: 4 },
@@ -367,15 +397,36 @@ function preventDefaultMenu(e) {
 
         { id: 87, name: "傑弗遜", coords: [121.585695, 24.987695, -24.0], neighbors: [66], story: 7, building: 4 },
         { id: 88, name: "教學研究室", coords: [121.585886, 24.987710, -24.0], neighbors: [66], story: 7, building: 4 },
-        //樓梯
+
+        { id: 142, name: "羅吉斯、佛洛伊德", coords: [121.584667, 24.987512, -24.0], neighbors: [143], story: 7, building: 2 },
+        { id: 143, name: "輔導室", coords: [121.584811, 24.987445, -24.0], neighbors: [126], story: 7, building: 2 },
+        //樓梯 
         { id: 66, name: "丁棟中左樓梯(1F)", coords: [121.585783, 24.987650, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
         { id: 116, name: "停車場", coords: [121.585400, 24.987152, -24.0], neighbors: [], story: 7, building: 3, stair: 1 },
+        { id: 126, name: "乙棟樓梯(4F)", coords: [121.585025, 24.987388, -24.0], neighbors: [127], story: 7, building: 2, stair: 1 },
+        //-------------6樓-------------
+        { id: 144, name: "體育科辦公室", coords: [121.584667, 24.987512, -33.0], neighbors: [127], story: 6, building: 2 },
+        //樓梯
+        { id: 127, name: "乙棟樓梯(3F)", coords: [121.585025, 24.987388, -33.0], neighbors: [128], story: 6, building: 2, stair: 1 },
+        //-------------5樓-------------
+        { id: 145, name: "樂活運動站", coords: [121.584811, 24.987445, -42.0], neighbors: [128], story: 5, building: 2 },
+        //樓梯
+        { id: 128, name: "乙棟樓梯(2F)", coords: [121.585025, 24.987388, -42.0], neighbors: [129], story: 5, building: 2, stair: 1 },
+        //-------------4樓-------------
+        //樓梯
+        { id: 129, name: "乙棟樓梯(1F)", coords: [121.585025, 24.987388, -51.0], neighbors: [], story: 4, building: 2, stair: 1 },
+        //-------------3樓-------------
+        //樓梯
+        //-------------2樓-------------
+        //樓梯
+        //-------------1樓-------------
+        //樓梯
     ];
     // ==========================================
     // 5.5 AUTOMATIC NODE SCALING
     // ==========================================
     // This function automatically moves the nodes if you change MODEL_SCALE
-(function scaleNodesToModel() {
+    (function scaleNodesToModel() {
         const REF_SCALE = [3, 3, 3]; 
 
         // Check if scaling is needed
@@ -440,6 +491,78 @@ function preventDefaultMenu(e) {
         });
         console.log("[Graph] Edges converted to undirected.");
     })();
+
+    (function readCSVfile() {
+        fetch('class.csv')
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.text();
+            })
+            .then(data => {
+                console.log("CSV loaded successfully");
+                const rows = data.trim().split('\n');
+                const headers = rows[0].split(',');
+                
+                rows.slice(1).forEach(row => {
+                    const values = row.split(',');
+                    const id = values[0];
+                    const name = values[1];
+                    const number = values[2];
+
+                    const Node = NAVIGATION_NODES.find(n => n.id == parseInt(id)); // Parse ID
+                    if (Node) {
+                        Node.name = `${number} ${Node.name}`;
+                    }
+                });
+
+                initDropdowns();
+
+                refreshThreeJsLabels();
+            })
+            .catch(error => console.error('CSV Error:', error));
+    })();
+
+    function refreshThreeJsLabels() {
+    if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
+
+    window.threeLayer.sceneNodes.children.forEach(child => {
+        // Check if this is a sphere and if it has a label mesh attached
+        if (child.userData.isNode && child.userData.labelMesh) {
+            const labelMesh = child.userData.labelMesh;
+            const nodeId = child.userData.id;
+            
+            // Find the updated node data
+            const updatedNode = NAVIGATION_NODES.find(n => n.id === nodeId);
+            if (!updatedNode) return;
+
+            // Create a new canvas with the updated name
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 2048;
+            canvas.height = 512;
+            
+            context.font = "Bold 180px Arial";
+            context.fillStyle = "white";
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.strokeStyle = 'black';
+            context.lineWidth = 12;
+            
+            context.strokeText(updatedNode.name, 1024, 256);
+            context.fillText(updatedNode.name, 1024, 256);
+            
+            // Dispose of old texture to save memory and apply new one
+            labelMesh.material.map.dispose(); 
+            labelMesh.material.map = new THREE.CanvasTexture(canvas);
+            labelMesh.material.needsUpdate = true;
+
+            // Update the user data name for consistency
+            child.userData.name = updatedNode.name;
+        }
+    });
+    
+    if (window.threeLayer.map) window.threeLayer.map.triggerRepaint();
+}
 
     function checkDuplicateIds(nodes) {
         const seenIds = new Set();
@@ -642,19 +765,6 @@ const customLayer = {
             sphere.userData.labelMesh = labelMesh;
         });
 
-        // 3. Create Path Line
-        const pathPoints = NAV_PATH.map(coord => {
-            const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2]);
-            const x = (nodeMerc.x - originMerc.x) / originScale;
-            const y = -(nodeMerc.y - originMerc.y) / originScale;
-            const z = (nodeMerc.z - originMerc.z) / originScale;
-            return new THREE.Vector3(x, y, z);
-        });
-        this.sceneNodes.add(new THREE.Line(
-            new THREE.BufferGeometry().setFromPoints(pathPoints),
-            new THREE.LineBasicMaterial({ color: 0x00d2ff, linewidth: 3, toneMapped: false })
-        ));
-
         this.map = map;
         this.renderer = new THREE.WebGLRenderer({
             canvas: map.getCanvas(),
@@ -703,6 +813,15 @@ const customLayer = {
             .makeTranslation(modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ)
             .scale(new THREE.Vector3(modelTransform.scale, -modelTransform.scale, modelTransform.scale));
 
+        const pathMesh = window.threeLayer.sceneNodes.children.find(c => c.userData.isPathLine === true);
+        if (pathMesh && pathMesh.material.map) {
+            // Adjust speed here (negative for forward direction along the array)
+            pathMesh.material.map.offset.x -= 0.01; 
+            
+            // Essential: Trigger a repaint to keep the animation running smooth
+            map.triggerRepaint(); 
+        }
+
         this.renderer.resetState();
         this.camera.projectionMatrix = m.clone().multiply(lModel);
         this.renderer.render(this.sceneModel, this.camera);
@@ -726,7 +845,7 @@ map.on('load', () => {
         }))
     };
 
-    initDropdowns();
+    // initDropdowns();
 
     filterNodesByStory(0);
 
@@ -754,24 +873,26 @@ map.on('load', () => {
         $('#start-select').val(startId).trigger('change');
         $('#end-select').val(endId).trigger('change');
 
-        // 1. Get Path (Now returns Nodes)
-        const rawNodes = findPath(startId, endId);
-    
-        if (rawNodes.length > 0) {
-            // 2. Reset Animation
-            if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
-                cancelAnimationFrame(currentAnimFrame);
-                currentAnimFrame = null;
+        if (startID && endID){
+            // 1. Get Path (Now returns Nodes)
+            const rawNodes = findPath(startId, endId);
+        
+            if (rawNodes.length > 0) {
+                // 2. Reset Animation
+                if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
+                    cancelAnimationFrame(currentAnimFrame);
+                    currentAnimFrame = null;
+                }
+
+                // 3. Process Segments
+                globalPathSegments = groupNodesByStory(rawNodes);
+                currentSegmentIndex = -1; // Reset index
+
+                console.log("Path Segments:", globalPathSegments);
+
+                // 4. Start the first segment immediately
+                loadNextPathSegment();
             }
-
-            // 3. Process Segments
-            globalPathSegments = groupNodesByStory(rawNodes);
-            currentSegmentIndex = -1; // Reset index
-
-            console.log("Path Segments:", globalPathSegments);
-
-            // 4. Start the first segment immediately
-            loadNextPathSegment();
         }
     }
 
@@ -820,38 +941,95 @@ function getSmoothPath(geoCoords) {
     });
 }
 
+function getFlowTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; 
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    
+    // Create Gradient: Transparent -> Cyan -> Purple -> Transparent
+    // This creates a "pulse" or "comet" look
+    const gradient = ctx.createLinearGradient(0, 0, 256, 0);
+    gradient.addColorStop(0.0, 'rgba(0, 210, 255, 0)');
+    gradient.addColorStop(0.1, 'rgba(0, 210, 255, 1)');
+    gradient.addColorStop(0.5, 'rgba(150, 0, 255, 1)');
+    gradient.addColorStop(1.0, 'rgba(150, 0, 255, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 256, 1);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping; // Allows the texture to loop
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    return texture;
+}
+
 // Helper: Update the Blue Line in Three.js
 function updatePathVisuals(newPathCoords) {
     if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
 
     const layer = window.threeLayer;
-    
-    // 1. Find and remove old line
-    const oldLine = layer.sceneNodes.children.find(c => c.type === 'Line');
-    if (oldLine) layer.sceneNodes.remove(oldLine);
 
-    // 2. Create new Geometry
+    // 1. Remove old mesh if it exists
+    const oldMesh = layer.sceneNodes.children.find(c => c.userData.isPathLine === true);
+    if (oldMesh) {
+        if (oldMesh.geometry) oldMesh.geometry.dispose();
+        if (oldMesh.material) {
+            if (oldMesh.material.map) oldMesh.material.map.dispose();
+            oldMesh.material.dispose();
+        }
+        layer.sceneNodes.remove(oldMesh);
+    }
+
+    // 2. Prepare Data
+    const smoothedCoords = getSmoothPath(newPathCoords);
+    if (smoothedCoords.length < 2) return;
+
     const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
     const originScale = originMerc.meterInMercatorCoordinateUnits();
 
-    // --- SMOOTHING ADDED HERE ---
-    // We pass the raw coordinates through getSmoothPath to generate 20 points per segment
-    const smoothedCoords = getSmoothPath(newPathCoords);
-
+    // 3. Convert to Local Vector3 (Meters)
     const pathPoints = smoothedCoords.map(coord => {
-        const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2]);
+        const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2] || 0);
+        
+        // Convert Mercator delta to Meters
         const x = (nodeMerc.x - originMerc.x) / originScale;
         const y = -(nodeMerc.y - originMerc.y) / originScale;
-        const z = (nodeMerc.z - originMerc.z) / originScale;
+        
+        // Lift the line 0.5 meters above the floor to avoid z-fighting/clipping
+        const z = ((nodeMerc.z - originMerc.z) / originScale) + 0.5;
+        
         return new THREE.Vector3(x, y, z);
     });
 
-    // 3. Add new Line
-    const geometry = new THREE.BufferGeometry().setFromPoints(pathPoints);
-    const material = new THREE.LineBasicMaterial({ color: 0x00d2ff, linewidth: 3 });
-    const newLine = new THREE.Line(geometry, material);
+    // 4. Create Geometry
+    // CatmullRomCurve3 creates the smooth spine of the tube
+    const curve = new THREE.CatmullRomCurve3(pathPoints);
     
-    layer.sceneNodes.add(newLine);
+    // FIX: Set radius directly in meters (0.4m = ~40cm thick)
+    // We do NOT divide by originScale here because the scene is already in meters.
+    const radius = 1.6; 
+    
+    // Geometry: (curve, tubularSegments, radius, radialSegments, closed)
+    const geometry = new THREE.TubeGeometry(curve, pathPoints.length * 8, radius, 8, false);
+
+    // 5. Create Material
+    const flowTexture = getFlowTexture(); // Ensure this helper function exists in your code!
+    
+    const material = new THREE.MeshBasicMaterial({ 
+        map: flowTexture,
+        transparent: true,
+        opacity: 1.0,
+        side: THREE.DoubleSide,
+        depthTest: false, // Key: Draws the line "on top" of everything
+        blending: THREE.AdditiveBlending // Optional: Makes the colors glow/pop more
+    });
+
+    const newMesh = new THREE.Mesh(geometry, material);
+    newMesh.userData.isPathLine = true; 
+    newMesh.renderOrder = 999; // Ensure it draws last (on top)
+
+    layer.sceneNodes.add(newMesh);
     map.triggerRepaint();
 }
 
@@ -1357,7 +1535,10 @@ map.on('click', (e) => {
     if (window.threeLayer && window.threeLayer.camera) {
         const hit = getIntersects(mouse, window.threeLayer.camera);
         if (hit) {
-            openPanorama(hit.userData);
+            const node = NAVIGATION_NODES.find(n => n.id == hit.userData.id);
+            if (node.stair != 1 && node.elevator != 1){
+                openPanorama(hit.userData);
+            }
         }
     }
 });
@@ -1895,7 +2076,7 @@ function showCopyFeedback() {
     const originalText = btnText.innerText;
     
     // 1. Change text and add "success" state
-    btnText.innerText = "Link Copied!";
+    btnText.innerText = "連結已複製!";
     shareBtn.classList.add('copy-success');
 
     setTimeout(() => {
@@ -1913,4 +2094,131 @@ if (shareBtnElement) {
         if (typeof copyRouteLink === "function") copyRouteLink(); 
         showCopyFeedback();
     });
+}
+
+
+const liveBtn = document.getElementById('live-view-btn');
+const closeCamBtn = document.getElementById('close-camera');
+const cameraOverlay = document.getElementById('camera-overlay');
+const video = document.getElementById('webcam');
+const camcanvas = document.getElementById('snapshot');
+const context = camcanvas.getContext('2d');
+
+let isStreaming = false;
+
+// 1. Toggle Camera View
+liveBtn.addEventListener('click', async () => {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" }, 
+            audio: false 
+        });
+        video.srcObject = stream;
+        cameraOverlay.style.display = 'block';
+        isStreaming = true;
+        sendFrameLoop(); // Start sending JPGs
+    } catch (err) {
+        alert("Camera access denied or not available.");
+        console.error(err);
+    }
+});
+
+// 2. Stop Camera
+closeCamBtn.addEventListener('click', () => {
+    const stream = video.srcObject;
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    cameraOverlay.style.display = 'none';
+    isStreaming = false;
+});
+
+// 3. Send JPEG frames to your Python backend
+async function sendFrameLoop() {
+    if (!isStreaming) return;
+
+    // DEBUG: Check if video has dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+        console.warn("Video not ready yet...");
+        requestAnimationFrame(sendFrameLoop);
+        return;
+    }
+
+    camcanvas.width = video.videoWidth;
+    camcanvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, camcanvas.width, camcanvas.height);
+
+    // Check if the canvas is entirely black
+    const imageData = context.getImageData(0, 0, camcanvas.width, camcanvas.height);
+    const data = imageData.data;
+    let isBlackScreen = true;
+
+    for (let i = 0; i < data.length; i += 4) {
+        // Check if any pixel has non-zero RGB values
+        if (data[i] > 10 || data[i + 1] > 10 || data[i + 2] > 10) {
+            isBlackScreen = false;
+            break;
+        }
+    }
+
+    if (isBlackScreen) {
+        console.warn("Black screen detected, skipping frame...");
+        if (isStreaming) setTimeout(sendFrameLoop, 500);
+        return;
+    }
+
+
+    camcanvas.toBlob(async (blob) => {
+        if (!blob) {
+             console.error("Blob failed to generate"); 
+             return;
+        }
+        
+        console.log("Blob generated, size:", blob.size); // <--- DOES THIS PRINT?
+        
+        const formData = new FormData();
+        formData.append('image', blob, 'live_frame.jpg');
+
+        try {
+            console.log("Attempting fetch..."); // <--- DOES THIS PRINT?
+            
+            const response = await fetch('http://localhost:8000/process', { // Check this URL!
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                console.error("Server Error:", response.status, response.statusText);
+            } else {
+                const data = await response.json();
+                const result = data;
+                if (result.status == "success") {
+                    console.log("Nearest Node ID:", result.nearest_node);
+                    console.log("Score:", result.inliers);
+                    // Navigate to the detected node
+                    if (result.nearest_node) {
+                        const nodeId = parseInt(result.nearest_node.split('_')[0]);
+                        const node = NAVIGATION_NODES.find(n => n.id === nodeId);
+                        if (node) {
+                            console.log("Detected location:", node.name);
+                            // Optional: Update UI to show detected location
+                            document.getElementById('status-text').innerText = `Detected: ${node.name}`;
+                            $('#start-select').val(node.id).trigger('change');
+                        }
+                    }
+                    console.log("Success:", data);
+                    const stream = video.srcObject;
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    cameraOverlay.style.display = 'none';
+                    isStreaming = false;
+                }
+            }
+        } catch (error) {
+            console.error("Fetch failed entirely:", error);
+        }
+
+        if (isStreaming) setTimeout(sendFrameLoop, 10000);
+    }, 'image/jpeg', 0.7);
 }
