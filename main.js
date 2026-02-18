@@ -1704,7 +1704,7 @@ function initDropdowns() {
 
     // Defaults
     startSel.value = 1;
-    endSel.value = 6;
+    endSel.value = 2;
 
     $('#start-select, #end-select').trigger('change');
 }
