@@ -537,3 +537,89 @@ button.cta:hover {
     display: flex;
     align-items: center;
 }
+
+/* AR Overlays */
+.ar-vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+}
+
+.ar-guidance-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+}
+
+/* The Pulsing Ring */
+.ar-ring {
+    width: 120px;
+    height: 120px;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    position: absolute;
+    animation: ar-pulse 2s infinite;
+}
+
+/* Glassy Hint Box */
+.ar-hint-box {
+    margin-top: 160px; /* Position below the ring */
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 12px 24px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.ar-arrow {
+    font-size: 24px;
+    color: #00ffcc;
+    animation: ar-float 1.5s infinite ease-in-out;
+}
+
+/* Animations */
+@keyframes ar-pulse {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 0.4; }
+    100% { transform: scale(0.8); opacity: 0.8; }
+}
+
+@keyframes ar-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* Cleanup: Positioning the existing close button */
+#close-camera {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid white;
+    color: white;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

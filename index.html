@@ -122,8 +122,19 @@
         <video id="webcam" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
         <canvas id="snapshot" style="display: none;"></canvas>
         
-        <button id="close-camera" style="position: absolute; top: 20px; right: 20px; font-size: 30px; color: white; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer;">×</button>
-        <div id="camera-status" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: #00ffcc; font-family: monospace; text-shadow: 1px 1px 2px black;">STREAMING TO SERVER...</div>
+        <div class="ar-vignette"></div>
+
+        <div class="ar-guidance-container">
+            <div class="ar-ring"></div>
+            <div class="ar-hint-box">
+                <div class="ar-arrow">↑</div>
+                <span id="camera-status">請將相機對準周圍的建築物。</span>
+            </div>
+        </div>
+
+        <div id="camera-status" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: #00ffcc; font-family: monospace; text-shadow: 1px 1px 2px black;">掃描中...</div>
+        
+        <button id="close-camera">×</button>
     </div>
 
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
