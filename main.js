@@ -2110,7 +2110,11 @@ let isStreaming = false;
 liveBtn.addEventListener('click', async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "environment" }, 
+            video: { facingMode: "environment",
+                width: {ideal: 1920},
+                height: {ideal: 1080},
+                frameRate: {ideal: 30}
+             }, 
             audio: false 
         });
         video.srcObject = stream;
@@ -2219,6 +2223,6 @@ async function sendFrameLoop() {
             console.error("Fetch failed entirely:", error);
         }
 
-        if (isStreaming) setTimeout(sendFrameLoop, 10000);
+        if (isStreaming) setTimeout(sendFrameLoop, 5000);
     }, 'image/jpeg', 0.7);
 }
