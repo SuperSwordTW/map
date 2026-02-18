@@ -2182,7 +2182,7 @@ async function sendFrameLoop() {
         try {
             console.log("Attempting fetch..."); // <--- DOES THIS PRINT?
             
-            const response = await fetch('http://61.228.190.179:8000/process', { // Check this URL!
+            const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev:8000/process', { // Check this URL!
                 method: 'POST',
                 body: formData
             });
