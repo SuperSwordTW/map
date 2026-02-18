@@ -45,7 +45,7 @@
                     <div style="display: flex; gap: 5px; align-items: center; width: 100%;">
                         <select id="start-select" style="flex-grow: 1; width: auto; height: 36px;"></select>
                         
-                        <button id="live-view-btn" title="Open Live View" style="background: #00ffcc; border: none; border-radius: 4px; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; margin-left: 5px;">
+                        <button id="live-view-btn" title="Open Live View" style="background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); border: none; border-radius: 4px; padding: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; margin-left: 5px;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2">
                                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                                 <circle cx="12" cy="13" r="4"></circle>
@@ -132,7 +132,23 @@
             </div>
         </div>
 
-        <div id="camera-status" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: #00ffcc; font-family: monospace; text-shadow: 1px 1px 2px black;">掃描中...</div>
+        <div id="camera-status" style="
+            position: absolute;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%); 
+            color: white;
+            font-family: monospace;
+            text-shadow: 1px 1px 2px black;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);">掃描中...</div>
         
         <button id="close-camera">×</button>
     </div>

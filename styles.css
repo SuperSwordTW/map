@@ -79,7 +79,6 @@ button:hover {
     right: 10px;
     background: rgba(0, 0, 0, 0.6);
     color: white;
-    border: 1px solid white;
     font-size: 24px;
     width: 40px;
     height: 40px;
@@ -524,8 +523,8 @@ button.cta:hover {
 
 /* Style for when the checkbox is checked */
 .checkbox-wrapper input[type="checkbox"]:checked + label::before {
-    background: rgba(202, 129, 235, 0.6); /* Matches your Menu/Start button color */
-    border-color: #ffffff00; /* Cyan border for a "active" look */
+    background: #E491C9;
+    border-color: #ffffff00;
     box-shadow: 0 0 8px #6f4d7b;
 }
 
@@ -611,7 +610,6 @@ button.cta:hover {
     right: 25px;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(5px);
-    border: 1px solid white;
     color: white;
     border-radius: 50%;
     width: 44px;
@@ -622,4 +620,8 @@ button.cta:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+#close-camera:hover {
+    background: red;
 }

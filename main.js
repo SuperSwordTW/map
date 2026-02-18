@@ -849,32 +849,20 @@ map.on('load', () => {
 
     filterNodesByStory(0);
 
-    // Gets the 'start' and 'end' parameters from the URL query string (e.g., ?start=1&end=5)
-    function getNavParamsFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        return {
-            start: params.get('start'), // returns the ID string or null
-            end: params.get('end')     
-        };
-    }
-
     const urlNodes = getNavParamsFromURL();
 
     if (urlNodes.start || urlNodes.end) {
-        console.log(`URL Path requested: ${urlNodes.start} to ${urlNodes.end}`);
-
+        
         const startId = parseInt(urlNodes.start);
         const endId = parseInt(urlNodes.end);
+        
+        console.log(`URL Path requested: ${urlNodes.start} to ${urlNodes.end}`);
 
         if (startId === endId) {
             alert("Start and Destination cannot be the same.");
         }
 
-        $('#start-select').val(startId).trigger('change');
-        $('#end-select').val(endId).trigger('change');
-
-        if (startID && endID){
-            // 1. Get Path (Now returns Nodes)
+        if (startId != endId && urlNodes.start != null && urlNodes.end != null){
             const rawNodes = findPath(startId, endId);
         
             if (rawNodes.length > 0) {
@@ -894,6 +882,7 @@ map.on('load', () => {
                 loadNextPathSegment();
             }
         }
+
     }
 
     console.log("Map Layers Initialized");
@@ -1144,7 +1133,6 @@ function loadNextPathSegment() {
     const startCoord = coords[0];
 
     // Check if screen width is less than 768px (Standard Mobile Breakpoint)
-    const isMobile = window.innerWidth < 768;
     
     // Select the appropriate array
     const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
@@ -1289,9 +1277,6 @@ function animateCamera(path, duration, targetStory) {
         // 4. RECALIBRATION
         const offsetDist = 0;
         const focusPoint = getDestination(currentLng, currentLat, offsetDist, smoothedBearing);
-
-        // Check if screen width is less than 768px (Standard Mobile Breakpoint)
-        const isMobile = window.innerWidth < 768;
     
         // Select the appropriate array
         const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
@@ -1657,6 +1642,14 @@ function reconstructPath(cameFrom, currentId, nodeMap) {
     return totalPath;
 }
 
+function getNavParamsFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        start: params.get('start'), // returns the ID string or null
+        end: params.get('end')     
+    };
+}
+
 // Populate UI Dropdowns
 function initDropdowns() {
     const startSel = document.getElementById('start-select');
@@ -1702,9 +1695,23 @@ function initDropdowns() {
         });
     });
 
-    // Defaults
-    startSel.value = 1;
-    endSel.value = 2;
+
+    const urlNodes = getNavParamsFromURL();
+
+    if (urlNodes.start != null || urlNodes.end != null) {
+        const startId = parseInt(urlNodes.start);
+        const endId = parseInt(urlNodes.end);
+
+        startSel.value = startId;
+        endSel.value = endId;
+    }
+    else{
+        // Defaults
+        startSel.value = 1;
+        endSel.value = 2;
+    }
+
+    
 
     $('#start-select, #end-select').trigger('change');
 }
@@ -1964,48 +1971,66 @@ function openPanorama(nodeData) {
     const modal = document.getElementById('pano-modal');
     const title = document.getElementById('pano-title');
     
-    // 1. Show Modal
-    modal.style.display = 'flex';
-    title.innerText = nodeData.name; // Display Node Name
-
-    // 2. Destroy previous viewer if exists
     if (panoViewer) {
+        if (panoViewer.tempObjectURL) {
+            URL.revokeObjectURL(panoViewer.tempObjectURL);
+        }
+        // Destroy the WebGL instance
         panoViewer.destroy();
         panoViewer = null;
     }
 
-    // 3. Construct Image Path
-    // ASSUMPTION: Images are in 'images/' folder and named by ID (e.g., "1.jpg", "55.jpg")
-    // If you want to use names, change to: `images/${nodeData.name}.jpg`
-    const imagePath = `images/${nodeData.id}.jpg`; 
+    // Show Modal
+    modal.style.display = 'flex';
+    title.innerText = nodeData.name; // Display Node Name
+
+    const imagePath = isMobile? `images/Optimized_Panoramas/${nodeData.id}.jpg` : `images/${nodeData.id}.jpg`;
 
     console.log("Loading 360 Image:", imagePath);
 
-    // 4. Initialize Pannellum
+    // Initialize Pannellum
     // We wrap this in a try-catch or error handler in case image is missing
-    try {
-        panoViewer = pannellum.viewer('panorama-container', {
-            type: 'equirectangular',
-            panorama: imagePath,
-            autoLoad: true,
-            compass: true,
-            showControls: true,
-            theme: 'dark',
-            errorMessage: "Image not found: " + imagePath // Custom error message
-        });
-    } catch (e) {
-        console.error("Pannellum Error:", e);
-    }
+    setTimeout(() => {
+        fetch(imagePath)
+            .then(response => {
+                if (!response.ok) throw new Error("Image not found");
+                return response.blob();
+            })
+            .then(blob => {
+                const objectURL = URL.createObjectURL(blob);
+
+                panoViewer = pannellum.viewer('panorama-container', {
+                    type: 'equirectangular',
+                    panorama: objectURL,
+                    autoLoad: true,
+                    compass: true,
+                    showControls: true,
+                    theme: 'dark'
+                });
+
+                panoViewer.tempObjectURL = objectURL;
+            })
+            .catch(e => {
+                console.error("Pannellum Error:", e);
+                alert("Failed to load panorama.");
+            });
+    }, 100);
 }
 
-// Make this globally available so the HTML button can call it
 window.closePanorama = function() {
     const modal = document.getElementById('pano-modal');
     modal.style.display = 'none';
     
     if (panoViewer) {
+        if (panoViewer.tempObjectURL) {
+            URL.revokeObjectURL(panoViewer.tempObjectURL);
+        }
         panoViewer.destroy();
         panoViewer = null;
+    }
+    const container = document.getElementById('panorama-container');
+    if (container) {
+        container.innerHTML = ''; 
     }
 };
 
