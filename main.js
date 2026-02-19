@@ -1989,32 +1989,19 @@ function openPanorama(nodeData) {
     console.log("Loading 360 Image:", imagePath);
 
     // Initialize Pannellum
-    // We wrap this in a try-catch or error handler in case image is missing
-    setTimeout(() => {
-        fetch(imagePath)
-            .then(response => {
-                if (!response.ok) throw new Error("Image not found");
-                return response.blob();
-            })
-            .then(blob => {
-                const objectURL = URL.createObjectURL(blob);
-
-                panoViewer = pannellum.viewer('panorama-container', {
-                    type: 'equirectangular',
-                    panorama: objectURL,
-                    autoLoad: true,
-                    compass: true,
-                    showControls: true,
-                    theme: 'dark'
-                });
-
-                panoViewer.tempObjectURL = objectURL;
-            })
-            .catch(e => {
-                console.error("Pannellum Error:", e);
-                alert("Failed to load panorama.");
-            });
-    }, 100);
+    try {
+        panoViewer = pannellum.viewer('panorama-container', {
+            type: 'equirectangular',
+            panorama: imagePath,
+            autoLoad: true,
+            compass: true,
+            showControls: true,
+            theme: 'dark',
+            errorMessage: "Image not found: " + imagePath // Custom error message
+        });
+    } catch (e) {
+        console.error("Pannellum Error:", e);
+    }
 }
 
 window.closePanorama = function() {
@@ -2022,9 +2009,6 @@ window.closePanorama = function() {
     modal.style.display = 'none';
     
     if (panoViewer) {
-        if (panoViewer.tempObjectURL) {
-            URL.revokeObjectURL(panoViewer.tempObjectURL);
-        }
         panoViewer.destroy();
         panoViewer = null;
     }
