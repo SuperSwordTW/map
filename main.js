@@ -1,4 +1,77 @@
 // ==========================================
+// 0. Priority Queue Implementation
+// ==========================================
+const parent = i => ((i + 1) >>> 1) - 1;
+const left = i => (i << 1) + 1;
+const right = i => (i + 1) << 1;
+
+class PriorityQueue {
+  #top = 0;
+
+  constructor(comparator = (a, b) => a < b) {
+    this._heap = [];
+    this._comparator = comparator;
+  }
+  size() {
+    return this._heap.length;
+  }
+  isEmpty() {
+    return this.size() == 0;
+  }
+  peek() {
+    return this._heap[this.#top];
+  }
+  push(...values) {
+    values.forEach(value => {
+      this._heap.push(value);
+      this._siftUp();
+    });
+    return this.size();
+  }
+  pop() {
+    const poppedValue = this.peek();
+    const bottom = this.size() - 1;
+    if (bottom > this.#top) {
+      this._swap(this.#top, bottom);
+    }
+    this._heap.pop();
+    this._siftDown();
+    return poppedValue;
+  }
+  replace(value) {
+    const replacedValue = this.peek();
+    this._heap[this.#top] = value;
+    this._siftDown();
+    return replacedValue;
+  }
+  _greater(i, j) {
+    return this._comparator(this._heap[i], this._heap[j]);
+  }
+  _swap(i, j) {
+    [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
+  }
+  _siftUp() {
+    let node = this.size() - 1;
+    while (node > this.#top && this._greater(node, parent(node))) {
+      this._swap(node, parent(node));
+      node = parent(node);
+    }
+  }
+  _siftDown() {
+    let node = this.#top;
+    while (
+      (left(node) < this.size() && this._greater(left(node), node)) ||
+      (right(node) < this.size() && this._greater(right(node), node))
+    ) {
+      let maxChild = (right(node) < this.size() && this._greater(right(node), left(node))) ? right(node) : left(node);
+      this._swap(node, maxChild);
+      node = maxChild;
+    }
+  }
+}
+
+
+// ==========================================
 // 1. CONFIGURATION
 // ==========================================
 
@@ -70,6 +143,8 @@ const FLOOR_NAMES = {
     7: {name: "丁棟1F、乙棟4F"},
     6: {name: "乙棟3F"},
     5: {name: "乙棟2F"},
+    4: {name: "乙棟1F"},
+    3: {name: "甲棟"},
 }
 
 const FLOOR_ZOOMS = {
@@ -216,7 +291,10 @@ function preventDefaultMenu(e) {
             117~119丙棟中心
             120~122丙棟轉彎處
             123~129乙棟樓梯
-            130~145乙棟
+            130~145乙棟(146~150未完成)
+            151~157丁棟電梯
+            158~163丙棟電梯
+            164~170乙棟電梯
         */
         //-------------13樓-------------
         { id: 1, name: "韋格納", coords: [121.585997, 24.987735, 30.0], neighbors: [2], story: 13, building: 4 },
@@ -229,9 +307,11 @@ function preventDefaultMenu(e) {
 
         { id: 89, name: "丁棟轉彎處(7F)", coords: [121.585871, 24.987789, 30.0], neighbors: [1,60], story: 13, building: 4, turn: 1 },
         
-        //樓梯
+        //樓梯、電梯
         { id: 55, name: "丁棟中右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [56], story: 13, building: 4, stair: 1 },
         { id: 60, name: "丁棟中左樓梯(7F)", coords: [121.585783, 24.987650, 30.0], neighbors: [89], story: 13, building: 4, stair: 1 },
+
+        { id: 151, name: "丁棟電梯(7F)", coords: [121.585732, 24.987731, 30.0], neighbors: [75,89,152], story: 13, building: 4, elevator: 1 },
         //-------------12樓-------------
         { id: 6, name: "李清照", coords: [121.585997, 24.987735, 21.0], neighbors: [7], story: 12, building: 4 },
         { id: 7, name: "胡適", coords: [121.586070, 24.987698, 21.0], neighbors: [8], story: 12, building: 4 },
@@ -248,10 +328,13 @@ function preventDefaultMenu(e) {
         { id: 76, name: "自然科辦公室(二)", coords: [121.585695, 24.987695, 21.0], neighbors: [61], story: 12, building: 4 },
 
         { id: 90, name: "丁棟轉彎處(6F)", coords: [121.585871, 24.987789, 21.0], neighbors: [6,61], story: 12, building: 4, turn: 1 },
-        //樓梯
+        //樓梯、電梯
         { id: 56, name: "丁棟中右樓梯(6F)", coords: [121.586225, 24.987475, 21.0], neighbors: [55,57], story: 12, building: 4, stair: 1 },
         { id: 61, name: "丁棟中左樓梯(6F)", coords: [121.585783, 24.987650, 21.0], neighbors: [60,62,67], story: 12, building: 4, stair: 1 },
-        { id: 111, name: "丙棟樓梯(6F)", coords: [121.585400, 24.987152, 21.0], neighbors: [112], story: 12, building: 3, stair: 1 },
+        { id: 111, name: "丙棟樓梯(6F)", coords: [121.585413, 24.987089, 21.0], neighbors: [112], story: 12, building: 3, stair: 1 },
+
+        { id: 152, name: "丁棟電梯(6F)", coords: [121.585732, 24.987731, 21.0], neighbors: [76,90,153], story: 12, building: 4, elevator: 1 },
+        { id: 158, name: "丙棟電梯(6F)", coords: [121.585370, 24.987078, 21.0], neighbors: [159], story: 12, building: 3, elevator: 1 },
         //...
         //-------------11樓-------------
         { id: 13, name: "曹雪芹", coords: [121.585997, 24.987735, 12.0], neighbors: [14,36], story: 11, building: 4 },
@@ -277,10 +360,13 @@ function preventDefaultMenu(e) {
         { id: 91, name: "丁棟轉彎處(5F)", coords: [121.585871, 24.987789, 12.0], neighbors: [13,36,62], story: 11, building: 4, turn: 1 },
 
         { id: 94, name: "圖書館", coords: [121.585556, 24.987457, 12.0], neighbors: [62], story: 11, building: 3 },
-        //樓梯
+        //樓梯、電梯
         { id: 57, name: "丁棟中右樓梯(5F)", coords: [121.586225, 24.987475, 12.0], neighbors: [56,58], story: 11, building: 4, stair: 1 },
         { id: 62, name: "丁棟中左樓梯(5F)", coords: [121.585783, 24.987650, 12.0], neighbors: [61,63], story: 11, building: 4, stair: 1 },
-        { id: 112, name: "丙棟樓梯(5F)", coords: [121.585400, 24.987152, 12.0], neighbors: [113], story: 11, building: 3, stair: 1 },
+        { id: 112, name: "丙棟樓梯(5F)", coords: [121.585413, 24.987089, 12.0], neighbors: [113], story: 11, building: 3, stair: 1 },
+
+        { id: 153, name: "丁棟電梯(5F)", coords: [121.585732, 24.987731, 12.0], neighbors: [91,94,154], story: 11, building: 4, elevator: 1 },
+        { id: 159, name: "丙棟電梯(5F)", coords: [121.585370, 24.987078, 12.0], neighbors: [160], story: 11, building: 3, elevator: 1 },
         //-------------10樓-------------
         { id: 20, name: "李白", coords: [121.585997, 24.987735, 3.0], neighbors: [21,41], story: 10, building: 4 },
         { id: 21, name: "蘇東坡", coords: [121.586070, 24.987698, 3.0], neighbors: [22], story: 10, building: 4 },
@@ -296,7 +382,7 @@ function preventDefaultMenu(e) {
         { id: 40, name: "Chomsky", coords: [121.585746, 24.987986, 3.0], neighbors: [41], story: 10, building: 4 },
         { id: 41, name: "Woolf", coords: [121.585809, 24.987907, 3.0], neighbors: [], story: 10, building: 4 },
 
-        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [], story: 10, building: 4 },
+        { id: 73, name: "學務處", coords: [121.586020, 24.987470, 3.0], neighbors: [63], story: 10, building: 4 },
 
         { id: 80, name: "學生會辦", coords: [121.585459, 24.987808, 3.0], neighbors: [81], story: 10, building: 4 },
         { id: 81, name: "皮亞傑", coords: [121.585513, 24.987784, 3.0], neighbors: [82], story: 10, building: 4 },
@@ -316,11 +402,15 @@ function preventDefaultMenu(e) {
         { id: 130, name: "莫札特", coords: [121.584737, 24.987549, 3.0], neighbors: [131], story: 10, building: 2 },
         { id: 131, name: "藝能科辦公室", coords: [121.584889, 24.987494, 3.0], neighbors: [123], story: 10, building: 2 },
         { id: 132, name: "卓別林", coords: [121.584667, 24.987512, 3.0], neighbors: [123], story: 10, building: 2 },
-        //樓梯
+        //樓梯、電梯
         { id: 58, name: "丁棟中右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
         { id: 63, name: "丁棟中左樓梯(4F)", coords: [121.585783, 24.987650, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
-        { id: 113, name: "丙棟樓梯(4F)", coords: [121.585400, 24.987152, 3.0], neighbors: [114], story: 10, building: 3, stair: 1 },
+        { id: 113, name: "丙棟樓梯(4F)", coords: [121.585413, 24.987089, 3.0], neighbors: [114], story: 10, building: 3, stair: 1 },
         { id: 123, name: "乙棟樓梯(7F)", coords: [121.585025, 24.987388, 3.0], neighbors: [117,124], story: 10, building: 2, stair: 1 },
+
+        { id: 154, name: "丁棟電梯(4F)", coords: [121.585732, 24.987731, 3.0], neighbors: [63,92,155], story: 10, building: 4, elevator: 1 },
+        { id: 160, name: "丙棟電梯(4F)", coords: [121.585370, 24.987078, 3.0], neighbors: [117,161], story: 10, building: 3, elevator: 1 },
+        { id: 164, name: "乙棟電梯(7F)", coords: [121.584913, 24.987409, 3.0], neighbors: [123,165], story: 10, building: 2, elevator: 1 },
         //-------------9樓-------------
         { id: 27, name: "莊子", coords: [121.585997, 24.987735, -6.0], neighbors: [28,46], story: 9, building: 4 },
         { id: 28, name: "孔子", coords: [121.586070, 24.987698, -6.0], neighbors: [29], story: 9, building: 4 },
@@ -357,11 +447,15 @@ function preventDefaultMenu(e) {
         { id: 134, name: "賽尚", coords: [121.584889, 24.987494, -6.0], neighbors: [124], story: 9, building: 2 },
         { id: 135, name: "陸羽軒", coords: [121.584667, 24.987512, -6.0], neighbors: [136], story: 9, building: 2 },
         { id: 136, name: "多功能教室", coords: [121.584811, 24.987445, -6.0], neighbors: [124], story: 9, building: 2 },
-        //樓梯
+        //樓梯、電梯
         { id: 59, name: "丁棟中右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
         { id: 64, name: "丁棟中左樓梯(3F)", coords: [121.585783, 24.987650, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
-        { id: 114, name: "丙棟樓梯(3F)", coords: [121.585400, 24.987152, -6.0], neighbors: [115], story: 9, building: 3, stair: 1 },
+        { id: 114, name: "丙棟樓梯(3F)", coords: [121.585413, 24.987089, -6.0], neighbors: [115], story: 9, building: 3, stair: 1 },
         { id: 124, name: "乙棟樓梯(6F)", coords: [121.585025, 24.987388, -6.0], neighbors: [118,125], story: 9, building: 2, stair: 1 },
+
+        { id: 155, name: "丁棟電梯(3F)", coords: [121.585732, 24.987731, -6.0], neighbors: [64,93,156,118], story: 9, building: 4, elevator: 1 },
+        { id: 161, name: "丙棟電梯(3F)", coords: [121.585370, 24.987078, -6.0], neighbors: [118,162], story: 9, building: 3, elevator: 1 },
+        { id: 165, name: "乙棟電梯(6F)", coords: [121.584913, 24.987409, -6.0], neighbors: [124,166], story: 9, building: 2, elevator: 1 },
         //-------------8樓-------------
         { id: 47, name: "梁啟超", coords: [121.585550, 24.988139, -15.0], neighbors: [48], story: 8, building: 4 },
         { id: 48, name: "司馬遷", coords: [121.585638, 24.988086, -15.0], neighbors: [49], story: 8, building: 4 },
@@ -386,10 +480,14 @@ function preventDefaultMenu(e) {
         { id: 139, name: "查德威克", coords: [121.584889, 24.987494, -15.0], neighbors: [125], story: 8, building: 2 },
         { id: 140, name: "伊尹", coords: [121.584667, 24.987512, -15.0], neighbors: [141], story: 8, building: 2 },
         { id: 141, name: "家長會辦", coords: [121.584811, 24.987445, -15.0], neighbors: [125], story: 8, building: 2 },
-        //樓梯
+        //樓梯、電梯
         { id: 65, name: "丁棟中左樓梯(2F)", coords: [121.585783, 24.987650, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
-        { id: 115, name: "丙棟樓梯(2F)", coords: [121.585400, 24.987152, -15.0], neighbors: [116], story: 8, building: 3, stair: 1 },
+        { id: 115, name: "丙棟樓梯(2F)", coords: [121.585413, 24.987089, -15.0], neighbors: [116], story: 8, building: 3, stair: 1 },
         { id: 125, name: "乙棟樓梯(5F)", coords: [121.585025, 24.987388, -15.0], neighbors: [119,126], story: 8, building: 2, stair: 1 },
+
+        { id: 156, name: "丁棟電梯(2F)", coords: [121.585732, 24.987731, -15.0], neighbors: [85,86,157], story: 8, building: 4, elevator: 1 },
+        { id: 162, name: "丙棟電梯(2F)", coords: [121.585370, 24.987078, -15.0], neighbors: [119,163], story: 8, building: 3, elevator: 1 },
+        { id: 166, name: "乙棟電梯(5F)", coords: [121.584913, 24.987409, -15.0], neighbors: [125,167], story: 8, building: 2, elevator: 1 },
         //-------------7樓-------------
         { id: 52, name: "健康中心", coords: [121.585699, 24.988053, -24.0], neighbors: [53], story: 7, building: 4 },
         { id: 53, name: "貝登堡", coords: [121.585746, 24.987986, -24.0], neighbors: [54], story: 7, building: 4 },
@@ -400,27 +498,37 @@ function preventDefaultMenu(e) {
 
         { id: 142, name: "羅吉斯、佛洛伊德", coords: [121.584667, 24.987512, -24.0], neighbors: [143], story: 7, building: 2 },
         { id: 143, name: "輔導室", coords: [121.584811, 24.987445, -24.0], neighbors: [126], story: 7, building: 2 },
-        //樓梯 
+        //樓梯、電梯
         { id: 66, name: "丁棟中左樓梯(1F)", coords: [121.585783, 24.987650, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
-        { id: 116, name: "停車場", coords: [121.585400, 24.987152, -24.0], neighbors: [], story: 7, building: 3, stair: 1 },
+        { id: 116, name: "丙棟汽車停車場", coords: [121.585413, 24.987089, -24.0], neighbors: [], story: 7, building: 3, stair: 1 },
         { id: 126, name: "乙棟樓梯(4F)", coords: [121.585025, 24.987388, -24.0], neighbors: [127], story: 7, building: 2, stair: 1 },
+
+        { id: 157, name: "丁棟電梯(1F)", coords: [121.585732, 24.987731, -24.0], neighbors: [87,88], story: 7, building: 4, elevator: 1 },
+        { id: 163, name: "丙棟電梯(1F)", coords: [121.585370, 24.987078, -24.0], neighbors: [], story: 7, building: 3, elevator: 1 },
+        { id: 167, name: "乙棟電梯(4F)", coords: [121.584913, 24.987409, -24.0], neighbors: [126,168], story: 7, building: 2, elevator: 1 },
         //-------------6樓-------------
         { id: 144, name: "體育科辦公室", coords: [121.584667, 24.987512, -33.0], neighbors: [127], story: 6, building: 2 },
-        //樓梯
+        //樓梯、電梯
         { id: 127, name: "乙棟樓梯(3F)", coords: [121.585025, 24.987388, -33.0], neighbors: [128], story: 6, building: 2, stair: 1 },
+
+        { id: 168, name: "乙棟電梯(3F)", coords: [121.584913, 24.987409, -33.0], neighbors: [127,169], story: 6, building: 2, elevator: 1 },
         //-------------5樓-------------
         { id: 145, name: "樂活運動站", coords: [121.584811, 24.987445, -42.0], neighbors: [128], story: 5, building: 2 },
-        //樓梯
+        //樓梯、電梯
         { id: 128, name: "乙棟樓梯(2F)", coords: [121.585025, 24.987388, -42.0], neighbors: [129], story: 5, building: 2, stair: 1 },
+
+        { id: 169, name: "乙棟電梯(2F)", coords: [121.584913, 24.987409, -42.0], neighbors: [128,170,145], story: 5, building: 2, elevator: 1 },
         //-------------4樓-------------
-        //樓梯
+        //樓梯、電梯
         { id: 129, name: "乙棟樓梯(1F)", coords: [121.585025, 24.987388, -51.0], neighbors: [], story: 4, building: 2, stair: 1 },
+
+        { id: 170, name: "乙棟電梯(1F)", coords: [121.584913, 24.987409, -51.0], neighbors: [129], story: 4, building: 2, elevator: 1 },
         //-------------3樓-------------
-        //樓梯
+        //樓梯、電梯
         //-------------2樓-------------
-        //樓梯
+        //樓梯、電梯 
         //-------------1樓-------------
-        //樓梯
+        //樓梯、電梯
     ];
     // ==========================================
     // 5.5 AUTOMATIC NODE SCALING
@@ -587,18 +695,6 @@ function preventDefaultMenu(e) {
     }
 
     checkDuplicateIds(NAVIGATION_NODES);
-
-
-    // #path
-    // We will use this path for the animation (based on the nodes above)
-    const NAV_PATH = [
-        // NAVIGATION_NODES[0].coords, // Entrance
-        // NAVIGATION_NODES[1].coords, // Lobby
-        // NAVIGATION_NODES[3].coords, // Hallway
-        // NAVIGATION_NODES[4].coords, // Intersection
-        // NAVIGATION_NODES[5].coords  // Gate 5
-    ];
-
 
 // ==========================================
 // 3. THREE.JS CUSTOM LAYER
@@ -1083,7 +1179,7 @@ function groupNodesByStory(nodePath) {
         // Check if this segment has any "useful" nodes (non-stairs)
         // Note: In your data, normal nodes don't have the 'stair' property, so !n.stair is true.
         // Stair nodes have 'stair: 1', so !n.stair is false.
-        const hasActivity = segment.some(n => !n.stair);
+        const hasActivity = segment.some(n => (!n.stair && !n.elevator)) || segment.length > 1;
 
         return isStart || isEnd || hasActivity;
     });
@@ -1183,6 +1279,8 @@ document.getElementById('start-btn').addEventListener('click', () => {
         alert("Start and Destination cannot be the same.");
         return;
     }
+
+    isElevator = !document.getElementById('elev-toggle').checked;
 
     // 1. Get Path (Now returns Nodes)
     const rawNodes = findPath(startId, endId);
@@ -1573,6 +1671,10 @@ canvas.addEventListener('mouseup', () => {
 // 2.5 PATHFINDING LOGIC (A*)
 // ==========================================
 
+// TODO: Add elevator interface!
+
+let isElevator = 1;
+
 // Helper: Distance between two 3D points
 function getDistance(coordA, coordB) {
     const dx = coordA[0] - coordB[0];
@@ -1589,41 +1691,56 @@ function findPath(startId, endId) {
     const startNode = nodeMap[startId];
     const endNode = nodeMap[endId];
 
-    let openSet = [startNode];
+    const openSet = new PriorityQueue((a,b) => a[1] < b[1]);
+    const closeSet = new Set();
+    // let openSet = [startNode]; // Deprecated(replaced by binary heap)
     let cameFrom = {}; 
     let gScore = {}; 
     let fScore = {}; 
-
+    
     NAVIGATION_NODES.forEach(n => {
         gScore[n.id] = Infinity;
         fScore[n.id] = Infinity;
     });
-
+    
     gScore[startId] = 0;
     fScore[startId] = getDistance(startNode.coords, endNode.coords);
 
-    while (openSet.length > 0) {
-        let current = openSet.reduce((a, b) => fScore[a.id] < fScore[b.id] ? a : b);
+    openSet.push([startNode, fScore[startNode]]);
+
+    while (openSet.size() > 0) {
+        // let current = openSet.reduce((a, b) => fScore[a.id] < fScore[b.id] ? a : b);
+        let current = openSet.pop()[0];
 
         if (current.id === endId) {
             // [CHANGE] Now returns Node Objects, not just coordinates
             return reconstructPath(cameFrom, current.id, nodeMap);
         }
 
-        openSet = openSet.filter(n => n.id !== current.id);
+        closeSet.add(current);
+
+        // openSet = openSet.filter(n => n.id !== current.id);
 
         current.neighbors.forEach(neighborId => {
             const neighbor = nodeMap[neighborId];
-            const tentativeGScore = gScore[current.id] + getDistance(current.coords, neighbor.coords);
+            let movementCost = getDistance(current.coords, neighbor.coords);
+            if ((isElevator && neighbor.stair) ||(!isElevator && neighbor.elevator)){
+                movementCost *= 10;
+            }
+            
+            let tentativeGScore = gScore[current.id] + movementCost;
 
-            if (tentativeGScore < gScore[neighborId]) {
+            if (tentativeGScore < gScore[neighborId] && !closeSet.has(neighbor)) {
                 cameFrom[neighborId] = current.id;
                 gScore[neighborId] = tentativeGScore;
                 fScore[neighborId] = gScore[neighborId] + getDistance(neighbor.coords, endNode.coords);
 
-                if (!openSet.includes(neighbor)) {
-                    openSet.push(neighbor);
+                if (!closeSet.has(neighbor)) {
+                    openSet.push([neighbor, fScore[neighborId]]);
                 }
+                // if (!openSet.includes(neighbor)){
+                //     openSet.push(neighbor);
+                // }
             }
         });
     }

@@ -62,7 +62,7 @@ button:hover {
     max-width: 1000px;
     height: 80%; /* Adjust height as needed */
     background: #000;
-    border: 2px solid #00d2ff;
+    border: 2px solid #a200ff;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
@@ -481,61 +481,127 @@ button.cta:hover {
 
 /* Container for the checkbox and label */
 .checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
-    
-    /* Rounded corners and matching color */
-    background: rgba(255, 255, 255, 0.05); /* Soft glass look */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 2rem; /* Perfectly rounded ends */
-    
-    /* Spacing and layout */
-    margin-bottom: 16px;
-    padding: 8px 15px;
-    transition: background 0.3s ease;
+  --checkbox-size: 25px;
+  --checkbox-color: #ec7eec;
+  --checkbox-shadow: rgba(105, 49, 105, 0.3);
+  --checkbox-border: rgba(144, 58, 165, 0.7);
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  padding: 10px;
+  
 }
 
-.checkbox-wrapper:hover {
-    background: rgba(255, 255, 255, 0.1); /* Subtle highlight on hover */
-}
 
 /* Hide the default checkbox */
-.checkbox-wrapper input[type="checkbox"] {
-    display: none;
+.checkbox-wrapper input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-wrapper .checkmark {
+  position: relative;
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  border: 2px solid var(--checkbox-border);
+  border-radius: 8px;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 15px var(--checkbox-shadow);
+  overflow: hidden;
 }
 
 /* Create the custom checkbox (the circle/box) */
-.checkbox-wrapper label::before {
-    content: "";
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    vertical-align: middle;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%; /* This makes it a circle */
-    margin-right: 10px;
-    transition: all 0.2s ease;
+.checkbox-wrapper .checkmark::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, var(--checkbox-color), #00ffcc);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform: scale(0) rotate(-45deg);
 }
 
-/* Style for when the checkbox is checked */
-.checkbox-wrapper input[type="checkbox"]:checked + label::before {
-    background: #E491C9;
-    border-color: #ffffff00;
-    box-shadow: 0 0 8px #6f4d7b;
+.checkbox-wrapper input:checked ~ .checkmark::before {
+  opacity: 1;
+  transform: scale(1) rotate(0);
 }
 
-/* Label text style */
-.checkbox-wrapper label {
-    font-size: 14px;
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
+.checkbox-wrapper .checkmark svg {
+  width: 0;
+  height: 0;
+  color: #1a1a1a;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
+
+.checkbox-wrapper input:checked ~ .checkmark svg {
+  width: 18px;
+  height: 18px;
+  transform: rotate(360deg);
+}
+
+.checkbox-wrapper input:checked ~ .checkmark svg {
+  width: 18px;
+  height: 18px;
+  transform: rotate(360deg);
+}
+
+.checkbox-wrapper:hover .checkmark {
+  border-color: var(--checkbox-color);
+  transform: scale(1.1);
+  box-shadow:
+    0 0 20px var(--checkbox-shadow),
+    0 0 40px var(--checkbox-shadow),
+    inset 0 0 10px var(--checkbox-shadow);
+}
+
+.checkbox-wrapper input:checked ~ .checkmark {
+  animation: pulse 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px var(--checkbox-shadow);
+  }
+  50% {
+    transform: scale(0.9);
+    box-shadow:
+      0 0 30px var(--checkbox-shadow),
+      0 0 50px var(--checkbox-shadow);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px var(--checkbox-shadow);
+  }
+}
+
+.checkbox-wrapper .label {
+  margin-left: 15px;
+  font-family: "Segoe UI", sans-serif;
+  font-weight: bold;
+  color: var(--checkbox-color);
+  font-size: 18px;
+  text-shadow: 0 0 10px var(--checkbox-shadow);
+  opacity: 0.9;
+  transition: all 0.3s;
+}
+
+.checkbox-wrapper:hover .label {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
 
 /* AR Overlays */
 .ar-vignette {
@@ -624,4 +690,99 @@ button.cta:hover {
 
 #close-camera:hover {
     background: red;
+}
+
+.camera-status-container {
+  /* Position and Centering */
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  /* Layout */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  
+  /* Aesthetics */
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari support */
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  
+  /* Typography */
+  color: white;
+  font-family: monospace;
+  font-weight: 500;
+  text-shadow: 1px 1px 2px black;
+  white-space: nowrap; /* Prevents text wrapping */
+}
+
+.toggle-container {
+  position: relative;
+  display: flex;
+  margin: 0 auto;
+  width: fit-content;
+  align-items: center;
+  cursor: pointer;
+  scale: 0.75;
+}
+
+/* Hide the native checkbox */
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The background track */
+.toggle-track {
+  width: 96px; /* w-24 */
+  height: 48px; /* h-12 */
+  background-color: #b785f1; /* bg-rose-400 */
+  border-radius: 9999px;
+  position: relative;
+  transition: duration 300ms;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* The sliding circle (The "After" element) */
+.toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 40px;
+  height: 40px;
+  background-color: #f9fafb; /* gray-50 */
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  z-index: 10;
+}
+
+/* Icons styling */
+.icon {
+  position: absolute;
+  top: 6px;    /* Centered vertically */
+  width: 36px;  /* Slightly smaller to fit the elevator detail */
+  height: 36px;
+  fill: #111827; 
+  pointer-events: none; /* Prevents icons from blocking clicks */
+  scale: 0.8;
+}
+
+.icon-locked { left: 6px; }
+.icon-unlocked { left: 54px; }
+
+.toggle-input:checked + .toggle-track::after {
+  transform: translateX(48px); /* Moves the circle to the right */
+}
+
+/* Hover Effect */
+.toggle-container:hover .toggle-track::after {
+  scale: 0.95;
 }
