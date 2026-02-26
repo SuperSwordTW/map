@@ -2311,9 +2311,13 @@ async function sendFrameLoop() {
 
         try {
             console.log("Attempting fetch..."); // <--- DOES THIS PRINT?
-            
-            const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/process', { // Check this URL!
+        
+
+            const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/process', {
                 method: 'POST',
+                headers: {
+                    "ngrok-skip-browser-warning": "69420" // <--- INSERT THIS LINE
+                },
                 body: formData
             });
             
