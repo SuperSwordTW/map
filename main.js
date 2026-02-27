@@ -127,9 +127,9 @@ const FLOOR_MODELS = {
     7:  { name: "丁棟1F+乙棟4F", url: './floors/7F.glb' },
     6:  { name: "乙棟3F", url: './floors/6F.glb' },
     5:  { name: "乙棟2F", url: './floors/5F.glb' },
-    
-    3: { name: "體育館", url: './floors/3F.glb' },
-    2: { name: "游泳池", url: './floors/2F.glb' },
+    4:  { name: "乙棟1F", url: './floors/4F.glb' },
+    3:  { name: "體育館", url: './floors/4F.glb' },
+    2:  { name: "游泳池", url: './floors/2F.glb' },
     // Add other floors here...
 };
 
@@ -1187,6 +1187,7 @@ function groupNodesByStory(nodePath) {
     const optimizedSegments = rawSegments.filter((segment, index) => {
         const isStart = (index === 0);
         const isEnd = (index === rawSegments.length - 1);
+        if (isEnd) console.log("Evaluating END segment:", segment.map(n => n.name));
         
         // Check if this segment has any "useful" nodes (non-stairs)
         // Note: In your data, normal nodes don't have the 'stair' property, so !n.stair is true.
@@ -1245,7 +1246,7 @@ function loadNextPathSegment() {
     // Select the appropriate array
     const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
 
-    const directedBearing = calculateBearing(coords[0][0], coords[0][1], coords[1][0], coords[1][1]);
+    const directedBearing = coords.length > 1 ? calculateBearing(coords[0][0], coords[0][1], coords[1][0], coords[1][1]) : 0;
 
     map.flyTo({
         center: [startCoord[0], startCoord[1]],
