@@ -786,3 +786,96 @@ button.cta:hover {
 .toggle-container:hover .toggle-track::after {
   scale: 0.95;
 }
+
+#zoom-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+
+    height: 3rem; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 3px 15px;
+    border-radius: 10px;
+
+    background: linear-gradient(
+      to bottom right,
+      #b22eff 0%,
+      rgba(255, 46, 245, 0.205) 100%
+    );
+    background-color: rgba(46, 142, 255, 0.2);
+    color: #ca6dd6;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+#zoom-value {
+    font-weight: bold;
+    color: #ffffff;
+}
+
+
+#flag-button-container {
+    position: fixed;
+    top: 80px; 
+    right: 20px;
+    z-index: 1000;
+    background: linear-gradient(
+      to bottom right,
+      rgba(46, 143, 255, 0.76) 0%,
+      rgba(46, 143, 255, 0.021) 100%
+    );
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flag-button-container-btn {
+  --color: #a5a5b0;
+  --size: 30px;
+  background: none !important;
+  border: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  font-size: var(--size);
+  fill: var(--color);
+  width: var(--size);
+  height: var(--size);
+  transition: transform 0.1s;
+}
+
+.flag-button-container-btn:active {
+  transform: scale(0.9);
+}
+
+.flag-icon {
+  animation: none;
+}
+
+@keyframes keyframes-fill {
+  0% {
+    transform: rotate(0deg) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(-10deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}

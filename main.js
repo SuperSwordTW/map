@@ -176,6 +176,8 @@ const FLOOR_ZOOMS_MOBILE = {
 const isMobile = window.innerWidth < 768;
 
 const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[100] : FLOOR_ZOOMS[100];
+let maxZoomLevel = 20.0;
+let minZoomLevel = isMobile ? 12.86 : 13.65;
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -201,8 +203,8 @@ const map = new maplibregl.Map({
     zoom: zoomLevel,
     pitch: 67.76,
     maxPitch: 85,
-    maxZoom: 20,
-    minZoom: 13.65,
+    maxZoom: maxZoomLevel,
+    minZoom: minZoomLevel,
     bearing: -20.71,
     antialias: true,
     doubleClickZoom: false,
@@ -798,10 +800,17 @@ const customLayer = {
             // --- SPHERE SCALING ---
             // Multiply radius (1.2) by 's'
             const geometry = new THREE.SphereGeometry(1.2 * s, 32, 32);
+
             const material = new THREE.MeshBasicMaterial({
-                 color: 0xff9900,
-                 toneMapped: false
+                color: 0xff9900,
+                toneMapped: false
             });
+            
+            if (node.stair || node.elevator) {
+                material.color.set(0xcc62fc);
+            }
+
+
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(x, y, z);
             
@@ -980,6 +989,9 @@ map.on('load', () => {
         }
 
     }
+    // Load the zoom level display
+    const zoomPercent = 100 - ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
+    document.getElementById('zoom-value').innerText = `${zoomPercent}%`;
 
     console.log("Map Layers Initialized");
 });
@@ -1233,10 +1245,12 @@ function loadNextPathSegment() {
     // Select the appropriate array
     const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
 
+    const directedBearing = calculateBearing(coords[0][0], coords[0][1], coords[1][0], coords[1][1]);
+
     map.flyTo({
         center: [startCoord[0], startCoord[1]],
         zoom: zoomLevel,
-        bearing: map.getBearing(),
+        bearing: directedBearing,
         pitch: 0
     });
 
@@ -1252,8 +1266,8 @@ function loadNextPathSegment() {
             const smoothPath = getSmoothPath(coords);
             animateCamera(smoothPath, 4000, targetStory); // 4 seconds per floor
         }
-
-        map.setMinZoom(14.81);
+        minZoomLevel = isMobile ? 14.16 : 14.81;
+        map.setMinZoom(minZoomLevel);
     });
 
 
@@ -1671,7 +1685,7 @@ canvas.addEventListener('mouseup', () => {
 // 2.5 PATHFINDING LOGIC (A*)
 // ==========================================
 
-// TODO: Add elevator interface!
+// TODO: Add elevator interface(到幾樓)!
 
 let isElevator = 1;
 
@@ -2352,3 +2366,42 @@ async function sendFrameLoop() {
         if (isStreaming) setTimeout(sendFrameLoop, 5000);
     }, 'image/jpeg', 0.7);
 }
+
+
+// ==========================================
+// Zoom Percentage Display Logic
+// ==========================================
+
+map.on('zoom', () => {
+    const zoomPercent = 100 - ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
+    document.getElementById('zoom-value').innerText = `${zoomPercent}%`;
+});
+
+// ==========================================
+// Return to origin
+// ==========================================
+
+const flagBtn = document.getElementById('flag-action-btn');
+
+flagBtn.addEventListener('click', function() {
+
+    const segmentNodes = globalPathSegments[currentSegmentIndex];
+
+    const targetStory = segmentNodes[0].story;
+
+    const coords = segmentNodes.map(n => n.coords);
+
+    const startCoord = coords[0];
+    
+    const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
+
+    const directedBearing = calculateBearing(coords[0][0], coords[0][1], coords[1][0], coords[1][1]);
+
+    map.flyTo({
+        center: [startCoord[0], startCoord[1]],
+        zoom: zoomLevel,
+        bearing: directedBearing,
+        pitch: 0
+    });
+    
+});
