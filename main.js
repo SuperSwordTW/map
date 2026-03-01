@@ -118,7 +118,7 @@ nextBtn.addEventListener('click', () => {
 });
 
 const FLOOR_MODELS = {
-    13: { name: "丁棟7F", url: './floors/13F.glb' },
+    13: { name: "丁棟7F", url: './floors/13F1.glb' },
     12: { name: "丁棟6F+圖書館2F", url: './floors/12F.glb' },
     11: { name: "丁棟5F+圖書館1F", url: './floors/11F.glb' },
     10: { name: "丁棟4F+乙棟7F", url: './floors/10F.glb' },
@@ -147,6 +147,7 @@ const FLOOR_NAMES = {
     3: {name: "甲棟"},
 }
 
+// TODO: 6, 5, 4, 3, 2, 1F 的放大倍率還沒調整，因為我還沒拍到照片，先暫時放一樣的倍率。等拍到照片後再微調。
 const FLOOR_ZOOMS = {
     100: 14.46, //Full view
     13:15.41,
@@ -156,6 +157,12 @@ const FLOOR_ZOOMS = {
     9:15.56,
     8:15.54,
     7:15.85,
+    6:15.85,
+    5:15.85,
+    4:15.85,
+    3:15.85,
+    2:15.85,
+    1:15.85,
 };
 
 const FLOOR_ZOOMS_MOBILE = {
@@ -167,6 +174,12 @@ const FLOOR_ZOOMS_MOBILE = {
     9:  15.05,
     8:  15.17,
     7:  15.15,
+    6:  15.15,
+    5:  15.15,
+    4:  15.15,
+    3:  15.15,
+    2:  15.15,
+    1:  15.15,
 };
 
 // ==========================================
@@ -208,15 +221,44 @@ const map = new maplibregl.Map({
     bearing: -20.71,
     antialias: true,
     doubleClickZoom: false,
-    dragRotate: false
+    dragRotate: false,
+    dragPan: false,
 });
+
+map.getCanvasContainer().addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+}, false);
+
+const PAN_SENSITIVITY = 0.4; // 1.0 is normal, 0.4 is 40% speed. Adjust this!
+let isDragging = false;
+let prevPos = { x: 0, y: 0 };
 
 const ROTATION_SENSITIVITY = 0.2; // 0.2 = 20% of original speed. Adjust this!
 let isRightDragging = false;
 let prevMousePos = { x: 0, y: 0 };
 
+function getPoint(e) {
+    if (e.originalEvent.touches && e.originalEvent.touches.length > 0) {
+        return { x: e.originalEvent.touches[0].clientX, y: e.originalEvent.touches[0].clientY };
+    }
+    return { x: e.point.x, y: e.point.y };
+}
+
+map.on('touchstart', (e) => {
+    // Disable default touch handling so it doesn't fight our script
+    if (e.originalEvent.touches.length === 1) {
+        isDragging = true;
+        const point = getPoint(e);
+        prevPos = { x: point.x, y: point.y };
+    }
+});
+
 // 1. Listen for Right Mouse Down
 map.on('mousedown', (e) => {
+    if (e.originalEvent.button === 0 && !e.originalEvent.ctrlKey) {
+        isDragging = true;
+        prevPos = { x: e.point.x, y: e.point.y };
+    }
     // Button 2 is Right Click. logical OR handles Ctrl+LeftClick (Mac style)
     if (e.originalEvent.button === 2 || (e.originalEvent.ctrlKey && e.originalEvent.button === 0)) {
         isRightDragging = true;
@@ -230,42 +272,59 @@ map.on('mousedown', (e) => {
     }
 });
 
-// 2. Calculate Rotation on Move
-map.on('mousemove', (e) => {
-    if (!isRightDragging) return;
+const handleMove = (e) => {
+    // Handle Rotation (Right Click)
+    if (isRightDragging) {
+        const dx = e.point.x - prevMousePos.x;
+        const dy = e.point.y - prevMousePos.y;
 
-    // Calculate how far mouse moved
-    const dx = e.point.x - prevMousePos.x;
-    const dy = e.point.y - prevMousePos.y;
+        map.jumpTo({
+            bearing: map.getBearing() + (dx * ROTATION_SENSITIVITY),
+            pitch: map.getPitch() - (dy * ROTATION_SENSITIVITY),
+            animate: false
+        });
+        prevMousePos = { x: e.point.x, y: e.point.y };
+        return; // Exit so we don't pan while rotating
+    }
 
-    // Apply Sensitivity Factor
-    // Note: MapLibre native uses Bearing (Rotation) for X, Pitch for Y
-    const newBearing = map.getBearing() + (dx * ROTATION_SENSITIVITY);
-    const newPitch = map.getPitch() - (dy * ROTATION_SENSITIVITY);
+    // Handle Slow Panning (Left Click / Single Touch)
+    if (isDragging) {
+        const point = getPoint(e);
+        const dx = (point.x - prevPos.x) * PAN_SENSITIVITY;
+        const dy = (point.y - prevPos.y) * PAN_SENSITIVITY;
 
-    // Apply new values (without animation for instant feel)
-    map.jumpTo({
-        bearing: newBearing,
-        pitch: newPitch,
-        center: map.getCenter(), // Keeps rotation centered on map center
-        zoom: map.getZoom(),
-        animate: false
-    });
+        const currentPoint = map.project(map.getCenter());
+        const newCenter = map.unproject([
+            currentPoint.x - dx, 
+            currentPoint.y - dy
+        ]);
 
-    prevMousePos = { x: e.point.x, y: e.point.y };
-});
+        map.jumpTo({
+            center: newCenter,
+            animate: false
+        });
 
-// 3. Clean up on Release
-map.on('mouseup', stopDrag);
-map.on('mouseout', stopDrag); // Stop if mouse leaves map area
+        prevPos = { x: point.x, y: point.y };
+    }
+};
 
+// 2. Event Listeners
+map.on('mousemove', handleMove);
+map.on('touchmove', handleMove);
+
+// 3. Consolidated Stop Dragging
 function stopDrag() {
+    isDragging = false;
     if (isRightDragging) {
         isRightDragging = false;
         map.getCanvas().style.cursor = '';
         map.getCanvas().removeEventListener('contextmenu', preventDefaultMenu);
     }
 }
+
+map.on('mouseup', stopDrag);
+map.on('touchend', stopDrag);
+map.on('mouseout', stopDrag);
 
 function preventDefaultMenu(e) {
     e.preventDefault();
@@ -279,7 +338,7 @@ function preventDefaultMenu(e) {
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-        //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+            //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
         /*id 1~33丁棟右上棟
             34~54丁棟左上棟
             55~59丁棟右樓梯
@@ -293,7 +352,7 @@ function preventDefaultMenu(e) {
             117~119丙棟中心
             120~122丙棟轉彎處
             123~129乙棟樓梯
-            130~145乙棟(146~150未完成)
+            130~150乙棟
             151~157丁棟電梯
             158~163丙棟電梯
             164~170乙棟電梯
@@ -313,7 +372,7 @@ function preventDefaultMenu(e) {
         { id: 55, name: "丁棟中右樓梯(7F)", coords: [121.586225, 24.987475, 30.0], neighbors: [56], story: 13, building: 4, stair: 1 },
         { id: 60, name: "丁棟中左樓梯(7F)", coords: [121.585783, 24.987650, 30.0], neighbors: [89], story: 13, building: 4, stair: 1 },
 
-        { id: 151, name: "丁棟電梯(7F)", coords: [121.585732, 24.987731, 30.0], neighbors: [75,89,152], story: 13, building: 4, elevator: 1 },
+        { id: 151, name: "丁棟電梯(7F)", coords: [121.585732, 24.987731, 30.0], neighbors: [60,75,89,152], story: 13, building: 4, elevator: 1 },
         //-------------12樓-------------
         { id: 6, name: "李清照", coords: [121.585997, 24.987735, 21.0], neighbors: [7], story: 12, building: 4 },
         { id: 7, name: "胡適", coords: [121.586070, 24.987698, 21.0], neighbors: [8], story: 12, building: 4 },
@@ -324,7 +383,7 @@ function preventDefaultMenu(e) {
         { id: 12, name: "拉瓦節(化學實驗室)", coords: [121.586209, 24.987327, 21.0], neighbors: [], story: 12, building: 4 },
 
         { id: 67, name: "亞當斯密", coords: [121.585933, 24.987558, 21.0], neighbors: [68], story: 12, building: 4 },
-        { id: 68, name: "蘇格拉底", coords: [121.586020, 24.987470, 21.0], neighbors: [69], story: 12, building: 4 },
+        { id: 68, name: "蘇格拉底", coords: [121.586020, 24.987470, 21.0], neighbors: [9,69], story: 12, building: 4 },
         { id: 69, name: "霍金", coords: [121.586018, 24.987332, 21.0], neighbors: [], story: 12, building: 4 },
 
         { id: 76, name: "自然科辦公室(二)", coords: [121.585695, 24.987695, 21.0], neighbors: [61], story: 12, building: 4 },
@@ -335,7 +394,7 @@ function preventDefaultMenu(e) {
         { id: 61, name: "丁棟中左樓梯(6F)", coords: [121.585783, 24.987650, 21.0], neighbors: [60,62,67], story: 12, building: 4, stair: 1 },
         { id: 111, name: "丙棟樓梯(6F)", coords: [121.585413, 24.987089, 21.0], neighbors: [112], story: 12, building: 3, stair: 1 },
 
-        { id: 152, name: "丁棟電梯(6F)", coords: [121.585732, 24.987731, 21.0], neighbors: [76,90,153], story: 12, building: 4, elevator: 1 },
+        { id: 152, name: "丁棟電梯(6F)", coords: [121.585732, 24.987731, 21.0], neighbors: [61,76,90,153], story: 12, building: 4, elevator: 1 },
         { id: 158, name: "丙棟電梯(6F)", coords: [121.585370, 24.987078, 21.0], neighbors: [159], story: 12, building: 3, elevator: 1 },
         //...
         //-------------11樓-------------
@@ -352,7 +411,7 @@ function preventDefaultMenu(e) {
         { id: 36, name: "Yeats", coords: [121.585809, 24.987907, 12.0], neighbors: [], story: 11, building: 4 },
 
         { id: 70, name: "湯姆林森", coords: [121.585933, 24.987558, 12.0], neighbors: [62,71], story: 11, building: 4 },
-        { id: 71, name: "亞里斯多德", coords: [121.586020, 24.987470, 12.0], neighbors: [72], story: 11, building: 4 },
+        { id: 71, name: "亞里斯多德", coords: [121.586020, 24.987470, 12.0], neighbors: [16,72], story: 11, building: 4 },
         { id: 72, name: "諾貝爾", coords: [121.586018, 24.987332, 12.0], neighbors: [], story: 11, building: 4 },
 
         { id: 77, name: "聯合社辦", coords: [121.585459, 24.987808, 12.0], neighbors: [78], story: 11, building: 4 },
@@ -367,7 +426,7 @@ function preventDefaultMenu(e) {
         { id: 62, name: "丁棟中左樓梯(5F)", coords: [121.585783, 24.987650, 12.0], neighbors: [61,63], story: 11, building: 4, stair: 1 },
         { id: 112, name: "丙棟樓梯(5F)", coords: [121.585413, 24.987089, 12.0], neighbors: [113], story: 11, building: 3, stair: 1 },
 
-        { id: 153, name: "丁棟電梯(5F)", coords: [121.585732, 24.987731, 12.0], neighbors: [91,94,154], story: 11, building: 4, elevator: 1 },
+        { id: 153, name: "丁棟電梯(5F)", coords: [121.585732, 24.987731, 12.0], neighbors: [62,91,94,154], story: 11, building: 4, elevator: 1 },
         { id: 159, name: "丙棟電梯(5F)", coords: [121.585370, 24.987078, 12.0], neighbors: [160], story: 11, building: 3, elevator: 1 },
         //-------------10樓-------------
         { id: 20, name: "李白", coords: [121.585997, 24.987735, 3.0], neighbors: [21,41], story: 10, building: 4 },
@@ -402,8 +461,8 @@ function preventDefaultMenu(e) {
         { id: 120, name: "丙棟轉彎處(4F)", coords: [121.585564, 24.987538, 3.0], neighbors: [63,98,117], story: 10, building: 3, turn: 1 },
 
         { id: 130, name: "莫札特", coords: [121.584737, 24.987549, 3.0], neighbors: [131], story: 10, building: 2 },
-        { id: 131, name: "藝能科辦公室", coords: [121.584889, 24.987494, 3.0], neighbors: [123], story: 10, building: 2 },
-        { id: 132, name: "卓別林", coords: [121.584667, 24.987512, 3.0], neighbors: [123], story: 10, building: 2 },
+        { id: 131, name: "藝能科辦公室", coords: [121.584889, 24.987494, 3.0], neighbors: [164], story: 10, building: 2 },
+        { id: 132, name: "卓別林", coords: [121.584667, 24.987512, 3.0], neighbors: [164], story: 10, building: 2 },
         //樓梯、電梯
         { id: 58, name: "丁棟中右樓梯(4F)", coords: [121.586225, 24.987475, 3.0], neighbors: [57,59], story: 10, building: 4, stair: 1 },
         { id: 63, name: "丁棟中左樓梯(4F)", coords: [121.585783, 24.987650, 3.0], neighbors: [62,64], story: 10, building: 4, stair: 1 },
@@ -446,9 +505,9 @@ function preventDefaultMenu(e) {
         { id: 121, name: "丙棟轉彎處(3F)", coords: [121.585564, 24.987538, -6.0], neighbors: [64,118], story: 9, building: 3, turn: 1 },
 
         { id: 133, name: "張大千", coords: [121.584737, 24.987549, -6.0], neighbors: [134], story: 9, building: 2 },
-        { id: 134, name: "賽尚", coords: [121.584889, 24.987494, -6.0], neighbors: [124], story: 9, building: 2 },
+        { id: 134, name: "賽尚", coords: [121.584889, 24.987494, -6.0], neighbors: [165], story: 9, building: 2 },
         { id: 135, name: "陸羽軒", coords: [121.584667, 24.987512, -6.0], neighbors: [136], story: 9, building: 2 },
-        { id: 136, name: "多功能教室", coords: [121.584811, 24.987445, -6.0], neighbors: [124], story: 9, building: 2 },
+        { id: 136, name: "多功能教室", coords: [121.584811, 24.987445, -6.0], neighbors: [165], story: 9, building: 2 },
         //樓梯、電梯
         { id: 59, name: "丁棟中右樓梯(3F)", coords: [121.586225, 24.987475, -6.0], neighbors: [58], story: 9, building: 4, stair: 1 },
         { id: 64, name: "丁棟中左樓梯(3F)", coords: [121.585783, 24.987650, -6.0], neighbors: [63,65], story: 9, building: 4, stair: 1 },
@@ -479,15 +538,15 @@ function preventDefaultMenu(e) {
 
         { id: 137, name: "禮儀教室", coords: [121.584677, 24.987564, -15.0], neighbors: [138], story: 8, building: 2 },
         { id: 138, name: "畢昇", coords: [121.584737, 24.987549, -15.0], neighbors: [139], story: 8, building: 2 },
-        { id: 139, name: "查德威克", coords: [121.584889, 24.987494, -15.0], neighbors: [125], story: 8, building: 2 },
+        { id: 139, name: "查德威克", coords: [121.584889, 24.987494, -15.0], neighbors: [166], story: 8, building: 2 },
         { id: 140, name: "伊尹", coords: [121.584667, 24.987512, -15.0], neighbors: [141], story: 8, building: 2 },
-        { id: 141, name: "家長會辦", coords: [121.584811, 24.987445, -15.0], neighbors: [125], story: 8, building: 2 },
+        { id: 141, name: "家長會辦", coords: [121.584811, 24.987445, -15.0], neighbors: [166], story: 8, building: 2 },
         //樓梯、電梯
         { id: 65, name: "丁棟中左樓梯(2F)", coords: [121.585783, 24.987650, -15.0], neighbors: [64,66], story: 8, building: 4, stair: 1 },
         { id: 115, name: "丙棟樓梯(2F)", coords: [121.585413, 24.987089, -15.0], neighbors: [116], story: 8, building: 3, stair: 1 },
         { id: 125, name: "乙棟樓梯(5F)", coords: [121.585025, 24.987388, -15.0], neighbors: [119,126], story: 8, building: 2, stair: 1 },
 
-        { id: 156, name: "丁棟電梯(2F)", coords: [121.585732, 24.987731, -15.0], neighbors: [85,86,157], story: 8, building: 4, elevator: 1 },
+        { id: 156, name: "丁棟電梯(2F)", coords: [121.585732, 24.987731, -15.0], neighbors: [65,85,86,157], story: 8, building: 4, elevator: 1 },
         { id: 162, name: "丙棟電梯(2F)", coords: [121.585370, 24.987078, -15.0], neighbors: [119,163], story: 8, building: 3, elevator: 1 },
         { id: 166, name: "乙棟電梯(5F)", coords: [121.584913, 24.987409, -15.0], neighbors: [125,167], story: 8, building: 2, elevator: 1 },
         //-------------7樓-------------
@@ -499,28 +558,33 @@ function preventDefaultMenu(e) {
         { id: 88, name: "教學研究室", coords: [121.585886, 24.987710, -24.0], neighbors: [66], story: 7, building: 4 },
 
         { id: 142, name: "羅吉斯、佛洛伊德", coords: [121.584667, 24.987512, -24.0], neighbors: [143], story: 7, building: 2 },
-        { id: 143, name: "輔導室", coords: [121.584811, 24.987445, -24.0], neighbors: [126], story: 7, building: 2 },
+        { id: 143, name: "輔導室", coords: [121.584811, 24.987445, -24.0], neighbors: [167], story: 7, building: 2 },
+        { id: 146, name: "演藝廳", coords: [121.584636, 24.987690, -24.0], neighbors: [142], story: 7, building: 1 },
         //樓梯、電梯
         { id: 66, name: "丁棟中左樓梯(1F)", coords: [121.585783, 24.987650, -24.0], neighbors: [65], story: 7, building: 4, stair: 1 },
         { id: 116, name: "丙棟汽車停車場", coords: [121.585413, 24.987089, -24.0], neighbors: [], story: 7, building: 3, stair: 1 },
         { id: 126, name: "乙棟樓梯(4F)", coords: [121.585025, 24.987388, -24.0], neighbors: [127], story: 7, building: 2, stair: 1 },
 
-        { id: 157, name: "丁棟電梯(1F)", coords: [121.585732, 24.987731, -24.0], neighbors: [87,88], story: 7, building: 4, elevator: 1 },
+        { id: 157, name: "丁棟電梯(1F)", coords: [121.585732, 24.987731, -24.0], neighbors: [66,87,88], story: 7, building: 4, elevator: 1 },
         { id: 163, name: "丙棟電梯(1F)", coords: [121.585370, 24.987078, -24.0], neighbors: [], story: 7, building: 3, elevator: 1 },
         { id: 167, name: "乙棟電梯(4F)", coords: [121.584913, 24.987409, -24.0], neighbors: [126,168], story: 7, building: 2, elevator: 1 },
         //-------------6樓-------------
-        { id: 144, name: "體育科辦公室", coords: [121.584667, 24.987512, -33.0], neighbors: [127], story: 6, building: 2 },
+        { id: 144, name: "體育科辦公室", coords: [121.584667, 24.987512, -33.0], neighbors: [168], story: 6, building: 2 },
+        { id: 147, name: "室內跑道", coords: [121.584294, 24.987892, -33.0], neighbors: [144], story: 6, building: 1 },
         //樓梯、電梯
         { id: 127, name: "乙棟樓梯(3F)", coords: [121.585025, 24.987388, -33.0], neighbors: [128], story: 6, building: 2, stair: 1 },
 
         { id: 168, name: "乙棟電梯(3F)", coords: [121.584913, 24.987409, -33.0], neighbors: [127,169], story: 6, building: 2, elevator: 1 },
         //-------------5樓-------------
-        { id: 145, name: "樂活運動站", coords: [121.584811, 24.987445, -42.0], neighbors: [128], story: 5, building: 2 },
+        { id: 145, name: "樂活運動站", coords: [121.584811, 24.987445, -42.0], neighbors: [169], story: 5, building: 2 },
         //樓梯、電梯
         { id: 128, name: "乙棟樓梯(2F)", coords: [121.585025, 24.987388, -42.0], neighbors: [129], story: 5, building: 2, stair: 1 },
 
         { id: 169, name: "乙棟電梯(2F)", coords: [121.584913, 24.987409, -42.0], neighbors: [128,170,145], story: 5, building: 2, elevator: 1 },
         //-------------4樓-------------
+        { id: 148, name: "聯合社辦", coords: [121.584594, 24.987990, -51.0], neighbors: [149], story: 4, building: 2 },
+        { id: 149, name: "綜合技擊室", coords: [121.584638, 24.987602, -51.0], neighbors: [150], story: 4, building: 2 },
+        { id: 150, name: "韻律教室", coords: [121.584619, 24.987551, -51.0], neighbors: [170], story: 4, building: 2 },
         //樓梯、電梯
         { id: 129, name: "乙棟樓梯(1F)", coords: [121.585025, 24.987388, -51.0], neighbors: [], story: 4, building: 2, stair: 1 },
 
@@ -809,7 +873,8 @@ const customLayer = {
             if (node.stair || node.elevator) {
                 material.color.set(0xcc62fc);
             }
-
+            
+            // TODO: Use node model to highlight the fact that it can be clicked.
 
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(x, y, z);
@@ -1000,42 +1065,47 @@ map.on('load', () => {
 // 4. CINEMATIC CAMERA LOGIC & PATH UPDATE
 // ==========================================
 
+// TODO; When clicking "下樓" or "上樓", we should ideally jump to the next segment immediately instead of waiting for the current animation to finish. This requires a bit of state management to interrupt the current animation and start the next one.
+
 // NEW: Helper to smooth jagged paths into curves
 function getSmoothPath(geoCoords) {
     if (geoCoords.length < 2) return geoCoords;
 
-    // 1. Convert Lng/Lat/Alt to Mercator-based meters for accurate 3D curve math
-    // This handles the scale difference between degrees and meters automatically.
+    // 1. Convert to Vector3 using raw Mercator units (0 to 1 range)
+    // We don't need the 1,000,000 multiplier here; CatmullRom works fine with decimals.
     const vectorPoints = geoCoords.map(p => {
         const merc = maplibregl.MercatorCoordinate.fromLngLat([p[0], p[1]], p[2]);
-        // We use relative units; multiplying by 1,000,000 prevents precision loss 
-        // while keeping X, Y, and Z in the same spatial magnitude.
-        return new THREE.Vector3(merc.x * 1000000, merc.y * 1000000, merc.z * 1000000);
+        return new THREE.Vector3(merc.x, merc.y, merc.z);
     });
 
     // 2. Create the Curve
     const curve = new THREE.CatmullRomCurve3(vectorPoints);
-    
-    // 'centripetal' is superior to 'catmullrom' for navigation. 
-    // It prevents the path from "looping" or over-swinging at sharp floor turns.
     curve.curveType = 'centripetal'; 
     
     // 3. Resample
-    // 20-30 points per segment is usually plenty for a "silky" feel without 
-    // bloating the geometry buffer.
     const totalPoints = (geoCoords.length - 1) * 30;
     const smoothedVectors = curve.getPoints(totalPoints);
 
     // 4. Convert back to [Lng, Lat, Alt]
     return smoothedVectors.map(v => {
-        // Reverse the Mercator projection
-        const merc = new maplibregl.MercatorCoordinate(v.x / 1000000, v.y / 1000000, v.z / 1000000);
-        const lngLat = merc.toLngLat();
-        const metersPerUnit = merc.meterInMercatorCoordinateUnits();
-        const alt = merc.z / metersPerUnit;
+        // Create a temporary Mercator object from the smoothed vectors
+        const tempMerc = new maplibregl.MercatorCoordinate(v.x, v.y, v.z);
+        
+        // Convert back to LngLat
+        const lngLat = tempMerc.toLngLat();
+        
+        // Safety check: if projection fails, return original if possible
+        if (isNaN(lngLat.lng) || isNaN(lngLat.lat)) {
+            console.warn("Smoothing produced NaN coordinates, skipping point.");
+            return null; 
+        }
+
+        // Correctly calculate altitude from Mercator Z
+        const metersPerUnit = tempMerc.meterInMercatorCoordinateUnits();
+        const alt = v.z / metersPerUnit;
 
         return [lngLat.lng, lngLat.lat, alt];
-    });
+    }).filter(p => p !== null); // Clean up any failed projections
 }
 
 function getFlowTexture() {
@@ -1265,7 +1335,39 @@ function loadNextPathSegment() {
         if (isCinematicEnabled) {
             // Optional: Smooth and Animate
             const smoothPath = getSmoothPath(coords);
-            animateCamera(smoothPath, 4000, targetStory); // 4 seconds per floor
+            const MS_PER_METER = 10; 
+            let totalDistance = 0;
+
+            for (let i = 0; i < smoothPath.length - 1; i++) {
+                const p1 = smoothPath[i]; // [lng, lat, alt]
+                const p2 = smoothPath[i+1];
+
+                // 1. Haversine distance (Horizontal meters)
+                const R = 6371e3; // Earth radius in meters
+                const phi1 = p1[1] * Math.PI / 180;
+                const phi2 = p2[1] * Math.PI / 180;
+                const deltaPhi = (p2[1] - p1[1]) * Math.PI / 180;
+                const deltaLambda = (p2[0] - p1[0]) * Math.PI / 180;
+
+                const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                        Math.cos(phi1) * Math.cos(phi2) *
+                        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const horizontalDist = R * c;
+
+                // 2. Vertical distance
+                const verticalDist = Math.abs(p2[2] - p1[2]);
+
+                // 3. Total 3D distance
+                totalDistance += Math.sqrt(horizontalDist * horizontalDist + verticalDist * verticalDist);
+            }
+
+            // Ensure a minimum duration (e.g., 2000ms) so very short paths aren't instant
+            const dynamicDuration = Math.max(2000, totalDistance * MS_PER_METER);
+
+            console.log(`Path Length: ${totalDistance.toFixed(2)}m | Duration: ${dynamicDuration}ms`);
+            
+            animateCamera(smoothPath, dynamicDuration, targetStory);
         }
         minZoomLevel = isMobile ? 14.16 : 14.81;
         map.setMinZoom(minZoomLevel);
@@ -2331,7 +2433,7 @@ async function sendFrameLoop() {
                 method: 'POST',
                 headers: {
                     'ngrok-skip-browser-warning': '69420', 
-                    'Authorization': 'Bearer YOUR_SUPER_SECRET_KEY',
+                    'Authorization': 'Bearer YOUR_SUPER_SECRET_KEY', // TODO: Replace with actual key or remove if not needed
                 },
                 body: formData
             });

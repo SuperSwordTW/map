@@ -879,3 +879,8 @@ button.cta:hover {
     opacity: 1;
   }
 }
+
+#map {
+  touch-action: none;
+  -webkit-user-select: none;
+}
