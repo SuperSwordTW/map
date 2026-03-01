@@ -2331,6 +2331,7 @@ async function sendFrameLoop() {
                 method: 'POST',
                 headers: {
                     'ngrok-skip-browser-warning': '69420', 
+                    'Authorization': 'Bearer YOUR_SUPER_SECRET_KEY',
                 },
                 body: formData
             });
