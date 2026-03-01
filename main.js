@@ -2315,8 +2315,8 @@ async function sendFrameLoop() {
 
     camcanvas.toBlob(async (blob) => {
         if (!blob) {
-             console.error("Blob failed to generate"); 
-             return;
+            console.error("Blob failed to generate"); 
+            return;
         }
         
         console.log("Blob generated, size:", blob.size); // <--- DOES THIS PRINT?
@@ -2329,6 +2329,9 @@ async function sendFrameLoop() {
             
             const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/process', { // Check this URL!
                 method: 'POST',
+                headers: {
+                    'ngrok-skip-browser-warning': '69420', 
+                },
                 body: formData
             });
             
