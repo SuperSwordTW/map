@@ -118,7 +118,7 @@ nextBtn.addEventListener('click', () => {
 });
 
 const FLOOR_MODELS = {
-    13: { name: "丁棟7F", url: './floors/13F1.glb' },
+    13: { name: "丁棟7F", url: './floors/13F.glb' },
     12: { name: "丁棟6F+圖書館2F", url: './floors/12F.glb' },
     11: { name: "丁棟5F+圖書館1F", url: './floors/11F.glb' },
     10: { name: "丁棟4F+乙棟7F", url: './floors/10F.glb' },
@@ -127,8 +127,8 @@ const FLOOR_MODELS = {
     7:  { name: "丁棟1F+乙棟4F", url: './floors/7F.glb' },
     6:  { name: "乙棟3F", url: './floors/6F.glb' },
     5:  { name: "乙棟2F", url: './floors/5F.glb' },
-    4:  { name: "乙棟1F", url: './floors/4F.glb' },
-    3:  { name: "體育館", url: './floors/4F.glb' },
+    4:  { name: "乙棟1F、體育館", url: './floors/4F.glb' },
+    3:  { name: "游泳池看台", url: './floors/2F.glb' },
     2:  { name: "游泳池", url: './floors/2F.glb' },
     // Add other floors here...
 };
@@ -143,8 +143,9 @@ const FLOOR_NAMES = {
     7: {name: "丁棟1F、乙棟4F"},
     6: {name: "乙棟3F"},
     5: {name: "乙棟2F"},
-    4: {name: "乙棟1F"},
-    3: {name: "甲棟"},
+    4: {name: "乙棟1F、體育館"},
+    3: {name: "游泳池看台"},
+    2: {name: "游泳池"},
 }
 
 // TODO: 6, 5, 4, 3, 2, 1F 的放大倍率還沒調整，因為我還沒拍到照片，先暫時放一樣的倍率。等拍到照片後再微調。
@@ -229,7 +230,7 @@ map.getCanvasContainer().addEventListener('contextmenu', (e) => {
     e.preventDefault();
 }, false);
 
-const PAN_SENSITIVITY = 0.4; // 1.0 is normal, 0.4 is 40% speed. Adjust this!
+const PAN_SENSITIVITY = 0.5; // 1.0 is normal, 0.4 is 40% speed. Adjust this!
 let isDragging = false;
 let prevPos = { x: 0, y: 0 };
 
@@ -1443,7 +1444,7 @@ function animateCamera(path, duration, targetStory) {
     if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
         cancelAnimationFrame(currentAnimFrame);
     }
-    map.stop(); 
+    map.stop();
 
     const start = performance.now();
     const totalPoints = path.length - 1;
