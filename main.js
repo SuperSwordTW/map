@@ -2469,19 +2469,19 @@ async function sendFrameLoop() {
             return;
         }
         
-        console.log("Blob generated, size:", blob.size); // <--- DOES THIS PRINT?
+        console.log("Blob generated, size:", blob.size);
         
         const formData = new FormData();
         formData.append('image', blob, 'live_frame.jpg');
 
         try {
-            console.log("Attempting fetch..."); // <--- DOES THIS PRINT?
+            console.log("Attempting fetch...");
             
-            const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/process', { // Check this URL!
+            const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/process', {
                 method: 'POST',
                 headers: {
                     'ngrok-skip-browser-warning': '69420', 
-                    'Authorization': 'Bearer h5BfWP16uq6OfjZC', // TODO: Replace with actual key or remove if not needed
+                    'Authorization': 'Bearer h5BfWP16uq6OfjZC',
                 },
                 body: formData
             });
