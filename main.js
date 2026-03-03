@@ -83,7 +83,6 @@ const MODEL_ALTITUDE = 1250;
 const MODEL_ROTATE = [Math.PI / 2, -Math.PI / 6 + 0.05, 0];
 const MODEL_SCALE = [30, 30, 30]; // Adjust based on your model's unit scale
 
-let currentFocusAltitude = MODEL_ALTITUDE;
 let currentFadeFrame = null; // NEW: Tracks the fade animation to kill it
 let currentAnimFrame = null; // (Existing: Tracks camera movement)
 
@@ -2031,12 +2030,6 @@ function transitionToFloor(story) {
     if (!layer || !FLOOR_MODELS[story]) return;
 
     const floorNode = NAVIGATION_NODES.find(n => n.story == story);
-    if (floorNode) {
-        currentFocusAltitude = floorNode.coords[2]; // Use the node's Z height
-        console.log(`Pivot Altitude updated to: ${currentFocusAltitude}m`);
-    } else {
-        currentFocusAltitude = MODEL_ALTITUDE; // Fallback
-    }
 
     
     
