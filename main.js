@@ -698,43 +698,66 @@ function preventDefaultMenu(e) {
     })();
 
     function refreshThreeJsLabels() {
-    if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
+        if (!window.threeLayer || !window.threeLayer.sceneNodes) return;
 
-    window.threeLayer.sceneNodes.children.forEach(child => {
-        // Check if this is a sphere and if it has a label mesh attached
-        if (child.userData.isNode && child.userData.labelMesh) {
-            const labelMesh = child.userData.labelMesh;
-            const nodeId = child.userData.id;
-            
-            // Find the updated node data
-            const updatedNode = NAVIGATION_NODES.find(n => n.id === nodeId);
-            if (!updatedNode) return;
+        const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
 
-            // Create a new canvas with the updated name
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = 2048;
-            canvas.height = 512;
-            
-            context.font = "Bold 180px Arial";
-            context.fillStyle = "white";
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.strokeStyle = 'black';
-            context.lineWidth = 12;
-            
-            context.strokeText(updatedNode.name, 1024, 256);
-            context.fillText(updatedNode.name, 1024, 256);
-            
-            // Dispose of old texture to save memory and apply new one
-            labelMesh.material.map.dispose(); 
-            labelMesh.material.map = new THREE.CanvasTexture(canvas);
-            labelMesh.material.needsUpdate = true;
+        window.threeLayer.sceneNodes.children.forEach(child => {
+            // Check if this is a sphere and if it has a label mesh attached
+            if (child.userData.isNode && child.userData.labelMesh) {
+                const labelMesh = child.userData.labelMesh;
+                const nodeId = child.userData.id;
+                
+                // Find the updated node data
+                const updatedNode = NAVIGATION_NODES.find(n => n.id === nodeId);
+                if (!updatedNode) return;
 
-            // Update the user data name for consistency
-            child.userData.name = updatedNode.name;
-        }
-    });
+                // Create a new canvas with the updated name
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 2048;
+                canvas.height = 512;
+
+                context.font = "Bold 180px Arial";
+                context.fillStyle = "white";
+                context.textAlign = "center";
+                context.textBaseline = "middle";
+                context.strokeStyle = 'black';
+                context.lineWidth = 12;
+
+                const centerX = canvas.width / 2; // 1024
+                context.strokeText(updatedNode.name, centerX, 180);
+                context.fillText(updatedNode.name, centerX, 180);
+
+                // #refresh
+                if (!updatedNode.turn && !updatedNode.stair && !updatedNode.elevator) {
+                    context.save();
+                    context.strokeStyle = "#35ceb9";
+                    context.lineJoin = "round";
+                    context.lineCap = "round";
+
+                    const iconScale = 12;
+                    const iconWidth = 24 * iconScale; 
+                    context.translate(centerX - (iconWidth / 2), 250); 
+                    context.scale(iconScale, iconScale);
+                    
+                    context.lineWidth = 2;
+
+                    const path = new Path2D(svgPath);
+                    context.stroke(path);
+                    context.restore();
+                }
+            
+                
+                // Dispose of old texture to save memory and apply new one
+                labelMesh.material.map.dispose(); 
+                labelMesh.material.map = new THREE.CanvasTexture(canvas);
+                labelMesh.material.needsUpdate = true;
+
+                // Update the user data name for consistency
+                child.userData.name = updatedNode.name;
+            }
+        });
     
     if (window.threeLayer.map) window.threeLayer.map.triggerRepaint();
 }
@@ -894,16 +917,36 @@ const customLayer = {
             
             canvas.width = 2048;
             canvas.height = 512;
+
+            // #icon
+
+            // if (!node.turn && !node.stair && !node.elevator) {
+            //     const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
+
+            //     context.save();
+            //     context.strokeStyle = "#35ceb9";
+            //     context.lineJoin = "round";
+            //     context.lineCap = "round";
+
+            //     context.translate(400, 130); 
+            //     context.scale(15, 15);
+            //     context.lineWidth = 2;
+
+            //     const iconPath = new Path2D(svgPath);
+            //     context.stroke(iconPath);
+            //     context.restore();
+            // }
             
-            context.font = "Bold 180px Arial";
-            context.fillStyle = "white";
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.strokeStyle = 'black';
-            context.lineWidth = 12;
+            // context.font = "Bold 180px Arial";
+            // context.fillStyle = "white";
+            // context.textAlign = "left";
+            // context.textBaseline = "middle";
+            // context.strokeStyle = 'black';
+            // context.lineWidth = 12;
             
-            context.strokeText(node.name, 1024, 256);
-            context.fillText(node.name, 1024, 256);
+            // const textX = 550;
+            // context.strokeText(node.name, textX, 256);
+            // context.fillText(node.name, textX, 256);
             
             const texture = new THREE.CanvasTexture(canvas);
             texture.minFilter = THREE.LinearMipmapLinearFilter; 
@@ -1330,6 +1373,10 @@ function loadNextPathSegment() {
     updatePathVisuals(coords);
 
     const isCinematicEnabled = document.getElementById('anim-toggle').checked;
+
+    if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
+        cancelAnimationFrame(currentAnimFrame);
+    }
 
     map.once('moveend', () => {
 
@@ -2434,7 +2481,7 @@ async function sendFrameLoop() {
                 method: 'POST',
                 headers: {
                     'ngrok-skip-browser-warning': '69420', 
-                    'Authorization': 'Bearer YOUR_SUPER_SECRET_KEY', // TODO: Replace with actual key or remove if not needed
+                    'Authorization': 'Bearer h5BfWP16uq6OfjZC', // TODO: Replace with actual key or remove if not needed
                 },
                 body: formData
             });
