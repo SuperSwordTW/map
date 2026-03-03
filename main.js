@@ -919,33 +919,36 @@ const customLayer = {
 
             // #icon
 
-            // if (!node.turn && !node.stair && !node.elevator) {
-            //     const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
+            const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
 
-            //     context.save();
-            //     context.strokeStyle = "#35ceb9";
-            //     context.lineJoin = "round";
-            //     context.lineCap = "round";
+            context.font = "Bold 180px Arial";
+            context.fillStyle = "white";
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.strokeStyle = 'black';
+            context.lineWidth = 12;
 
-            //     context.translate(400, 130); 
-            //     context.scale(15, 15);
-            //     context.lineWidth = 2;
+            const centerX = canvas.width / 2; // 1024
+            context.strokeText(node.name, centerX, 180);
+            context.fillText(node.name, centerX, 180);
 
-            //     const iconPath = new Path2D(svgPath);
-            //     context.stroke(iconPath);
-            //     context.restore();
-            // }
-            
-            // context.font = "Bold 180px Arial";
-            // context.fillStyle = "white";
-            // context.textAlign = "left";
-            // context.textBaseline = "middle";
-            // context.strokeStyle = 'black';
-            // context.lineWidth = 12;
-            
-            // const textX = 550;
-            // context.strokeText(node.name, textX, 256);
-            // context.fillText(node.name, textX, 256);
+            if (!node.turn && !node.stair && !node.elevator) {
+                context.save();
+                context.strokeStyle = "#35ceb9";
+                context.lineJoin = "round";
+                context.lineCap = "round";
+
+                const iconScale = 12;
+                const iconWidth = 24 * iconScale; 
+                context.translate(centerX - (iconWidth / 2), 250); 
+                context.scale(iconScale, iconScale);
+                
+                context.lineWidth = 2;
+
+                const path = new Path2D(svgPath);
+                context.stroke(path);
+                context.restore();
+            }
             
             const texture = new THREE.CanvasTexture(canvas);
             texture.minFilter = THREE.LinearMipmapLinearFilter; 
