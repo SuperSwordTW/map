@@ -75,13 +75,11 @@ class PriorityQueue {
 // 1. CONFIGURATION
 // ==========================================
 
-// Where the 3D model will be placed on the real world map
-// Coordinates: [Longitude, Latitude]
 // #model
 const MODEL_ORIGIN = [121.58595, 24.9870];
 const MODEL_ALTITUDE = 1250;
 const MODEL_ROTATE = [Math.PI / 2, -Math.PI / 6 + 0.05, 0];
-const MODEL_SCALE = [30, 30, 30]; // Adjust based on your model's unit scale
+const MODEL_SCALE = [30, 30, 30]; // Adjust based unit scale
 
 let currentFadeFrame = null; // NEW: Tracks the fade animation to kill it
 let currentAnimFrame = null; // (Existing: Tracks camera movement)
@@ -103,12 +101,11 @@ Object.assign(nextBtn.style, {
     borderRadius: '50px',
     cursor: 'pointer',
     boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-    display: 'none', // Hidden by default
+    display: 'none',
     zIndex: '9999'
 });
 document.body.appendChild(nextBtn);
 
-// State variables for step-by-step navigation
 let globalPathSegments = [];
 let currentSegmentIndex = 0;
 
@@ -130,7 +127,6 @@ const FLOOR_MODELS = {
     3:  { name: "游泳池看台", url: './floors/2F.glb' },
     2:  { name: "游泳池", url: './floors/2F.glb' },
     1:  { name: "甲棟1F", url: './floors/1F.glb' },
-    // Add other floors here...
 };
 
 const FLOOR_NAMES = {
@@ -693,7 +689,11 @@ function preventDefaultMenu(e) {
 
                 initDropdowns();
 
-                refreshThreeJsLabels();
+                if (isThreeReady) {
+                    refreshThreeJsLabels();
+                } else {
+                    window.pendingLabelRefresh = true;
+                }
             })
             .catch(error => console.error('CSV Error:', error));
     })();
@@ -718,6 +718,7 @@ function preventDefaultMenu(e) {
                 const context = canvas.getContext('2d');
                 canvas.width = 2048;
                 canvas.height = 512;
+                context.clearRect(0, 0, canvas.width, canvas.height);
 
                 context.font = "Bold 180px Arial";
                 context.fillStyle = "white";
@@ -748,11 +749,13 @@ function preventDefaultMenu(e) {
                     context.stroke(path);
                     context.restore();
                 }
+                const newTexture = new THREE.CanvasTexture(canvas);
+                newTexture.needsUpdate = true;
             
                 
                 // Dispose of old texture to save memory and apply new one
-                labelMesh.material.map.dispose(); 
-                labelMesh.material.map = new THREE.CanvasTexture(canvas);
+                if (labelMesh.material.map) labelMesh.material.map.dispose();
+                labelMesh.material.map = newTexture;
                 labelMesh.material.needsUpdate = true;
 
                 // Update the user data name for consistency
@@ -807,6 +810,8 @@ const modelTransform = {
     rotateZ: MODEL_ROTATE[2],
     scale: modelAsMercator.meterInMercatorCoordinateUnits()
 };
+
+let isThreeReady = false;
 
 const customLayer = {
     id: '3d-model',
@@ -996,6 +1001,13 @@ const customLayer = {
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 0.5; // Increased from 0.5 to prevent "Black" look
         this.renderer.autoClear = false;
+
+        isThreeReady = true;
+
+        if (window.pendingLabelRefresh) {
+            refreshThreeJsLabels();
+            window.pendingLabelRefresh = false;
+        }
     },
 
     render: function (gl, matrix) {
@@ -1226,7 +1238,7 @@ function updatePathVisuals(newPathCoords) {
     const radius = 1.6; 
     
     // Geometry: (curve, tubularSegments, radius, radialSegments, closed)
-    const geometry = new THREE.TubeGeometry(curve, pathPoints.length * 8, radius, 8, false);
+    const geometry = new THREE.TubeGeometry(curve, pathPoints.length * 1, radius, 8, false);
 
     // 5. Create Material
     const flowTexture = getFlowTexture(); // Ensure this helper function exists in your code!
@@ -2034,35 +2046,48 @@ function transitionToFloor(story) {
     const layer = window.threeLayer;
     if (!layer || !FLOOR_MODELS[story]) return;
 
-    const floorNode = NAVIGATION_NODES.find(n => n.story == story);
-
-    
-    
-    // ===============================================
-    // 1. KILL ZOMBIE ANIMATIONS (Critical Fix)
-    // ===============================================
+    // 1. KILL ZOMBIE ANIMATIONS
     if (typeof currentFadeFrame !== 'undefined' && currentFadeFrame) {
         cancelAnimationFrame(currentFadeFrame);
         currentFadeFrame = null;
     }
 
-    // ===============================================
-    // 2. INSTANTLY HIDE OLD BUILDING
-    // ===============================================
-    if (layer.mainBuildingGroup) {
-        // Force visibility OFF
-        layer.mainBuildingGroup.visible = false;
+    const disposeObject = (obj) => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+            if (Array.isArray(obj.material)) {
+                obj.material.forEach(mat => cleanMaterial(mat));
+            } else {
+                cleanMaterial(obj.material);
+            }
+        }
+    };
 
-        // Double Tap: Traverse and force children off just in case
-        layer.mainBuildingGroup.traverse(c => {
-            if (c.isMesh) c.visible = false;
+    const cleanMaterial = (mat) => {
+        // Dispose all possible texture maps
+        const maps = ['map', 'lightMap', 'bumpMap', 'normalMap', 'specularMap', 'envMap', 'emissiveMap', 'roughnessMap', 'metalnessMap'];
+        maps.forEach(mapName => {
+            if (mat[mapName] && mat[mapName].dispose) {
+                mat[mapName].dispose();
+            }
         });
+        mat.dispose();
+    };
 
+    layer.currentFloorGroup.traverse(child => {
+        if (child.isMesh) disposeObject(child);
+    });
+
+    layer.currentFloorGroup.clear();
+    
+    // 2. INSTANTLY HIDE OLD BUILDING
+    if (layer.mainBuildingGroup) {
+        layer.mainBuildingGroup.visible = false;
         console.log("Old building hidden immediately.");
     }
 
     // Force map to clear the old building NOW
-    map.triggerRepaint();
+    // map.triggerRepaint();
 
     const floorConfig = FLOOR_MODELS[story];
     console.log(`Swapping to ${floorConfig.name} (Instant)... ${story}`);
@@ -2070,9 +2095,7 @@ function transitionToFloor(story) {
     const loader = new THREE.GLTFLoader();
     
     loader.load(floorConfig.url, (gltf) => {
-        // ===============================================
         // 3. SETUP NEW FLOOR (Solid & Visible)
-        // ===============================================
         gltf.scene.traverse((child) => {
             if (child.isMesh) {
                 // 1. Get a reference to the material exported from Blender for THIS specific block
@@ -2114,22 +2137,14 @@ function transitionToFloor(story) {
             }
         });
 
-        // ===============================================
         // 4. SWAP AND RENDER
-        // ===============================================
-        layer.currentFloorGroup.clear();
         layer.currentFloorGroup.add(gltf.scene);
 
-        layer.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        layer.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        layer.renderer.toneMappingExposure = 0.5;
-        layer.renderer.shadowMap.enabled = true;
-        layer.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        
-        // Safety Check: Ensure Old Building didn't sneak back on
-        if (layer.mainBuildingGroup) {
-            layer.mainBuildingGroup.visible = false;
-        }
+        // layer.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // layer.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        // layer.renderer.toneMappingExposure = 0.5;
+        // layer.renderer.shadowMap.enabled = true;
+        // layer.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         // Force map to show the new floor
         map.triggerRepaint();
