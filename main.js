@@ -70,6 +70,112 @@ class PriorityQueue {
   }
 }
 
+// ==========================================
+// 01. FEEDBACK MODAL
+// ==========================================
+
+const feedbackModal = document.createElement('div');
+feedbackModal.id = "feedback-popup";
+Object.assign(feedbackModal.style, {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: 'white',
+    padding: '30px',
+    borderRadius: '15px',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+    zIndex: '10000',
+    display: 'none',
+    textAlign: 'center',
+    width: '300px'
+});
+
+feedbackModal.innerHTML = `
+    <div id="feedback-form-container">
+        <h2 style="margin-top:0">對地圖滿意嗎?</h2>
+        <p>您的意見對我們很重要！</p>
+        
+        <div id="star-rating" style="font-size: 30px; margin-bottom: 15px; cursor: pointer;">
+            <span class="star" data-value="1">✰</span>
+            <span class="star" data-value="2">✰</span>
+            <span class="star" data-value="3">✰</span>
+            <span class="star" data-value="4">✰</span>
+            <span class="star" data-value="5">✰</span>
+        </div>
+
+        <textarea id="feedback-text" placeholder="告訴我們您的想法..." 
+            style="width: 100%; height: 80px; margin-bottom: 15px; padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; resize: none; box-sizing: border-box;"></textarea>
+
+        <button id="submit-feedback" style="background:#ff9900; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold; width: 100%;">送出</button>
+        <button id="close-feedback" style="background:none; border:none; color:gray; cursor:pointer; display:block; margin: 10px auto 0;">跳過</button>
+    </div>
+    <div id="feedback-success" style="display:none;">
+        <h3>謝謝您寶貴的意見!</h3>
+        <p>您的反饋已成功提交。</p>
+    </div>
+`;
+document.body.appendChild(feedbackModal);
+
+// Helper to set a cookie that expires in 30 days
+function setFeedbackCookie() {
+    const d = new Date();
+    d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000));
+    document.cookie = "feedback_submitted=true; expires=" + d.toUTCString() + "; path=/";
+}
+
+// Helper to check if the cookie exists
+function hasSubmittedFeedback() {
+    return document.cookie.split(';').some((item) => item.trim().startsWith('feedback_submitted='));
+}
+
+function triggerFeedbackPopup() {
+    if (hasSubmittedFeedback()) return;
+
+    setTimeout(() => {
+        const modal = document.getElementById('feedback-popup');
+        modal.style.display = 'block';
+        
+        let selectedRating = 0;
+        const stars = modal.querySelectorAll('.star');
+
+        // Star selection logic
+        stars.forEach(star => {
+            star.onclick = () => {
+                selectedRating = star.getAttribute('data-value');
+                stars.forEach(s => s.innerText = s.getAttribute('data-value') <= selectedRating ? '★' : '☆');
+                stars.forEach(s => s.style.color = s.getAttribute('data-value') <= selectedRating ? '#ff9900' : 'black');
+            };
+        });
+
+        document.getElementById('submit-feedback').onclick = async () => {
+            if (selectedRating === 0) {
+                return;
+            }
+            const comment = document.getElementById('feedback-text').value;
+
+            try {
+                const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating: selectedRating, comment: comment, timestamp: new Date() })
+                });
+
+                if (response.ok) {
+                    // setFeedbackCookie(); // Optional: Uncomment if you want to prevent multiple submissions
+                    document.getElementById('feedback-form-container').style.display = 'none';
+                    document.getElementById('feedback-success').style.display = 'block';
+                    setTimeout(() => modal.style.display = 'none', 3000);
+                }
+            } catch (err) {
+                console.error("Feedback submission failed:", err);
+                alert("Failed to send feedback. Please try again later.");
+            }
+        };
+
+        document.getElementById('close-feedback').onclick = () => modal.style.display = 'none';
+    }, 5000);
+}
 
 // ==========================================
 // 1. CONFIGURATION
@@ -187,7 +293,7 @@ const FLOOR_ZOOMS_MOBILE = {
 const isMobile = window.innerWidth < 768;
 
 const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[100] : FLOOR_ZOOMS[100];
-let maxZoomLevel = 20.0;
+let maxZoomLevel = 16.46;
 let minZoomLevel = isMobile ? 12.86 : 13.65;
 
 const map = new maplibregl.Map({
@@ -336,7 +442,8 @@ function preventDefaultMenu(e) {
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-            //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+        
+       //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
         /*id 1~33丁棟右上棟
             34~54丁棟左上棟
             55~59丁棟右樓梯
@@ -716,18 +823,19 @@ function preventDefaultMenu(e) {
                 // Create a new canvas with the updated name
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
-                canvas.width = 2048;
-                canvas.height = 512;
-                context.clearRect(0, 0, canvas.width, canvas.height);
+                const resScale = isMobile ? 0.25 : 0.5;
+                canvas.width = 2048 * resScale;
+                canvas.height = 512 * resScale;
+                context.scale(resScale, resScale);
 
-                context.font = "Bold 180px Arial";
+                context.font = "Bold 280px Arial";
                 context.fillStyle = "white";
                 context.textAlign = "center";
                 context.textBaseline = "middle";
                 context.strokeStyle = 'black';
                 context.lineWidth = 12;
 
-                const centerX = canvas.width / 2; // 1024
+                const centerX = 1024;
                 context.strokeText(updatedNode.name, centerX, 180);
                 context.fillText(updatedNode.name, centerX, 180);
 
@@ -750,6 +858,9 @@ function preventDefaultMenu(e) {
                     context.restore();
                 }
                 const newTexture = new THREE.CanvasTexture(canvas);
+                newTexture.generateMipmaps = false; 
+                newTexture.minFilter = THREE.LinearFilter; 
+                newTexture.magFilter = THREE.LinearFilter;
                 newTexture.needsUpdate = true;
             
                 
@@ -921,21 +1032,25 @@ const customLayer = {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             
-            canvas.width = 2048;
-            canvas.height = 512;
+            const resScale = isMobile ? 0.25 : 0.5;
+
+            canvas.width = 2048 * resScale;
+            canvas.height = 512 * resScale;
+
+            context.scale(resScale, resScale);
 
             // #icon
 
             const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
 
-            context.font = "Bold 180px Arial";
+            context.font = "Bold 280px Arial";
             context.fillStyle = "white";
             context.textAlign = "center";
             context.textBaseline = "middle";
             context.strokeStyle = 'black';
             context.lineWidth = 12;
 
-            const centerX = canvas.width / 2; // 1024
+            const centerX = 1024;
             context.strokeText(node.name, centerX, 180);
             context.fillText(node.name, centerX, 180);
 
@@ -958,10 +1073,9 @@ const customLayer = {
             }
             
             const texture = new THREE.CanvasTexture(canvas);
-            texture.minFilter = THREE.LinearMipmapLinearFilter; 
+            texture.generateMipmaps = false; 
+            texture.minFilter = THREE.LinearFilter; 
             texture.magFilter = THREE.LinearFilter;
-            texture.generateMipmaps = true;
-            texture.anisotropy = 16;
 
             const labelMat = new THREE.MeshBasicMaterial({ 
                 map: texture,
@@ -1115,7 +1229,7 @@ map.on('load', () => {
 
     }
     // Load the zoom level display
-    const zoomPercent = 100 - ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
+    const zoomPercent = ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
     document.getElementById('zoom-value').innerText = `${zoomPercent}%`;
 
     console.log("Map Layers Initialized");
@@ -1363,6 +1477,7 @@ function loadNextPathSegment() {
         nextBtn.style.display = 'block';
     } else {
         nextBtn.style.display = 'none'; // Reached final floor
+        triggerFeedbackPopup();
     }
 
     // 3. Extract Coords for Visuals
@@ -2040,7 +2155,7 @@ function getGroundTarget(lngLatOrigin, altitude, pitch, bearing) {
     return getDestination(lngLatOrigin[0], lngLatOrigin[1], offsetMeters, bearing);
 }
 
-let activeFloorMesh = null;
+let currentFloorLoadToken = 0;
 
 function transitionToFloor(story) {
     const layer = window.threeLayer;
@@ -2052,33 +2167,35 @@ function transitionToFloor(story) {
         currentFadeFrame = null;
     }
 
-    const disposeObject = (obj) => {
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) {
-            if (Array.isArray(obj.material)) {
-                obj.material.forEach(mat => cleanMaterial(mat));
-            } else {
-                cleanMaterial(obj.material);
-            }
+    currentFloorLoadToken++;
+    const myLoadToken = currentFloorLoadToken;
+
+    const disposeNode = (node) => {
+        if (node.geometry) node.geometry.dispose();
+        
+        if (node.material) {
+            const materials = Array.isArray(node.material) ? node.material : [node.material];
+            materials.forEach(mat => {
+                // Dispose textures
+                const maps = ['map', 'lightMap', 'bumpMap', 'normalMap', 'specularMap', 'envMap', 'emissiveMap', 'roughnessMap', 'metalnessMap'];
+                maps.forEach(mapName => {
+                    if (mat[mapName] && typeof mat[mapName].dispose === 'function') {
+                        mat[mapName].dispose();
+                        mat[mapName] = null; // Break reference
+                    }
+                });
+                mat.dispose();
+            });
         }
     };
 
-    const cleanMaterial = (mat) => {
-        // Dispose all possible texture maps
-        const maps = ['map', 'lightMap', 'bumpMap', 'normalMap', 'specularMap', 'envMap', 'emissiveMap', 'roughnessMap', 'metalnessMap'];
-        maps.forEach(mapName => {
-            if (mat[mapName] && mat[mapName].dispose) {
-                mat[mapName].dispose();
-            }
-        });
-        mat.dispose();
-    };
-
-    layer.currentFloorGroup.traverse(child => {
-        if (child.isMesh) disposeObject(child);
-    });
-
-    layer.currentFloorGroup.clear();
+    if (layer.currentFloorGroup) {
+        while(layer.currentFloorGroup.children.length > 0) {
+            const child = layer.currentFloorGroup.children[0];
+            child.traverse(disposeNode);
+            layer.currentFloorGroup.remove(child);
+        }
+    }
     
     // 2. INSTANTLY HIDE OLD BUILDING
     if (layer.mainBuildingGroup) {
@@ -2086,8 +2203,12 @@ function transitionToFloor(story) {
         console.log("Old building hidden immediately.");
     }
 
+    if (layer.renderer && layer.renderer.renderLists) {
+        layer.renderer.renderLists.dispose();
+    }
+
     // Force map to clear the old building NOW
-    // map.triggerRepaint();
+    map.triggerRepaint();
 
     const floorConfig = FLOOR_MODELS[story];
     console.log(`Swapping to ${floorConfig.name} (Instant)... ${story}`);
@@ -2095,6 +2216,11 @@ function transitionToFloor(story) {
     const loader = new THREE.GLTFLoader();
     
     loader.load(floorConfig.url, (gltf) => {
+        if (myLoadToken !== currentFloorLoadToken) {
+            console.warn(`Discarding orphaned load for ${floorConfig.name}`);
+            gltf.scene.traverse(disposeNode); // Free the orphaned memory!
+            return;
+        }
         // 3. SETUP NEW FLOOR (Solid & Visible)
         gltf.scene.traverse((child) => {
             if (child.isMesh) {
@@ -2118,8 +2244,8 @@ function transitionToFloor(story) {
                 
                 // 4. Handle lighting for every block
                 mat.side = THREE.DoubleSide; // Ensure we see both sides of every block
-                child.castShadow = true;      // Every block can cast shadows
-                child.receiveShadow = true;   // Every block can receive shadows
+                child.castShadow = false;      // Every block can cast shadows
+                child.receiveShadow = false;   // Every block can receive shadows
 
                 // 5. Texture Orientation (Safe for all blocks)
                 // If a block happens to have a map, we fix it; if not, this loop just skips it
@@ -2130,6 +2256,10 @@ function transitionToFloor(story) {
                         if (key === 'map' || key === 'emissiveMap') {
                             mat[key].colorSpace = THREE.SRGBColorSpace;
                         }
+                        mat[key].generateMipmaps = false;
+                        mat[key].minFilter = THREE.LinearFilter; 
+                        mat[key].magFilter = THREE.LinearFilter;
+                        mat[key].anisotropy = 1;
                     }
                 });
 
@@ -2140,14 +2270,11 @@ function transitionToFloor(story) {
         // 4. SWAP AND RENDER
         layer.currentFloorGroup.add(gltf.scene);
 
-        // layer.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        // layer.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        // layer.renderer.toneMappingExposure = 0.5;
-        // layer.renderer.shadowMap.enabled = true;
-        // layer.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
         // Force map to show the new floor
         map.triggerRepaint();
+        // if (layer.sceneModel) {
+        //     layer.sceneModel.onAfterRender = () => { layer.sceneModel.onAfterRender = null; };
+        // }
     });
 }
 
@@ -2541,7 +2668,7 @@ async function sendFrameLoop() {
 // ==========================================
 
 map.on('zoom', () => {
-    const zoomPercent = 100 - ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
+    const zoomPercent = ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
     document.getElementById('zoom-value').innerText = `${zoomPercent}%`;
 });
 
