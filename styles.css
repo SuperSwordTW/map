@@ -884,3 +884,94 @@ button.cta:hover {
   touch-action: none;
   -webkit-user-select: none;
 }
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-content {
+  background: white; 
+  padding: 30px; 
+  border-radius: 12px; 
+  max-width: 300px; 
+  width: 90%;
+  text-align: center;
+  position: relative; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.close-btn {
+    position: absolute; 
+    top: 15px; 
+    right: 15px; 
+    width: 32px; 
+    height: 32px; 
+    font-size: 28px; 
+    
+    /* Use flexbox to perfectly center the times symbol */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Reset default button styles */
+    padding: 0;
+    margin: 0;
+    border: none; 
+    background: transparent !important;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+.close-btn:hover {
+    color: #333;
+}
+#qrcode-container {
+  margin: 20px auto;
+  display: flex;
+  justify-content: center;
+}
+.link-copy-wrapper {
+  display: flex;
+  margin-top: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+#modal-url-input {
+  flex-grow: 1;
+  border: none;
+  padding: 10px;
+  background: #f9f9f9;
+  outline: none;
+  font-size: 14px;
+}
+#modal-copy-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0 15px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#modal-copy-btn:active {
+  background: #45a049;
+}
+
+#site-credit {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+      to bottom right,
+      rgba(127, 40, 241, 0.76) 0%,
+      rgba(255, 46, 238, 0.479) 100%
+    );;
+    color: #000000;
+    padding: 5px 12px;
+    font-family: 'monospace', sans-serif;
+    font-size: 11px;
+    z-index: 9999; /* Ensures it stays above the map */
+    border-radius: 0; /* Forces sharp corners */
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    pointer-events: none; /* Allows clicks to pass through to the map if needed */
+}

@@ -2440,6 +2440,8 @@ window.closePanorama = function() {
     }
 };
 
+let qrcode = null;
+
 function copyRouteLink() {
     const startId = document.getElementById('start-select').value;
     const endId = document.getElementById('end-select').value;
@@ -2454,76 +2456,62 @@ function copyRouteLink() {
     url.searchParams.set('end', endId);
     const fullUrl = url.toString();
 
-    // --- Robust Copy Logic ---
+    openShareModal(fullUrl);
+}
+
+function openShareModal(url) {
+    const modal = document.getElementById('share-modal');
+    const input = document.getElementById('modal-url-input');
+    const qrContainer = document.getElementById('qrcode-container');
+
+    input.value = url;
+    modal.style.display = 'flex';
+
+    // Clear previous QR and generate new one
+    qrContainer.innerHTML = "";
+    qrcode = new QRCode(qrContainer, {
+        text: url,
+        width: 180,
+        height: 180
+    });
+}
+
+function closeShareModal() {
+    document.getElementById('share-modal').style.display = 'none';
+}
+
+function copyFromModal() {
+    const copyText = document.getElementById("modal-url-input");
+    const copyBtn = document.getElementById("modal-copy-btn");
+
+    // Reusing your robust logic
     if (navigator.clipboard && window.isSecureContext) {
-        // Modern approach for HTTPS/Localhost
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            showCopyFeedback();
-        }).catch(err => {
-            console.error('Modern copy failed:', err);
-            fallbackCopy(fullUrl);
+        navigator.clipboard.writeText(copyText.value).then(() => {
+            updateButtonSuccess(copyBtn);
         });
     } else {
-        // Fallback approach for HTTP or non-secure contexts
-        fallbackCopy(fullUrl);
+        copyText.select();
+        document.execCommand("copy");
+        updateButtonSuccess(copyBtn);
     }
 }
 
-// Fallback using a hidden textarea
-function fallbackCopy(text) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    
-    // Ensure the textarea is not visible or disruptive
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    textArea.style.top = "0";
-    document.body.appendChild(textArea);
-    
-    textArea.focus();
-    textArea.select();
-
-    try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-            showCopyFeedback();
-        } else {
-            alert("Unable to copy. Please copy manually: " + text);
-        }
-    } catch (err) {
-        console.error('Fallback copy failed:', err);
-        alert("Manual link: " + text);
-    }
-
-    document.body.removeChild(textArea);
-}
-
-// Helper for visual feedback on the button
-function showCopyFeedback() {
-    const shareBtn = document.getElementById('share-btn');
-    const btnText = shareBtn?.querySelector('span');
-    if (!shareBtn || !btnText) return;
-
-    const originalText = btnText.innerText;
-    
-    // 1. Change text and add "success" state
-    btnText.innerText = "連結已複製!";
-    shareBtn.classList.add('copy-success');
-
+function updateButtonSuccess(btn) {
+    const originalText = btn.innerText;
+    btn.innerText = "COPIED!";
+    btn.style.backgroundColor = "#2196F3";
     setTimeout(() => {
-        // 2. Restore text and remove "success" state
-        btnText.innerText = originalText;
-        shareBtn.classList.remove('copy-success');
+        btn.innerText = originalText;
+        btn.style.backgroundColor = "#4CAF50";
     }, 2000);
 }
 
-// Attachment (remains largely the same, but calling showCopyFeedback inside copyRouteLink)
+
 const shareBtnElement = document.getElementById('share-btn');
 if (shareBtnElement) {
     shareBtnElement.addEventListener('click', () => {
         // I assume copyRouteLink is your function that handles the clipboard logic
         if (typeof copyRouteLink === "function") copyRouteLink(); 
-        showCopyFeedback();
     });
 }
 
