@@ -442,8 +442,7 @@ function preventDefaultMenu(e) {
     // Simulating a path through a building
     // #node
     const NAVIGATION_NODES = [
-        
-       //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+        //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
         /*id 1~33丁棟右上棟
             34~54丁棟左上棟
             55~59丁棟右樓梯
