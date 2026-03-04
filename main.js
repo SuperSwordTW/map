@@ -828,7 +828,7 @@ function preventDefaultMenu(e) {
                 canvas.height = 512 * resScale;
                 context.scale(resScale, resScale);
 
-                context.font = "Bold 280px Arial";
+                context.font = "Bold 250px Arial";
                 context.fillStyle = "white";
                 context.textAlign = "center";
                 context.textBaseline = "middle";
@@ -858,8 +858,8 @@ function preventDefaultMenu(e) {
                     context.restore();
                 }
                 const newTexture = new THREE.CanvasTexture(canvas);
-                newTexture.generateMipmaps = false; 
-                newTexture.minFilter = THREE.LinearFilter; 
+                newTexture.generateMipmaps = true; 
+                newTexture.minFilter = THREE.LinearMipmapLinearFilter; 
                 newTexture.magFilter = THREE.LinearFilter;
                 newTexture.needsUpdate = true;
             
@@ -1043,7 +1043,7 @@ const customLayer = {
 
             const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
 
-            context.font = "Bold 280px Arial";
+            context.font = "Bold 250px Arial";
             context.fillStyle = "white";
             context.textAlign = "center";
             context.textBaseline = "middle";
@@ -1073,8 +1073,8 @@ const customLayer = {
             }
             
             const texture = new THREE.CanvasTexture(canvas);
-            texture.generateMipmaps = false; 
-            texture.minFilter = THREE.LinearFilter; 
+            texture.generateMipmaps = true; 
+            texture.minFilter = THREE.LinearMipmapLinearFilter; 
             texture.magFilter = THREE.LinearFilter;
 
             const labelMat = new THREE.MeshBasicMaterial({ 
