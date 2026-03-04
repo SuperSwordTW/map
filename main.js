@@ -129,6 +129,7 @@ const FLOOR_MODELS = {
     4:  { name: "乙棟1F、體育館", url: './floors/4F.glb' },
     3:  { name: "游泳池看台", url: './floors/2F.glb' },
     2:  { name: "游泳池", url: './floors/2F.glb' },
+    1:  { name: "甲棟1F", url: './floors/1F.glb' },
     // Add other floors here...
 };
 
@@ -145,6 +146,7 @@ const FLOOR_NAMES = {
     4: {name: "乙棟1F、體育館"},
     3: {name: "游泳池看台"},
     2: {name: "游泳池"},
+    1: {name: "甲棟1F"},
 }
 
 // TODO: 6, 5, 4, 3, 2, 1F 的放大倍率還沒調整，因為我還沒拍到照片，先暫時放一樣的倍率。等拍到照片後再微調。
