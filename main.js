@@ -1290,10 +1290,10 @@ function getFlowTexture() {
     // Create Gradient: Transparent -> Cyan -> Purple -> Transparent
     // This creates a "pulse" or "comet" look
     const gradient = ctx.createLinearGradient(0, 0, 256, 0);
-    gradient.addColorStop(0.0, 'rgba(0, 210, 255, 0)');
-    gradient.addColorStop(0.1, 'rgba(0, 210, 255, 1)');
-    gradient.addColorStop(0.5, 'rgba(150, 0, 255, 1)');
-    gradient.addColorStop(1.0, 'rgba(150, 0, 255, 0)');
+    gradient.addColorStop(0.0, 'rgba(0, 255, 255, 0)');
+    gradient.addColorStop(0.1, 'rgba(0, 255, 255, 1)');
+    gradient.addColorStop(0.5, 'rgb(132, 0, 255)');
+    gradient.addColorStop(1.0, 'rgba(119, 0, 255, 0)');
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 256, 1);
@@ -1348,7 +1348,7 @@ function updatePathVisuals(newPathCoords) {
     
     // FIX: Set radius directly in meters (0.4m = ~40cm thick)
     // We do NOT divide by originScale here because the scene is already in meters.
-    const radius = 1.6; 
+    const radius = 2.6; 
     
     // Geometry: (curve, tubularSegments, radius, radialSegments, closed)
     const geometry = new THREE.TubeGeometry(curve, pathPoints.length * 1, radius, 8, false);
@@ -1549,6 +1549,8 @@ function loadNextPathSegment() {
         }
         minZoomLevel = isMobile ? 14.16 : 14.81;
         map.setMinZoom(minZoomLevel);
+        const zoomPercent = ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
+        document.getElementById('zoom-value').innerText = `${zoomPercent}%`;
     });
 
 
@@ -2119,7 +2121,7 @@ function initDropdowns() {
     }
     else{
         // Defaults
-        startSel.value = 1;
+        startSel.value = 110;
         endSel.value = 2;
     }
 
