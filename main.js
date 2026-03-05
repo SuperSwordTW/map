@@ -130,7 +130,7 @@ function hasSubmittedFeedback() {
 }
 
 function triggerFeedbackPopup() {
-    if (hasSubmittedFeedback()) return;
+    // if (hasSubmittedFeedback()) return;
 
     setTimeout(() => {
         const modal = document.getElementById('feedback-popup');
