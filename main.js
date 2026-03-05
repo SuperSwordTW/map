@@ -126,7 +126,7 @@ function setFeedbackCookie() {
 
 // Helper to check if the cookie exists
 function hasSubmittedFeedback() {
-    return document.cookie.split(';').some((item) => item.trim().startsWith('feedback_submitted='));
+    return localStorage.getItem('feedback_submitted') === 'true';
 }
 
 function triggerFeedbackPopup() {
@@ -162,7 +162,7 @@ function triggerFeedbackPopup() {
                 });
 
                 if (response.ok) {
-                    setFeedbackCookie(); // Optional: Uncomment if you want to prevent multiple submissions
+                    localStorage.setItem('feedback_submitted', 'true');
                     document.getElementById('feedback-form-container').style.display = 'none';
                     document.getElementById('feedback-success').style.display = 'block';
                     setTimeout(() => modal.style.display = 'none', 3000);
