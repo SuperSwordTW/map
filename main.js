@@ -236,22 +236,21 @@ const FLOOR_MODELS = {
 };
 
 const FLOOR_NAMES = {
-    13: {name: "丁棟7F"},
-    12: {name: "丁棟6F"},
-    11: {name: "丁棟5F"},
-    10: {name: "丁棟4F、乙棟7F"},
-    9: {name: "丁棟3F、乙棟6F"},
-    8: {name: "丁棟2F、乙棟5F"},
-    7: {name: "丁棟1F、乙棟4F"},
-    6: {name: "乙棟3F"},
-    5: {name: "乙棟2F"},
-    4: {name: "乙棟1F、體育館"},
-    3: {name: "游泳池看台"},
-    2: {name: "游泳池"},
-    1: {name: "甲棟1F"},
+    13: {4: "丁棟7F"},
+    12: {4: "丁棟6F", 3:"丙棟6F"},
+    11: {4: "丁棟5F", 3:"丙棟5F"},
+    10: {4: "丁棟4F", 2:"乙棟7F", 3:"丙棟4F"},
+    9: {4: "丁棟3F", 2:"乙棟6F", 3:"丙棟3F"},
+    8: {4: "丁棟2F", 2:"乙棟5F", 3:"丙棟2F"},
+    7: {4: "丁棟1F", 2:"乙棟4F", 3:"丙棟1F", 1:"甲棟7F"},
+    6: {2: "乙棟3F", 1:"甲棟6F"},
+    5: {2: "乙棟2F", 1:"甲棟5F"},
+    4: {2: "乙棟1F", 1:"甲棟4F"},
+    3: {1: "甲棟3F"},
+    2: {1: "甲棟2F"},
+    1: {1: "甲棟1F"},
 }
 
-// TODO: 6, 5, 4, 3, 2, 1F 的放大倍率還沒調整，因為我還沒拍到照片，先暫時放一樣的倍率。等拍到照片後再微調。
 const FLOOR_ZOOMS = {
     100: 14.46, //Full view
     13:15.11,
@@ -1063,7 +1062,6 @@ const customLayer = {
                 material.color.set(0xcc62fc);
             }
             
-            // TODO: Use node model to highlight the fact that it can be clicked.
 
             const sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(x, y, z);
@@ -1286,8 +1284,6 @@ map.on('load', () => {
 // ==========================================
 // 4. CINEMATIC CAMERA LOGIC & PATH UPDATE
 // ==========================================
-
-// TODO; When clicking "下樓" or "上樓", we should ideally jump to the next segment immediately instead of waiting for the current animation to finish. This requires a bit of state management to interrupt the current animation and start the next one.
 
 // NEW: Helper to smooth jagged paths into curves
 function getSmoothPath(geoCoords) {
@@ -1516,13 +1512,20 @@ function loadNextPathSegment() {
     // 2. Update Button Text for the *next* step (if valid)
     if (!isLastSegment) {
         const currentStory = globalPathSegments[currentSegmentIndex][0].story;
+        const nextStoryBuilding = globalPathSegments[currentSegmentIndex + 1][0].building;
         const nextStory = globalPathSegments[currentSegmentIndex + 1][0].story;
         const StoryDiff = nextStory - currentStory;
-        if (StoryDiff > 0){
-            nextBtn.innerText = `往上 ${StoryDiff} 層`;
-        }
-        else if (StoryDiff < 0){
-            nextBtn.innerText = `往下 ${Math.abs(StoryDiff)} 層`;
+
+        const transitionNode = segmentNodes[segmentNodes.length - 1];
+        if (transitionNode.elevator) {
+            nextBtn.innerText = `搭到 ${FLOOR_NAMES[nextStory][nextStoryBuilding]}`;
+        } else {
+            if (StoryDiff > 0){
+                nextBtn.innerText = `往上 ${StoryDiff} 層`;
+            }
+            else if (StoryDiff < 0){
+                nextBtn.innerText = `往下 ${Math.abs(StoryDiff)} 層`;
+            }
         }
         nextBtn.style.display = 'block';
     } else {
@@ -2023,8 +2026,6 @@ canvas.addEventListener('mouseup', () => {
 // ==========================================
 // 2.5 PATHFINDING LOGIC (A*)
 // ==========================================
-
-// TODO: Add elevator interface(到幾樓)!
 
 let isElevator = 1;
 
