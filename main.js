@@ -130,7 +130,7 @@ function hasSubmittedFeedback() {
 }
 
 function triggerFeedbackPopup() {
-    // if (hasSubmittedFeedback()) return;
+    if (hasSubmittedFeedback()) return;
 
     setTimeout(() => {
         const modal = document.getElementById('feedback-popup');
@@ -162,7 +162,7 @@ function triggerFeedbackPopup() {
                 });
 
                 if (response.ok) {
-                    // setFeedbackCookie(); // Optional: Uncomment if you want to prevent multiple submissions
+                    setFeedbackCookie(); // Optional: Uncomment if you want to prevent multiple submissions
                     document.getElementById('feedback-form-container').style.display = 'none';
                     document.getElementById('feedback-success').style.display = 'block';
                     setTimeout(() => modal.style.display = 'none', 3000);
