@@ -117,13 +117,6 @@ feedbackModal.innerHTML = `
 `;
 document.body.appendChild(feedbackModal);
 
-// Helper to set a cookie that expires in 30 days
-function setFeedbackCookie() {
-    const d = new Date();
-    d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000));
-    document.cookie = "feedback_submitted=true; expires=" + d.toUTCString() + "; path=/";
-}
-
 // Helper to check if the cookie exists
 function hasSubmittedFeedback() {
     return localStorage.getItem('feedback_submitted') === 'true';
