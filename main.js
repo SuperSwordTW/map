@@ -284,6 +284,13 @@ const FLOOR_ZOOMS_MOBILE = {
 
 const isMobile = window.innerWidth < 768;
 
+const isAndroidTV = /Android/i.test(userAgent) && (
+  /TV/i.test(userAgent) || 
+  /Television/i.test(userAgent) || 
+  /GoogleTV/i.test(userAgent) ||
+  /DroidTV/i.test(userAgent)
+);
+
 const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[100] : FLOOR_ZOOMS[100];
 let maxZoomLevel = 16.46;
 let minZoomLevel = isMobile ? 12.86 : 13.65;
@@ -2460,6 +2467,8 @@ function openPanorama(nodeData) {
     title.innerText = nodeData.name; // Display Node Name
 
     const imagePath = isMobile? `images/Optimized_Panoramas/${nodeData.id}.jpg` : `images/${nodeData.id}.jpg`;
+
+    if (isAndroidTV) imagePath = `images/TV_Panoramas/${nodeData.id}.jpg`;
 
     console.log("Loading 360 Image:", imagePath);
 

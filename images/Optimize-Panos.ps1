@@ -1,5 +1,5 @@
 # Create an output folder if it doesn't exist
-$outputFolder = "Optimized_Panoramas"
+$outputFolder = "TV_Panoramas"
 if (-not (Test-Path $outputFolder)) {
     New-Item -ItemType Directory -Path $outputFolder
 }
@@ -19,7 +19,7 @@ foreach ($img in $images) {
     # -interlace Plane: Progressive loading for web
     # -gaussian-blur 0.05: Smooths noise for better compression
     magick "$($img.FullName)" `
-        -resize 3072 `
+        -resize 8192 `
         "$outputPath"
 }
 
