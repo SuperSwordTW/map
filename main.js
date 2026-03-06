@@ -2130,9 +2130,9 @@ function initDropdowns() {
 
     // 1. Initialize groups with specific category keys
     const groups = {
-        "其他": [],
         "教室": [],
-        "行政單位": []
+        "行政單位": [],
+        "其他": []
     };
 
     NAVIGATION_NODES.forEach(node => {
