@@ -284,6 +284,8 @@ const FLOOR_ZOOMS_MOBILE = {
 
 const isMobile = window.innerWidth < 768;
 
+const userAgent = navigator.userAgent;
+
 const isAndroidTV = /Android/i.test(userAgent) && (
   /TV/i.test(userAgent) || 
   /Television/i.test(userAgent) || 
