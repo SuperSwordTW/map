@@ -1274,7 +1274,7 @@ map.on('load', () => {
                 loadNextPathSegment();
             }
         }
-
+        closeMenu();
     }
     // Load the zoom level display
     const zoomPercent = ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
