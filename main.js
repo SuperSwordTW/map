@@ -1141,7 +1141,7 @@ const customLayer = {
             // Multiply Width (12) and Height (3) by 's'
             const labelGeo = new THREE.PlaneGeometry(24 * (s*2), 3 * (s*2));
             const labelMesh = new THREE.Mesh(labelGeo, labelMat);
-            
+            labelMesh.userData.isStoryVisible = true;
             // --- OFFSET SCALING ---
             // Multiply the vertical lift (4.5) by 's'
             // Otherwise, on a huge model, the text would be inside the sphere
@@ -1180,17 +1180,69 @@ const customLayer = {
         const pitchRad = this.map.getPitch() * (Math.PI / 180);
         const bearingRad = this.map.getBearing() * (Math.PI / 180);
 
+        const currentZoom = this.map.getZoom();
+        const baseZoom = 14.81;
+        const scaleFactor = Math.pow(2, baseZoom - currentZoom);
+
+        const canvas = this.map.getCanvas();
+        const halfWidth = canvas.clientWidth / 2;
+        const halfHeight = canvas.clientHeight / 2;
+        const occupiedBoxes = [];
+
         this.textLabels.forEach(mesh => {
+            if (mesh.userData.isStoryVisible === false) {
+                mesh.visible = false;
+                return;
+            }
             // Reset
             mesh.rotation.set(0, 0, 0);
 
-            // 1. Counter-rotate against the Map's bearing (Spin)
             mesh.rotateZ(-bearingRad);
 
-            // 2. Rotate X to match the Map's Pitch (Tilt)
-            // If Pitch is 0 (Looking down), text lies flat (Rotation 0)
-            // If Pitch is 60 (Angled), text tilts up 60 degrees to face camera
             mesh.rotateX(pitchRad);
+
+            mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+            const pos = mesh.position.clone();
+
+            pos.applyMatrix4(this.camera.projectionMatrix);
+
+            if (pos.z < -1 || pos.z > 1) {
+                mesh.visible = false;
+                return;
+            }
+
+            const screenX = (pos.x * halfWidth) + halfWidth;
+            const screenY = -(pos.y * halfHeight) + halfHeight;
+
+            const boxWidth = 100;  
+            const boxHeight = 25;
+
+            const rect = {
+                left: screenX - boxWidth / 2,
+                right: screenX + boxWidth / 2,
+                top: screenY - boxHeight / 2,
+                bottom: screenY + boxHeight / 2
+            };
+
+            let overlaps = false;
+            for (let i = 0; i < occupiedBoxes.length; i++) {
+                const other = occupiedBoxes[i];
+                if (rect.left < other.right && 
+                    rect.right > other.left && 
+                    rect.top < other.bottom && 
+                    rect.bottom > other.top) {
+                    overlaps = true;
+                    break;
+                }
+            }
+
+            if (overlaps) {
+                mesh.visible = false; 
+            } else {
+                mesh.visible = true;  
+                occupiedBoxes.push(rect); 
+            }
         });
 
         const m = new THREE.Matrix4().fromArray(matrix);
@@ -1438,7 +1490,7 @@ function filterNodesByStory(targetStory) {
             
             // 2. Hide/Show the text label (if it exists)
             if (child.userData.labelMesh) {
-                child.userData.labelMesh.visible = shouldShow;
+                child.userData.labelMesh.userData.isStoryVisible = shouldShow;
             }
         }
     });
@@ -1526,11 +1578,12 @@ function loadNextPathSegment() {
             const elevatorName = transitionNode.name.replace(/\([^)]*\)/g, '').trim();
             nextBtn.innerText = `前往 ${elevatorName} 並搭到 ${FLOOR_NAMES[nextStory][nextStoryBuilding]}`;
         } else {
+            const stairName = transitionNode.name.replace(/\([^)]*\)/g, '').trim();
             if (StoryDiff > 0){
-                nextBtn.innerText = `往上 ${StoryDiff} 層`;
+                nextBtn.innerText = `前往 ${stairName} 並往上 ${StoryDiff} 層`;
             }
             else if (StoryDiff < 0){
-                nextBtn.innerText = `往下 ${Math.abs(StoryDiff)} 層`;
+                nextBtn.innerText = `前往 ${stairName} 並往下 ${Math.abs(StoryDiff)} 層`;
             }
         }
         nextBtn.style.display = 'block';

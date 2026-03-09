@@ -944,7 +944,7 @@ button.cta:hover {
     );
     backdrop-filter: blur(4px);
     padding: 10px;
-    border-radius: 10px;
+    border-radius: 30px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
@@ -952,7 +952,7 @@ button.cta:hover {
 }
 
 .flag-button-container-btn {
-  --color: #a5a5b0;
+  --color: #4b54dd;
   --size: 30px;
   background: none !important;
   border: none;
