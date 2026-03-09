@@ -188,7 +188,7 @@ nextBtn.innerText = "Go to Next Floor";
 nextBtn.id = "next-floor-btn";
 Object.assign(nextBtn.style, {
     position: 'absolute',
-    bottom: '30px',
+    bottom: '60px', // Increased from 30px to clear the 2.5rem (~40px) menu button
     left: '50%',
     transform: 'translateX(-50%)',
     padding: '12px 24px',
@@ -201,7 +201,8 @@ Object.assign(nextBtn.style, {
     cursor: 'pointer',
     boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
     display: 'none',
-    zIndex: '9999'
+    // Lower than the menu's 1000, but high enough to be seen over the map
+    zIndex: '500' 
 });
 document.body.appendChild(nextBtn);
 
@@ -282,7 +283,7 @@ const FLOOR_ZOOMS_MOBILE = {
 // 2. MAP INITIALIZATION
 // ==========================================
 
-const isMobile = window.innerWidth < 768;
+const isMobile = (screen.width < 768);
 
 const userAgent = navigator.userAgent;
 
@@ -873,18 +874,18 @@ function preventDefaultMenu(e) {
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
                 const resScale = isMobile ? 0.25 : 0.5;
-                canvas.width = 2048 * resScale;
+                canvas.width = 4096 * resScale;
                 canvas.height = 512 * resScale;
                 context.scale(resScale, resScale);
 
                 context.font = "Bold 250px Arial";
-                context.fillStyle = "white";
+                context.fillStyle = "#000000";
                 context.textAlign = "center";
                 context.textBaseline = "middle";
-                context.strokeStyle = 'black';
-                context.lineWidth = 12;
+                context.strokeStyle = 'white';
+                context.lineWidth = 28;
 
-                const centerX = 1024;
+                const centerX = 2048;
                 context.strokeText(updatedNode.name, centerX, 180);
                 context.fillText(updatedNode.name, centerX, 180);
 
@@ -1082,7 +1083,7 @@ const customLayer = {
             
             const resScale = isMobile ? 0.25 : 0.5;
 
-            canvas.width = 2048 * resScale;
+            canvas.width = 4096 * resScale;
             canvas.height = 512 * resScale;
 
             context.scale(resScale, resScale);
@@ -1092,13 +1093,13 @@ const customLayer = {
             const svgPath = "M7,10H10M10,10H13M10,10V7M10,10V13M15,15L21,21M10,17C6.134,17 3,13.866 3,10C3,6.134 6.134,3 10,3C13.866,3 17,6.134 17,10C17,13.866 13.866,17 10,17Z";
 
             context.font = "Bold 250px Arial";
-            context.fillStyle = "white";
+            context.fillStyle = "black";
             context.textAlign = "center";
             context.textBaseline = "middle";
-            context.strokeStyle = 'black';
+            context.strokeStyle = 'white';
             context.lineWidth = 12;
 
-            const centerX = 1024;
+            const centerX = 2048;
             context.strokeText(node.name, centerX, 180);
             context.fillText(node.name, centerX, 180);
 
@@ -1133,10 +1134,12 @@ const customLayer = {
                 side: THREE.DoubleSide,
                 toneMapped: false
             });
+            
+
 
             // --- LABEL SCALING ---
             // Multiply Width (12) and Height (3) by 's'
-            const labelGeo = new THREE.PlaneGeometry(12 * s, 3 * s);
+            const labelGeo = new THREE.PlaneGeometry(24 * (s*2), 3 * (s*2));
             const labelMesh = new THREE.Mesh(labelGeo, labelMat);
             
             // --- OFFSET SCALING ---
@@ -1520,7 +1523,8 @@ function loadNextPathSegment() {
 
         const transitionNode = segmentNodes[segmentNodes.length - 1];
         if (transitionNode.elevator) {
-            nextBtn.innerText = `搭到 ${FLOOR_NAMES[nextStory][nextStoryBuilding]}`;
+            const elevatorName = transitionNode.name.replace(/\([^)]*\)/g, '').trim();
+            nextBtn.innerText = `前往 ${elevatorName} 並搭到 ${FLOOR_NAMES[nextStory][nextStoryBuilding]}`;
         } else {
             if (StoryDiff > 0){
                 nextBtn.innerText = `往上 ${StoryDiff} 層`;
@@ -2640,6 +2644,8 @@ async function sendFrameLoop() {
     const data = imageData.data;
     let isBlackScreen = true;
 
+    const cameraStatus = document.getElementById('camera-status');
+
     for (let i = 0; i < data.length; i += 4) {
         // Check if any pixel has non-zero RGB values
         if (data[i] > 10 || data[i + 1] > 10 || data[i + 2] > 10) {
@@ -2704,6 +2710,10 @@ async function sendFrameLoop() {
                     }
                     cameraOverlay.style.display = 'none';
                     isStreaming = false;
+                }
+                else{
+                    cameraStatus.textContent = "偵測失敗，請換個角度再試一次...";
+                    cameraStatus.style.color = "red";
                 }
             }
         } catch (error) {

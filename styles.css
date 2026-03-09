@@ -206,6 +206,116 @@ button:hover {
     padding-left: 20px !important;
 }
 
+@media (min-width: 768px) {
+    .main-wrapper {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      width: 14rem;
+    }
+
+    .main {
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: white;
+      /* Glassy purple */
+      background-color: #7209b7 !important; 
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      
+      padding: 3px 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      height: 2.5rem;
+      cursor: pointer;
+      justify-content: center;
+      position: relative;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .menu-container {
+      /* Semi-transparent dark background */
+      background-color: rgba(76, 51, 80, 0.75) !important; 
+      
+      /* The Glassmorphism Effect */
+      backdrop-filter: blur(12px) saturate(150%);
+      -webkit-backdrop-filter: blur(12px) saturate(150%); /* For Safari support */
+      
+      /* Subtle border to define the edges */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      
+      color: white;
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-10px);
+    }
+
+    .inp:checked ~ .menu-container {
+      max-height: 600px; /* Large enough to hold your UI */
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+}
+
+@media (max-width: 767px) {
+    .main-wrapper {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column-reverse; /* Keeps button at bottom, menu above */
+        transform: none !important;
+    }
+
+    /* Full-width Bar */
+    .main {
+        height: 3.5rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        border-radius: 0 !important; /* Removes the rounded corners */
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2) !important;
+        margin: 0 !important;
+    }
+
+    /* Compact Menu Container */
+    .menu-container {
+        width: 14rem !important; /* Keeps your compact width */
+        margin: 0 auto 10px auto !important; /* Centers it horizontally */
+        border-radius: 12px !important;
+        transform: translateY(10px);
+        max-height: 0;
+        opacity: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+    }
+
+    .inp:checked ~ .menu-container {
+        max-height: 70vh;
+        opacity: 1;
+        transform: translateY(0);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+}
+
 /* Container for positioning */
 .main-wrapper {
   position: fixed;
@@ -237,6 +347,7 @@ button:hover {
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 
 .main .bar {
   position: absolute;
@@ -974,4 +1085,56 @@ button.cta:hover {
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     border-left: 1px solid rgba(255, 255, 255, 0.2);
     pointer-events: none; /* Allows clicks to pass through to the map if needed */
+}
+
+@media (min-width: 768px) {
+  #site-credit {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+      to bottom right,
+      rgba(127, 40, 241, 0.76) 0%,
+      rgba(255, 46, 238, 0.479) 100%
+    );;
+    color: #000000;
+    padding: 5px 12px;
+    font-family: 'monospace', sans-serif;
+    font-size: 11px;
+    z-index: 9999; /* Ensures it stays above the map */
+    border-radius: 0; /* Forces sharp corners */
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    pointer-events: none; /* Allows clicks to pass through to the map if needed */
+  }
+}
+
+
+@media (max-width: 767px) {
+  #site-credit {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: auto; /* Resets the desktop 'right: 0' */
+    bottom: auto; /* Resets the desktop 'bottom: 0' */
+    
+    /* Fixed the double semicolon and ensured visibility */
+    background: linear-gradient(
+      to bottom right,
+      rgba(127, 40, 241, 0.9) 0%, 
+      rgba(255, 46, 238, 0.7) 100%
+    );
+    
+    color: #000000;
+    padding: 6px 15px; /* Slightly more breathing room for mobile */
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 10px; /* Slightly smaller to stay unobtrusive */
+    z-index: 10001; /* Higher than the menu */
+    
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    white-space: nowrap; /* Prevents text from wrapping on tiny screens */
+  }
 }
