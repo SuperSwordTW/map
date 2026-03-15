@@ -590,129 +590,6 @@ button.cta:hover {
     color: white;
 }
 
-/* Container for the checkbox and label */
-.checkbox-wrapper {
-  --checkbox-size: 25px;
-  --checkbox-color: #ec7eec;
-  --checkbox-shadow: rgba(105, 49, 105, 0.3);
-  --checkbox-border: rgba(144, 58, 165, 0.7);
-  display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-  padding: 10px;
-  
-}
-
-
-/* Hide the default checkbox */
-.checkbox-wrapper input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-wrapper .checkmark {
-  position: relative;
-  width: var(--checkbox-size);
-  height: var(--checkbox-size);
-  border: 2px solid var(--checkbox-border);
-  border-radius: 8px;
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 15px var(--checkbox-shadow);
-  overflow: hidden;
-}
-
-/* Create the custom checkbox (the circle/box) */
-.checkbox-wrapper .checkmark::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, var(--checkbox-color), #00ffcc);
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  transform: scale(0) rotate(-45deg);
-}
-
-.checkbox-wrapper input:checked ~ .checkmark::before {
-  opacity: 1;
-  transform: scale(1) rotate(0);
-}
-
-.checkbox-wrapper .checkmark svg {
-  width: 0;
-  height: 0;
-  color: #1a1a1a;
-  z-index: 1;
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
-}
-
-.checkbox-wrapper input:checked ~ .checkmark svg {
-  width: 18px;
-  height: 18px;
-  transform: rotate(360deg);
-}
-
-.checkbox-wrapper input:checked ~ .checkmark svg {
-  width: 18px;
-  height: 18px;
-  transform: rotate(360deg);
-}
-
-.checkbox-wrapper:hover .checkmark {
-  border-color: var(--checkbox-color);
-  transform: scale(1.1);
-  box-shadow:
-    0 0 20px var(--checkbox-shadow),
-    0 0 40px var(--checkbox-shadow),
-    inset 0 0 10px var(--checkbox-shadow);
-}
-
-.checkbox-wrapper input:checked ~ .checkmark {
-  animation: pulse 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 20px var(--checkbox-shadow);
-  }
-  50% {
-    transform: scale(0.9);
-    box-shadow:
-      0 0 30px var(--checkbox-shadow),
-      0 0 50px var(--checkbox-shadow);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 20px var(--checkbox-shadow);
-  }
-}
-
-.checkbox-wrapper .label {
-  margin-left: 15px;
-  font-family: "Segoe UI", sans-serif;
-  font-weight: bold;
-  color: var(--checkbox-color);
-  font-size: 18px;
-  text-shadow: 0 0 10px var(--checkbox-shadow);
-  opacity: 0.9;
-  transition: all 0.3s;
-}
-
-.checkbox-wrapper:hover .label {
-  opacity: 1;
-  transform: translateX(5px);
-}
-
 
 /* AR Overlays */
 .ar-vignette {
@@ -911,12 +788,8 @@ button.cta:hover {
     padding: 3px 15px;
     border-radius: 10px;
 
-    background: linear-gradient(
-      to bottom right,
-      #b22eff 0%,
-      rgba(255, 46, 245, 0.205) 100%
-    );
-    background-color: rgba(46, 142, 255, 0.2);
+    background: #ac8ec9;
+    background-color: #ac8ec9;
     color: #ca6dd6;
     font-family: 'Monaco', 'Consolas', monospace;
     font-size: 13px;
@@ -937,11 +810,7 @@ button.cta:hover {
     top: 80px; 
     right: 20px;
     z-index: 1000;
-    background: linear-gradient(
-      to bottom right,
-      rgba(46, 143, 255, 0.76) 0%,
-      rgba(46, 143, 255, 0.021) 100%
-    );
+    background: #ac8ec9;
     backdrop-filter: blur(4px);
     padding: 10px;
     border-radius: 30px;
@@ -952,7 +821,7 @@ button.cta:hover {
 }
 
 .flag-button-container-btn {
-  --color: #4b54dd;
+  --color: #602a92;
   --size: 30px;
   background: none !important;
   border: none;
@@ -1137,4 +1006,61 @@ button.cta:hover {
     pointer-events: none;
     white-space: nowrap; /* Prevents text from wrapping on tiny screens */
   }
+}
+
+/* Container for the Play Button - Positioned below the Flag button */
+#play-button-container {
+    position: fixed;
+    top: 140px; /* Offset from the top to sit below the flag button (80px + padding) */
+    right: 20px;
+    z-index: 1000;
+    background: #ac8ec9;
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Button Reset and Interaction */
+.play-button-container-btn {
+  --color: #602a92;
+  --size: 30px;
+  background: none !important;
+  border: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  font-size: var(--size);
+  fill: var(--color);
+  width: var(--size);
+  height: var(--size);
+  transition: transform 0.1s, filter 0.2s;
+}
+
+.play-button-container-btn:hover {
+    filter: brightness(1.3);
+    transform: scale(1.1);
+}
+
+.play-button-container-btn:active {
+  transform: scale(0.9);
+}
+
+/* Ensure the SVG scales correctly */
+.play-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.flag-button-container-btn svg,
+.play-button-container-btn svg {
+    width: 100%;
+    height: 100%;
+    display: block;
 }

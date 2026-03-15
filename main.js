@@ -117,7 +117,6 @@ feedbackModal.innerHTML = `
 `;
 document.body.appendChild(feedbackModal);
 
-// Helper to check if the cookie exists
 function hasSubmittedFeedback() {
     return localStorage.getItem('feedback_submitted') === 'true';
 }
@@ -171,6 +170,374 @@ function triggerFeedbackPopup() {
 }
 
 // ==========================================
+// 0.1 Welcome Message
+// ==========================================
+
+const tutorialPages = [
+    {
+        title: "歡迎使用 Ahsnccu Atlas!",
+        text: "感謝您使用我們的地圖服務。這個導覽將帶您快速了解如何使用本系統。",
+        img: "AAA_welcome.png"
+    },
+    {
+        title: "選擇起點與終點",
+        text: "在左側的選單中，您可以從下拉清單輕鬆選擇您的起點與終點位置。",
+    },
+    {
+        title: "放大倍率、回到起點、播放預覽",
+        text: "檢視地圖的放大倍率。\n點擊按鈕快速返回您的起點位置。\n點擊「播放預覽」按鈕觀看導航路線。",
+    },
+    {
+        title: "實景偵測",
+        text: "點擊相機圖示可開啟實景偵測畫面，掃描幾秒鐘後系統即可辨識您所在位置。",
+        img: "camera.png"
+    },
+    {
+        title: "準備出發！",
+        text: "設定完成後，點擊下方的 START 按鈕開始您的導航。祝您使用愉快！",
+        img: "AAA_welcome.png"
+    }
+];
+
+let currentPage = 0;
+
+const tutorialStyle = document.createElement('style');
+
+tutorialStyle.innerHTML = `
+    #welcome-content {
+        background-color: rgba(76, 51, 80, 0.85); /* Matches your menu-container */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        position: relative;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .tut-img-container {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .tut-img-container img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .tut-title {
+        margin: 0 0 10px 0;
+        font-size: 22px;
+        color: #00ffcc; /* Matches your Dev HUD accent color */
+    }
+    .tut-text {
+        font-size: 20px;
+        line-height: 1.5;
+        color: #e2e8f0;
+        min-height: 45px; /* Prevents layout jumping */
+    }
+    .tut-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 20px 0;
+    }
+    .tut-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+    .tut-dot.active {
+        background: #00ffcc;
+        transform: scale(1.3);
+    }
+    .tut-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+    .tut-btn {
+        background: #7209b7; /* Matches your START button */
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 8px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+    .tut-btn:hover:not(:disabled) {
+        background: #a200ff;
+        transform: translateY(-2px);
+    }
+    .tut-btn:disabled {
+        background: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.3);
+        cursor: not-allowed;
+        border-color: transparent;
+    }
+    #tut-dim-bg {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6); /* Adjust darkness here */
+        z-index: 10002 !important; 
+    }
+    
+    #welcome-overlay {
+        background: transparent !important;
+        z-index: 10100 !important;
+        pointer-events: none;
+    }
+
+    #welcome-content {
+        pointer-events: auto;
+    }
+
+    .tut-highlight, .tut-wrapper-top {
+        z-index: 10005 !important; 
+    }
+`;
+tutorialStyle.innerHTML += `
+    /* --- Highlight UI Elements --- */
+    .tut-highlight {
+        z-index: 10005 !important; /* Higher than #welcome-overlay */
+        box-shadow: 0 0 20px 4px #ea00ff !important;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        pointer-events: none; /* Prevents user from clicking things during tutorial */
+    }
+
+    /* --- Collapsing Welcome Menu --- */
+    #welcome-content {
+        z-index: 10101 !important;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.5s ease, 
+                    padding 0.5s ease;
+    }
+
+    .tut-modal-compact {
+        max-width: 300px !important;
+        padding: 20px !important;
+    }
+
+    .tut-modal-compact .tut-img-container {
+        height: 100px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .tut-modal-compact .tut-title {
+        font-size: 20px !important;
+    }
+
+    .tut-modal-compact .tut-text {
+        font-size: 20px !important;
+        min-height: 40px !important;
+    }
+
+    /* Move the collapsed modal out of the way of the highlighted elements */
+    .tut-modal-right {
+        transform: translate(-25vw, 15vh);
+    }
+    
+    .tut-modal-left {
+        transform: translate(25vw, -15vh);
+    }
+
+    /* Mobile handling: move it slightly down to not block top UI */
+    @media (max-width: 767px) {
+        /* Page 2: Menu is at the BOTTOM on mobile, so push the modal to the TOP */
+        .tut-modal-right {
+            transform: translateY(-29vh) scale(0.85);
+        }
+
+        /* Page 3: Buttons are at the TOP-RIGHT, so push the modal to the BOTTOM-LEFT */
+        .tut-modal-left {
+            transform: translate(0vw, 10vh) scale(0.9);
+        }
+
+        /* Slightly smaller glow on mobile so it doesn't bleed off the screen */
+        .tut-highlight {
+            box-shadow: 0 0 15px 2px #ea00ff !important;
+        }
+    }
+`;
+document.head.appendChild(tutorialStyle);
+
+const welcomeOverlay = document.createElement('div');
+welcomeOverlay.className = 'modal-overlay';
+welcomeOverlay.id = 'welcome-overlay';
+welcomeOverlay.style.display = 'none';
+
+function clearTutorialHighlights() {
+    document.querySelector('.main-wrapper').classList.remove('tut-highlight');
+    document.getElementById('zoom-indicator').classList.remove('tut-highlight');
+    document.querySelector('.menu-container').classList.remove('tut-highlight');
+    document.getElementById('flag-button-container').classList.remove('tut-highlight');
+    document.getElementById('play-button-container').classList.remove('tut-highlight');
+    
+    const welcomeContent = document.getElementById('welcome-content');
+    welcomeContent.classList.remove('tut-modal-compact', 'tut-modal-right', 'tut-modal-left');
+}
+
+
+
+welcomeOverlay.innerHTML = `
+    <div id="welcome-content">
+        
+        <div class="tut-img-container">
+            <img id="tut-img" src="" alt="Tutorial Image">
+        </div>
+        
+        <h2 id="tut-title" class="tut-title">Title</h2>
+        <p id="tut-text" class="tut-text">Description</p>
+        
+        <div class="tut-dots" id="tut-dots"></div>
+        
+        <div class="tut-nav">
+            <button id="tut-prev" class="tut-btn">上一步</button>
+            <button id="tut-next" class="tut-btn">下一步</button>
+        </div>
+    </div>
+`;
+document.body.appendChild(welcomeOverlay);
+const tutDimBg = document.createElement('div');
+tutDimBg.id = 'tut-dim-bg';
+tutDimBg.style.display = 'none';
+document.body.appendChild(tutDimBg);
+
+const imgEl = document.getElementById('tut-img');
+const titleEl = document.getElementById('tut-title');
+const textEl = document.getElementById('tut-text');
+const dotsContainer = document.getElementById('tut-dots');
+const welprevBtn = document.getElementById('tut-prev');
+const welnextBtn = document.getElementById('tut-next');
+
+tutorialPages.forEach((_, index) => {
+    const dot = document.createElement('div');
+    dot.className = 'tut-dot';
+    dotsContainer.appendChild(dot);
+});
+
+const dots = document.querySelectorAll('.tut-dot');
+
+function updateTutorialPage() {
+    const page = tutorialPages[currentPage];
+    
+    // Update content
+    const imgEl = document.getElementById('tut-img');
+    const imgContainer = document.querySelector('.tut-img-container');
+    imgContainer.style.display = 'flex';
+    titleEl.textContent = page.title;
+    textEl.textContent = page.text;
+    
+    // Update dots
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentPage);
+    });
+    
+    // Update buttons
+    welprevBtn.disabled = currentPage === 0;
+    
+    if (currentPage === tutorialPages.length - 1) {
+        welnextBtn.textContent = "開始使用";
+        welnextBtn.style.background = "#00ffcc";
+        welnextBtn.style.color = "#000";
+    } else {
+        welnextBtn.textContent = "下一步";
+        welnextBtn.style.background = "#7209b7";
+        welnextBtn.style.color = "#fff";
+    }
+
+    // --- Dynamic UI Highlighting Logic ---
+    clearTutorialHighlights(); // Reset before applying new rules
+    
+    if (currentPage === 1) {
+        // Page 2: Highlight Left Menu
+        imgContainer.style.display = 'none';
+        textEl.style.display = 'none';
+        
+        // 1. Pull the whole wrapper above the dark overlay
+        document.querySelector('.main-wrapper').classList.add('tut-wrapper-top');
+        // 2. ONLY apply the pink/purple shadow to the dropdown container
+        document.querySelector('.menu-container').classList.add('tut-highlight');
+        
+        document.getElementById('menu-toggle').checked = true; // Ensure menu is open
+        document.getElementById('welcome-content').classList.add('tut-modal-compact', 'tut-modal-right');
+        
+    } else if (currentPage === 2) {
+        closeMenu();
+        imgContainer.style.display = 'none';
+        textEl.style.display = 'block';
+        // Page 3: Highlight Top Right Buttons
+        document.getElementById('zoom-indicator').classList.add('tut-highlight');
+        document.getElementById('flag-button-container').classList.add('tut-highlight');
+        document.getElementById('play-button-container').classList.add('tut-highlight');
+        
+        // Collapse modal and move left to avoid blocking the buttons
+        document.getElementById('welcome-content').classList.add('tut-modal-compact', 'tut-modal-left');
+    }
+    else{
+        imgEl.src = page.img;
+        textEl.style.display = 'block';
+    }
+}
+
+welprevBtn.addEventListener('click', () => {
+    if (currentPage > 0) {
+        currentPage--;
+        updateTutorialPage();
+    }
+});
+
+welnextBtn.addEventListener('click', () => {
+    if (currentPage < tutorialPages.length - 1) {
+        currentPage++;
+        updateTutorialPage();
+    } else {
+        closeTutorial();
+    }
+});
+
+function closeTutorial() {
+    clearTutorialHighlights();
+    welcomeOverlay.style.display = 'none';
+    tutDimBg.style.display = 'none';
+    localStorage.setItem('welcome_seen', 'true');
+}
+
+function hasSeenWelcomeMessage() {
+    return localStorage.getItem('welcome_seen') === 'true';
+}
+
+function triggerWelcomeMessage() {
+    // Uncomment the next line if you want it to trigger on every refresh during development
+    localStorage.removeItem('welcome_seen'); 
+
+    if (hasSeenWelcomeMessage()) return;
+
+    currentPage = 0;
+    updateTutorialPage();
+    
+    // We use flex instead of block to keep the modal centered via your .modal-overlay class
+    welcomeOverlay.style.display = 'flex'; 
+    tutDimBg.style.display = 'block';
+}
+
+
+// ==========================================
 // 1. CONFIGURATION
 // ==========================================
 
@@ -194,7 +561,7 @@ Object.assign(nextBtn.style, {
     padding: '12px 24px',
     fontSize: '18px',
     fontWeight: 'bold',
-    backgroundColor: '#ff9900',
+    backgroundColor: '#720e99',
     color: 'white',
     border: 'none',
     borderRadius: '50px',
@@ -1336,6 +1703,7 @@ map.on('load', () => {
     document.getElementById('zoom-value').innerText = `${zoomPercent}%`;
 
     console.log("Map Layers Initialized");
+    triggerWelcomeMessage();
 });
 
 // ==========================================
@@ -1559,8 +1927,6 @@ function loadNextPathSegment() {
     const targetStory = segmentNodes[0].story;
     const isLastSegment = (currentSegmentIndex === globalPathSegments.length - 1);
 
-    const isCinematicEnabled = document.getElementById('anim-toggle').checked;
-
     // 1. Transition Floor Model
     transitionToFloor(targetStory);
 
@@ -1588,10 +1954,8 @@ function loadNextPathSegment() {
         }
         nextBtn.style.display = 'block';
     } else {
-        nextBtn.style.display = 'none'; // Reached final floor
-        if (!isCinematicEnabled) {
-            triggerFeedbackPopup();
-        }
+        nextBtn.style.display = 'none';
+        triggerFeedbackPopup();
     }
 
     // 3. Extract Coords for Visuals
@@ -1622,48 +1986,6 @@ function loadNextPathSegment() {
     }
 
     map.once('moveend', () => {
-
-        if (isCinematicEnabled) {
-            // Optional: Smooth and Animate
-            const smoothPath = getSmoothPath(coords);
-            const MS_PER_METER = 10; 
-            let totalDistance = 0;
-
-            for (let i = 0; i < smoothPath.length - 1; i++) {
-                const p1 = smoothPath[i]; // [lng, lat, alt]
-                const p2 = smoothPath[i+1];
-
-                // 1. Haversine distance (Horizontal meters)
-                const R = 6371e3; // Earth radius in meters
-                const phi1 = p1[1] * Math.PI / 180;
-                const phi2 = p2[1] * Math.PI / 180;
-                const deltaPhi = (p2[1] - p1[1]) * Math.PI / 180;
-                const deltaLambda = (p2[0] - p1[0]) * Math.PI / 180;
-
-                const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-                        Math.cos(phi1) * Math.cos(phi2) *
-                        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                const horizontalDist = R * c;
-
-                // 2. Vertical distance
-                const verticalDist = Math.abs(p2[2] - p1[2]);
-
-                // 3. Total 3D distance
-                totalDistance += Math.sqrt(horizontalDist * horizontalDist + verticalDist * verticalDist);
-            }
-
-            // Ensure a minimum duration (e.g., 2000ms) so very short paths aren't instant
-            const dynamicDuration = Math.max(2000, totalDistance * MS_PER_METER);
-
-            console.log(`Path Length: ${totalDistance.toFixed(2)}m | Duration: ${dynamicDuration}ms`);
-            
-            animateCamera(smoothPath, dynamicDuration, targetStory, () => {
-                if (isLastSegment) {
-                    triggerFeedbackPopup();
-                }
-            });
-        }
         minZoomLevel = isMobile ? 14.16 : 14.81;
         map.setMinZoom(minZoomLevel);
         const zoomPercent = ((map.getZoom() - minZoomLevel) / (maxZoomLevel - minZoomLevel) * 100).toFixed(0);
@@ -2578,6 +2900,7 @@ function copyRouteLink() {
     const fullUrl = url.toString();
 
     openShareModal(fullUrl);
+    closeMenu();
 }
 
 function openShareModal(url) {
@@ -2765,7 +3088,7 @@ async function sendFrameLoop() {
                     isStreaming = false;
                 }
                 else{
-                    cameraStatus.textContent = "偵測失敗，請換個角度再試一次...";
+                    cameraStatus.textContent = "偵測失敗，請換個角度繼續掃描...";
                     cameraStatus.style.color = "red";
                 }
             }
@@ -2814,4 +3137,65 @@ flagBtn.addEventListener('click', function() {
         pitch: 0
     });
     
+});
+
+// ==========================================
+// Animation Start Button
+// ==========================================
+
+const playBtn = document.getElementById('play-action-btn');
+
+playBtn.addEventListener('click', function() {
+
+    map.stop();
+
+    if (!globalPathSegments || globalPathSegments[currentSegmentIndex] === undefined) {
+        console.warn("No path segment loaded yet.");
+        return;
+    }
+
+    const segmentNodes = globalPathSegments[currentSegmentIndex];
+    const targetStory = segmentNodes[0].story;
+
+    const coords = segmentNodes.map(n => n.coords);
+
+    const smoothPath = getSmoothPath(coords);
+    const MS_PER_METER = 10; 
+    let totalDistance = 0;
+
+    for (let i = 0; i < smoothPath.length - 1; i++) {
+        const p1 = smoothPath[i]; // [lng, lat, alt]
+        const p2 = smoothPath[i+1];
+
+        // 1. Haversine distance (Horizontal meters)
+        const R = 6371e3; // Earth radius in meters
+        const phi1 = p1[1] * Math.PI / 180;
+        const phi2 = p2[1] * Math.PI / 180;
+        const deltaPhi = (p2[1] - p1[1]) * Math.PI / 180;
+        const deltaLambda = (p2[0] - p1[0]) * Math.PI / 180;
+
+        const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const horizontalDist = R * c;
+
+        // 2. Vertical distance
+        const verticalDist = Math.abs(p2[2] - p1[2]);
+
+        // 3. Total 3D distance
+        totalDistance += Math.sqrt(horizontalDist * horizontalDist + verticalDist * verticalDist);
+    }
+
+    // Ensure a minimum duration (e.g., 2000ms) so very short paths aren't instant
+    const dynamicDuration = Math.max(2000, totalDistance * MS_PER_METER);
+
+    console.log(`Path Length: ${totalDistance.toFixed(2)}m | Duration: ${dynamicDuration}ms`);
+
+    requestAnimationFrame(() => {
+        animateCamera(smoothPath, dynamicDuration, targetStory, () => {
+            console.log("Animation Finished");
+        });
+    });
+
 });
