@@ -524,7 +524,7 @@ function hasSeenWelcomeMessage() {
 
 function triggerWelcomeMessage() {
     // Uncomment the next line if you want it to trigger on every refresh during development
-    localStorage.removeItem('welcome_seen'); 
+    // localStorage.removeItem('welcome_seen'); 
 
     if (hasSeenWelcomeMessage()) return;
 
