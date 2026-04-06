@@ -140,15 +140,14 @@ button:hover {
   );
 }
 
-/* 1. Remove truncation (...) and allow text to show fully */
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: white !important;
     line-height: 38px !important;
     padding-left: 12px !important;
-    padding-right: 30px !important; /* Leave room for the arrow */
-    text-align: left !important;    /* Force text to the left */
-    overflow: visible !important;   /* Stop the text from hiding */
-    text-overflow: clip !important; /* Remove the "..." */
+    padding-right: 30px !important;
+    text-align: left !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     white-space: nowrap !important;
 }
 
@@ -157,19 +156,16 @@ button:hover {
     height: 38px !important;
     display: flex !important;
     align-items: center !important;
-    /* Matches the dark purple glass effect of your menu */
     background-color: rgba(58, 40, 70, 0.8) !important; 
-    /* Matches the subtle white border of your menu */
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    /* Increased to 2rem to match your START button's roundness */
     border-radius: 2rem !important; 
     width: 100% !important;
     transition: all 0.3s ease;
 }
 
 .select2-container--open .select2-search__field {
-    border-radius: 20px !important; /* Adjust this for more/less roundness */
-    padding: 3px 15px !important;   /* Adds breathing room for the rounded edges */
+    border-radius: 20px !important;
+    padding: 3px 15px !important;
     z-index: 10500 !important;
 }
 
@@ -182,7 +178,6 @@ button:hover {
     box-shadow: 0 0 8px rgba(114, 9, 183, 0.4);
 }
 
-/* 3. Adjust the arrow position so it doesn't overlap text */
 .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 38px !important;
     position: absolute !important;
@@ -192,17 +187,16 @@ button:hover {
     align-items: center !important;
 }
 
-/* Style for the Optgroup Header (Floor Name) */
+
 .select2-results__group {
-    background-color: #b08bb8 !important; /* Slightly lighter than the background */
-    color: #ffffff !important;         /* Matches your DEV HUD color */
+    background-color: #b08bb8 !important;
+    color: #ffffff !important;
     padding: 4px 10px !important;
     font-weight: bold !important;
     font-size: 11px !important;
     text-transform: uppercase;
 }
 
-/* Add a small indent to the items under the floor header */
 .select2-results__option[aria-selected] {
     background-color: #5c3b5d !important;
     color: #ffffff !important;
@@ -224,7 +218,6 @@ button:hover {
       font-weight: 600;
       letter-spacing: 2px;
       color: white;
-      /* Glassy purple */
       background-color: #7209b7 !important; 
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
@@ -243,14 +236,12 @@ button:hover {
     }
 
     .menu-container {
-      /* Semi-transparent dark background */
       background-color: rgba(76, 51, 80, 0.75) !important; 
       
       /* The Glassmorphism Effect */
       backdrop-filter: blur(12px) saturate(150%);
       -webkit-backdrop-filter: blur(12px) saturate(150%); /* For Safari support */
       
-      /* Subtle border to define the edges */
       border: 1px solid rgba(255, 255, 255, 0.1);
       
       color: white;
@@ -265,7 +256,7 @@ button:hover {
     }
 
     .inp:checked ~ .menu-container {
-      max-height: 600px; /* Large enough to hold your UI */
+      max-height: 600px;
       opacity: 1;
       pointer-events: all;
       transform: translateY(0);
@@ -283,7 +274,7 @@ button:hover {
         width: 100% !important;
         z-index: 1000;
         display: flex;
-        flex-direction: column-reverse; /* Keeps button at bottom, menu above */
+        flex-direction: column-reverse;
         transform: none !important;
     }
 
@@ -293,7 +284,7 @@ button:hover {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
-        border-radius: 0 !important; /* Removes the rounded corners */
+        border-radius: 0 !important;
         border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-bottom: none !important;
         border-left: none !important;
@@ -302,10 +293,9 @@ button:hover {
         margin: 0 !important;
     }
 
-    /* Compact Menu Container */
     .menu-container {
-        width: 14rem !important; /* Keeps your compact width */
-        margin: 0 auto 10px auto !important; /* Centers it horizontally */
+        width: 14rem !important;
+        margin: 0 auto 10px auto !important;
         border-radius: 12px !important;
         transform: translateY(10px);
         max-height: 0;
@@ -321,7 +311,6 @@ button:hover {
     }
 }
 
-/* Container for positioning */
 .main-wrapper {
   position: fixed;
   top: 20px;
@@ -330,12 +319,11 @@ button:hover {
   width: 14rem;
 }
 
-/* The Button Part */
+/* The Button */
 .main {
   font-weight: 600;
   letter-spacing: 2px;
   color: white;
-  /* Glassy purple */
   background-color: #7209b7 !important; 
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -373,14 +361,11 @@ button:hover {
 
 /* Dropdown Panel */
 .menu-container {
-  /* Semi-transparent dark background */
   background-color: rgba(76, 51, 80, 0.75) !important; 
   
-  /* The Glassmorphism Effect */
   backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%); /* For Safari support */
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
   
-  /* Subtle border to define the edges */
   border: 1px solid rgba(255, 255, 255, 0.1);
   
   color: white;
@@ -393,9 +378,10 @@ button:hover {
   pointer-events: none;
   transform: translateY(-10px);
 }
+
 /* Expansion Logic - Triggered when input is checked */
 .inp:checked ~ .menu-container {
-  max-height: 600px; /* Large enough to hold your UI */
+  max-height: 600px;
   opacity: 1;
   pointer-events: all;
   transform: translateY(0);
@@ -408,7 +394,7 @@ button:hover {
   position: relative !important;
   top: 0 !important;
   left: 0 !important;
-  background: transparent !important; /* Ensures the glass effect shows through */
+  background: transparent !important;
 }
 
 #ui-container div[style*="background: #222"] {
@@ -416,7 +402,6 @@ button:hover {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Hamburger to X Animation */
 .inp:checked ~ .main .top {
   transform: translateY(6px) rotate(45deg);
 }
@@ -455,8 +440,8 @@ button:hover {
   transition: all .5s;
   border: none;
   background-color: transparent;
-  width: 100%; /* Ensures it fits your menu width */
-  padding: 0;  /* Reset default padding to let the inner div handle it */
+  width: 100%;
+  padding: 0;
   margin-top: 25px;
   margin-bottom: 20px;
 }
@@ -490,7 +475,7 @@ button:hover {
   cursor: pointer;
   filter: brightness(1.2);
   transform: scale(1.05);
-  background-color: transparent; /* Prevent background flicker */
+  background-color: transparent;
 }
 
 #start-btn.btn:hover::before {
@@ -529,7 +514,7 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  width: auto; /* Overriding your global button width: 100% */
+  width: auto;
 }
 
 .cta:before {
@@ -539,7 +524,7 @@ button:hover {
   left: 0;
   display: block;
   border-radius: 50px;
-  background: rgba(223, 206, 255, 0.3); /* Subtle purple wash */
+  background: rgba(223, 206, 255, 0.3);
   width: 45px;
   height: 45px;
   transition: all 0.3s ease;
@@ -570,7 +555,7 @@ button:hover {
 
 .cta:hover:before {
   width: 100%;
-  background: #3f36b6; /* Matches your "Start" button color */
+  background: #3f36b6;
 }
 
 .cta:hover svg {
@@ -581,14 +566,13 @@ button:hover {
   transform: scale(0.95);
 }
 
-/* Ensure the global button hover from styles.css doesn't override this */
 button.cta:hover {
     background: none !important;
 }
 
 .cta.copy-success:before {
     background: #28a745 !important;
-    width: 100%; /* Keeps it expanded while showing the message */
+    width: 100%;
 }
 
 .cta.copy-success span {
@@ -618,7 +602,6 @@ button.cta:hover {
     pointer-events: none;
 }
 
-/* The Pulsing Ring */
 .ar-ring {
     width: 120px;
     height: 120px;
@@ -628,9 +611,8 @@ button.cta:hover {
     animation: ar-pulse 2s infinite;
 }
 
-/* Glassy Hint Box */
 .ar-hint-box {
-    margin-top: 160px; /* Position below the ring */
+    margin-top: 160px;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(10px);
     padding: 12px 24px;
@@ -662,7 +644,6 @@ button.cta:hover {
     50% { transform: translateY(-5px); }
 }
 
-/* Cleanup: Positioning the existing close button */
 #close-camera {
     position: absolute;
     top: 25px;
@@ -701,7 +682,7 @@ button.cta:hover {
   /* Aesthetics */
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px); /* For Safari support */
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 30px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -711,7 +692,7 @@ button.cta:hover {
   font-family: monospace;
   font-weight: 500;
   text-shadow: 1px 1px 2px black;
-  white-space: nowrap; /* Prevents text wrapping */
+  white-space: nowrap;
 }
 
 .toggle-container {
@@ -724,7 +705,7 @@ button.cta:hover {
   scale: 0.75;
 }
 
-/* Hide the native checkbox */
+/* Hide the checkbox */
 .toggle-input {
   position: absolute;
   opacity: 0;
@@ -732,18 +713,16 @@ button.cta:hover {
   height: 0;
 }
 
-/* The background track */
 .toggle-track {
-  width: 96px; /* w-24 */
-  height: 48px; /* h-12 */
-  background-color: #b785f1; /* bg-rose-400 */
+  width: 96px;
+  height: 48px;
+  background-color: #b785f1;
   border-radius: 9999px;
   position: relative;
   transition: duration 300ms;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-/* The sliding circle (The "After" element) */
 .toggle-track::after {
   content: "";
   position: absolute;
@@ -751,7 +730,7 @@ button.cta:hover {
   left: 4px;
   width: 40px;
   height: 40px;
-  background-color: #f9fafb; /* gray-50 */
+  background-color: #f9fafb;
   border-radius: 50%;
   transition: transform 0.3s ease;
   z-index: 10;
@@ -760,11 +739,11 @@ button.cta:hover {
 /* Icons styling */
 .icon {
   position: absolute;
-  top: 6px;    /* Centered vertically */
-  width: 36px;  /* Slightly smaller to fit the elevator detail */
+  top: 6px;
+  width: 36px;
   height: 36px;
   fill: #111827; 
-  pointer-events: none; /* Prevents icons from blocking clicks */
+  pointer-events: none;
   scale: 0.8;
 }
 
@@ -892,7 +871,7 @@ button.cta:hover {
     height: 32px; 
     font-size: 28px; 
     
-    /* Use flexbox to perfectly center the times symbol */
+    /* Use flexbox to perfectly center "x" */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -954,11 +933,11 @@ button.cta:hover {
     padding: 5px 12px;
     font-family: 'monospace', sans-serif;
     font-size: 11px;
-    z-index: 9999; /* Ensures it stays above the map */
-    border-radius: 0; /* Forces sharp corners */
+    z-index: 9999;
+    border-radius: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     border-left: 1px solid rgba(255, 255, 255, 0.2);
-    pointer-events: none; /* Allows clicks to pass through to the map if needed */
+    pointer-events: none;
 }
 
 @media (min-width: 768px) {
@@ -975,11 +954,11 @@ button.cta:hover {
     padding: 5px 12px;
     font-family: 'monospace', sans-serif;
     font-size: 11px;
-    z-index: 9999; /* Ensures it stays above the map */
-    border-radius: 0; /* Forces sharp corners */
+    z-index: 9999;
+    border-radius: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     border-left: 1px solid rgba(255, 255, 255, 0.2);
-    pointer-events: none; /* Allows clicks to pass through to the map if needed */
+    pointer-events: none;
   }
 }
 
@@ -989,10 +968,9 @@ button.cta:hover {
     position: fixed;
     top: 0;
     left: 0;
-    right: auto; /* Resets the desktop 'right: 0' */
-    bottom: auto; /* Resets the desktop 'bottom: 0' */
+    right: auto;
+    bottom: auto;
     
-    /* Fixed the double semicolon and ensured visibility */
     background: linear-gradient(
       to bottom right,
       rgba(127, 40, 241, 0.9) 0%, 
@@ -1000,23 +978,23 @@ button.cta:hover {
     );
     
     color: #000000;
-    padding: 6px 15px; /* Slightly more breathing room for mobile */
+    padding: 6px 15px;
     font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 10px; /* Slightly smaller to stay unobtrusive */
-    z-index: 10001; /* Higher than the menu */
+    font-size: 10px;
+    z-index: 10001;
     
     border-radius: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     border-right: 1px solid rgba(255, 255, 255, 0.3);
     pointer-events: none;
-    white-space: nowrap; /* Prevents text from wrapping on tiny screens */
+    white-space: nowrap;
   }
 }
 
-/* Container for the Play Button - Positioned below the Flag button */
+/* Container for the Play Button */
 #play-button-container {
     position: fixed;
-    top: 140px; /* Offset from the top to sit below the flag button (80px + padding) */
+    top: 140px;
     right: 20px;
     z-index: 1000;
     background: #ac8ec9;
@@ -1057,7 +1035,6 @@ button.cta:hover {
   transform: scale(0.9);
 }
 
-/* Ensure the SVG scales correctly */
 .play-icon {
   width: 100%;
   height: 100%;

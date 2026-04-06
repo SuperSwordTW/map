@@ -1,5 +1,5 @@
 // ==========================================
-// 0. Priority Queue Implementation
+// Priority Queue Implementation
 // ==========================================
 const parent = i => ((i + 1) >>> 1) - 1;
 const left = i => (i << 1) + 1;
@@ -71,7 +71,7 @@ class PriorityQueue {
 }
 
 // ==========================================
-// 01. FEEDBACK MODAL
+// FEEDBACK MODAL
 // ==========================================
 
 const feedbackModal = document.createElement('div');
@@ -131,7 +131,7 @@ function triggerFeedbackPopup() {
         let selectedRating = 0;
         const stars = modal.querySelectorAll('.star');
 
-        // Star selection logic
+        // Star selection
         stars.forEach(star => {
             star.onclick = () => {
                 selectedRating = star.getAttribute('data-value');
@@ -147,10 +147,14 @@ function triggerFeedbackPopup() {
             const comment = document.getElementById('feedback-text').value;
 
             try {
-                const response = await fetch('https://onionlike-empathic-rayne.ngrok-free.dev/feedback', {
+                const response = await fetch('https://feedback.linjustin0209.workers.dev/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rating: selectedRating, comment: comment, timestamp: new Date() })
+                    body: JSON.stringify({ 
+                        rating: selectedRating, 
+                        comment: comment, 
+                        timestamp: new Date().toISOString() // Better for JSON storage
+                    })
                 });
 
                 if (response.ok) {
@@ -170,7 +174,7 @@ function triggerFeedbackPopup() {
 }
 
 // ==========================================
-// 0.1 Welcome Message
+// Welcome Message
 // ==========================================
 
 const tutorialPages = [
@@ -461,32 +465,30 @@ function updateTutorialPage() {
         welnextBtn.style.color = "#fff";
     }
 
-    // --- Dynamic UI Highlighting Logic ---
-    clearTutorialHighlights(); // Reset before applying new rules
+    // UI Highlighting Logic
+    clearTutorialHighlights();
     
     if (currentPage === 1) {
-        // Page 2: Highlight Left Menu
+        // Page 2: Remove text and image to focus on the menu, and highlight the menu
         imgContainer.style.display = 'none';
         textEl.style.display = 'none';
         
-        // 1. Pull the whole wrapper above the dark overlay
         document.querySelector('.main-wrapper').classList.add('tut-wrapper-top');
-        // 2. ONLY apply the pink/purple shadow to the dropdown container
         document.querySelector('.menu-container').classList.add('tut-highlight');
         
         document.getElementById('menu-toggle').checked = true; // Ensure menu is open
         document.getElementById('welcome-content').classList.add('tut-modal-compact', 'tut-modal-right');
         
     } else if (currentPage === 2) {
+        // Page 3: Highlight the zoom indicator and buttons
         closeMenu();
         imgContainer.style.display = 'none';
         textEl.style.display = 'block';
-        // Page 3: Highlight Top Right Buttons
         document.getElementById('zoom-indicator').classList.add('tut-highlight');
         document.getElementById('flag-button-container').classList.add('tut-highlight');
         document.getElementById('play-button-container').classList.add('tut-highlight');
         
-        // Collapse modal and move left to avoid blocking the buttons
+        // Collapse modal and move left
         document.getElementById('welcome-content').classList.add('tut-modal-compact', 'tut-modal-left');
     }
     else{
@@ -523,7 +525,6 @@ function hasSeenWelcomeMessage() {
 }
 
 function triggerWelcomeMessage() {
-    // Uncomment the next line if you want it to trigger on every refresh during development
     // localStorage.removeItem('welcome_seen'); 
 
     if (hasSeenWelcomeMessage()) return;
@@ -531,14 +532,13 @@ function triggerWelcomeMessage() {
     currentPage = 0;
     updateTutorialPage();
     
-    // We use flex instead of block to keep the modal centered via your .modal-overlay class
     welcomeOverlay.style.display = 'flex'; 
     tutDimBg.style.display = 'block';
 }
 
 
 // ==========================================
-// 1. CONFIGURATION
+// CONFIGURATION
 // ==========================================
 
 // #model
@@ -547,15 +547,16 @@ const MODEL_ALTITUDE = 1250;
 const MODEL_ROTATE = [Math.PI / 2, -Math.PI / 6 + 0.05, 0];
 const MODEL_SCALE = [30, 30, 30]; // Adjust based unit scale
 
-let currentFadeFrame = null; // NEW: Tracks the fade animation to kill it
-let currentAnimFrame = null; // (Existing: Tracks camera movement)
+let currentFadeFrame = null;
+let currentAnimFrame = null;
 
+// Next floor button
 const nextBtn = document.createElement('button');
 nextBtn.innerText = "Go to Next Floor";
 nextBtn.id = "next-floor-btn";
 Object.assign(nextBtn.style, {
     position: 'absolute',
-    bottom: '60px', // Increased from 30px to clear the 2.5rem (~40px) menu button
+    bottom: '60px',
     left: '50%',
     transform: 'translateX(-50%)',
     padding: '12px 24px',
@@ -568,7 +569,6 @@ Object.assign(nextBtn.style, {
     cursor: 'pointer',
     boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
     display: 'none',
-    // Lower than the menu's 1000, but high enough to be seen over the map
     zIndex: '500' 
 });
 document.body.appendChild(nextBtn);
@@ -576,6 +576,7 @@ document.body.appendChild(nextBtn);
 let globalPathSegments = [];
 let currentSegmentIndex = 0;
 
+// Detect click on the next button
 nextBtn.addEventListener('click', () => {
     loadNextPathSegment();
 });
@@ -647,24 +648,17 @@ const FLOOR_ZOOMS_MOBILE = {
 };
 
 // ==========================================
-// 2. MAP INITIALIZATION
+// MAP INITIALIZATION
 // ==========================================
 
 const isMobile = (screen.width < 768);
 
-const userAgent = navigator.userAgent;
-
-const isAndroidTV = /Android/i.test(userAgent) && (
-  /TV/i.test(userAgent) || 
-  /Television/i.test(userAgent) || 
-  /GoogleTV/i.test(userAgent) ||
-  /DroidTV/i.test(userAgent)
-);
-
+// Change zoom levels based on device
 const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[100] : FLOOR_ZOOMS[100];
 let maxZoomLevel = 16.46;
 let minZoomLevel = isMobile ? 12.86 : 13.65;
 
+// Initialize the map
 const map = new maplibregl.Map({
     container: 'map',
     attributionControl: false,
@@ -680,8 +674,6 @@ const map = new maplibregl.Map({
                 }
             }
         ],
-        // CRITICAL: We need this URL to download fonts for your text labels
-        // This uses the reliable OpenMapTiles font server
         'glyphs': 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
     },
     // style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
@@ -698,15 +690,16 @@ const map = new maplibregl.Map({
     dragPan: false,
 });
 
+// Disable default right-click on map
 map.getCanvasContainer().addEventListener('contextmenu', (e) => {
     e.preventDefault();
 }, false);
 
-const PAN_SENSITIVITY = 0.5; // 1.0 is normal, 0.4 is 40% speed. Adjust this!
+const PAN_SENSITIVITY = 0.5; // 1.0 is normal, 0.5 is 50% speed.
 let isDragging = false;
 let prevPos = { x: 0, y: 0 };
 
-const ROTATION_SENSITIVITY = 0.2; // 0.2 = 20% of original speed. Adjust this!
+const ROTATION_SENSITIVITY = 0.2; //1.0 is normal, 0.2 is 20% speed.
 let isRightDragging = false;
 let prevMousePos = { x: 0, y: 0 };
 
@@ -718,7 +711,7 @@ function getPoint(e) {
 }
 
 map.on('touchstart', (e) => {
-    // Disable default touch handling so it doesn't fight our script
+    // Disable default touch handling
     if (e.originalEvent.touches.length === 1) {
         isDragging = true;
         const point = getPoint(e);
@@ -726,13 +719,12 @@ map.on('touchstart', (e) => {
     }
 });
 
-// 1. Listen for Right Mouse Down
+// Listen for Right Mouse Down
 map.on('mousedown', (e) => {
     if (e.originalEvent.button === 0 && !e.originalEvent.ctrlKey) {
         isDragging = true;
         prevPos = { x: e.point.x, y: e.point.y };
     }
-    // Button 2 is Right Click. logical OR handles Ctrl+LeftClick (Mac style)
     if (e.originalEvent.button === 2 || (e.originalEvent.ctrlKey && e.originalEvent.button === 0)) {
         isRightDragging = true;
         prevMousePos = { x: e.point.x, y: e.point.y };
@@ -757,7 +749,7 @@ const handleMove = (e) => {
             animate: false
         });
         prevMousePos = { x: e.point.x, y: e.point.y };
-        return; // Exit so we don't pan while rotating
+        return;
     }
 
     // Handle Slow Panning (Left Click / Single Touch)
@@ -781,11 +773,10 @@ const handleMove = (e) => {
     }
 };
 
-// 2. Event Listeners
 map.on('mousemove', handleMove);
 map.on('touchmove', handleMove);
 
-// 3. Consolidated Stop Dragging
+// Consolidated Stop Dragging
 function stopDrag() {
     isDragging = false;
     if (isRightDragging) {
@@ -804,14 +795,12 @@ function preventDefaultMenu(e) {
 }
 
 
-    // ==========================================
-    // 5. NODES LOGIC
-    // ==========================================
-
-    // Simulating a path through a building
-    // #node
-    const NAVIGATION_NODES = [
-             //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
+// ==========================================
+// NODES LOGIC
+// ==========================================
+// #node
+const NAVIGATION_NODES = [
+        //13F=30.0 12F=21.0 11F=12.0 10F(校門)=3.0 9F=-6.0 8F=-15.0
         /*id 1~33丁棟右上棟
             34~54丁棟左上棟
             55~59丁棟右樓梯
@@ -1118,10 +1107,10 @@ function preventDefaultMenu(e) {
         
         { id: 188, name: "甲棟電梯(1F)", coords: [121.583730, 24.988414, -78.0], neighbors: [181], story: 1, building: 1, elevator: 1 },
     ];
+
     // ==========================================
-    // 5.5 AUTOMATIC NODE SCALING
+    // AUTOMATIC NODE SCALING
     // ==========================================
-    // This function automatically moves the nodes if you change MODEL_SCALE
     (function scaleNodesToModel() {
         const REF_SCALE = [3, 3, 3]; 
 
@@ -1132,49 +1121,51 @@ function preventDefaultMenu(e) {
 
         console.log(`[Auto-Scale] Scaling nodes from ${REF_SCALE} to ${MODEL_SCALE}`);
 
-        // 1. Use GROUND ZERO as the anchor for scaling calculations.
-        // This prevents the "Deep Underground" bug when the model is floating.
         const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
 
         NAVIGATION_NODES.forEach(node => {
-            // 2. Convert Node to Mercator
+            // Convert Node to Mercator
             const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat(node.coords, node.coords[2]);
 
-            // 3. Calculate Vector (Distance from Ground Origin)
+            // Calculate Vector (Distance from Ground Origin)
             const dx = nodeMerc.x - originMerc.x;
             const dy = nodeMerc.y - originMerc.y;
             const dz = nodeMerc.z - originMerc.z;
 
-            // 4. Calculate Ratios
+            // Calculate Ratios
             const ratioX = MODEL_SCALE[0] / REF_SCALE[0];
             const ratioY = MODEL_SCALE[1] / REF_SCALE[1];
             const ratioZ = MODEL_SCALE[2] / REF_SCALE[2];
 
-            // 5. Apply Scale
+            // Apply Scale
             const newX = originMerc.x + (dx * ratioX);
             const newY = originMerc.y + (dy * ratioY);
             const newZ = originMerc.z + (dz * ratioZ);
 
-            // 6. Convert back to Lng/Lat/Alt
+            // Convert back to Lng/Lat/Alt
             const newMerc = new maplibregl.MercatorCoordinate(newX, newY, newZ);
             const newLngLat = newMerc.toLngLat();
             const metersPerUnit = newMerc.meterInMercatorCoordinateUnits();
             const newAlt = newMerc.z / metersPerUnit;
 
-            // 7. Update Node
+            // Update Node
             // console.log(`Node ${node.id} moved: Alt ${node.coords[2]} -> ${newAlt.toFixed(2)}`);
             node.coords = [newLngLat.lng, newLngLat.lat, newAlt];
         });
     })();
 
+    // ==========================================
+    // AUTOMATIC UNDIRECTED GRAPH CONVERSION
+    // ==========================================
+
     (function makeGraphUndirected() {
         const nodeMap = {};
-        // 1. Map IDs to Nodes for O(1) lookup
+        // Map IDs to Nodes
         NAVIGATION_NODES.forEach(node => nodeMap[node.id] = node);
 
-        // 2. Iterate and back-link
+        // Iterate and back-link
         NAVIGATION_NODES.forEach(node => {
-            if (!node.neighbors) node.neighbors = []; // Safety check
+            if (!node.neighbors) node.neighbors = [];
 
             node.neighbors.forEach(neighborId => {
                 const neighbor = nodeMap[neighborId];
@@ -1187,6 +1178,10 @@ function preventDefaultMenu(e) {
         });
         console.log("[Graph] Edges converted to undirected.");
     })();
+
+    // ==========================================
+    // Update Node Names from CSV
+    // ==========================================
 
     (function readCSVfile() {
         fetch('class.csv')
@@ -1294,32 +1289,33 @@ function preventDefaultMenu(e) {
     if (window.threeLayer.map) window.threeLayer.map.triggerRepaint();
 }
 
-    function checkDuplicateIds(nodes) {
-        const seenIds = new Set();
-        const duplicates = [];
+// DEBUG
+function checkDuplicateIds(nodes) {
+    const seenIds = new Set();
+    const duplicates = [];
 
-        nodes.forEach(node => {
-            if (seenIds.has(node.id)) {
-                duplicates.push(node);
-            } else {
-                seenIds.add(node.id);
-            }
-        });
-
-        if (duplicates.length > 0) {
-            console.error("❌ Duplicate IDs found in NAVIGATION_NODES:");
-            duplicates.forEach(dup => {
-                console.log(`ID: ${dup.id}, Name: "${dup.name}", Story: ${dup.story}`);
-            });
+    nodes.forEach(node => {
+        if (seenIds.has(node.id)) {
+            duplicates.push(node);
         } else {
-            console.log("✅ No duplicate IDs found.");
+            seenIds.add(node.id);
         }
-    }
+    });
 
-    checkDuplicateIds(NAVIGATION_NODES);
+    if (duplicates.length > 0) {
+        console.error("❌ Duplicate IDs found in NAVIGATION_NODES:");
+        duplicates.forEach(dup => {
+            console.log(`ID: ${dup.id}, Name: "${dup.name}", Story: ${dup.story}`);
+        });
+    } else {
+        console.log("✅ No duplicate IDs found.");
+    }
+}
+
+checkDuplicateIds(NAVIGATION_NODES);
 
 // ==========================================
-// 3. THREE.JS CUSTOM LAYER
+// 4. THREE.JS CUSTOM LAYER
 // ==========================================
 
 // Calculate Mercator coordinates for the model placement
@@ -1341,6 +1337,7 @@ const modelTransform = {
 
 let isThreeReady = false;
 
+// Load model
 const customLayer = {
     id: '3d-model',
     type: 'custom',
@@ -1353,15 +1350,15 @@ const customLayer = {
         this.textLabels = [];
         window.threeLayer = this;
 
+        // Lighting
         const ambientLight = new THREE.AmbientLight(0x333333, 5.0); 
         this.sceneModel.add(ambientLight);
 
-        // 2. Directional Light: Mimics the sun, provides structure and shine
         const dirLight = new THREE.DirectionalLight(0xffffff, 5.0);
-        dirLight.position.set(500, 500, 500); // Positions the light above and to the right
+        dirLight.position.set(500, 500, 500);
         this.sceneModel.add(dirLight);
 
-        // 1. Load MAIN Building
+        // Load MAIN Building
         this.mainBuildingGroup = new THREE.Group(); // Create a group to hold the main building
         this.sceneModel.add(this.mainBuildingGroup);
         
@@ -1373,11 +1370,9 @@ const customLayer = {
         loader.load('./building.glb', (gltf) => {
             gltf.scene.traverse((child) => {
                 if (child.isMesh) {
-                    // 1. Keep the original PBR material from Blender
-                    // but enable transparency so you can fade it later
                     child.material.transparent = true;
                     child.material.opacity = 1.0;
-                    child.material.side = THREE.DoubleSide; // If you still need both sides visible
+                    child.material.side = THREE.DoubleSide;
 
                     child.material.polygonOffset = true;
                     child.material.polygonOffsetFactor = 1;
@@ -1385,7 +1380,7 @@ const customLayer = {
 
                     child.material.needsUpdate = true;
 
-                    // 2. Add edges (Optional, keeping your current logic)
+                    // Add edges
                     const edges = new THREE.EdgesGeometry(child.geometry, 15);
                     const line = new THREE.LineSegments(
                         edges, 
@@ -1397,19 +1392,15 @@ const customLayer = {
             this.mainBuildingGroup.add(gltf.scene);
         });
 
-        // 2. Create 3D Nodes
+        // Create 3D Nodes
         const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
         const originScale = originMerc.meterInMercatorCoordinateUnits();
 
-        // --- NEW: CALCULATE SCALE FACTOR ---
-        // Your original sizes (1.2m radius) were designed for Scale 3.
-        // We calculate 's' to multiply sizes if the model gets bigger.
         const REF_SCALE = 3; 
         const s = MODEL_SCALE[0] / REF_SCALE; 
 
         NAVIGATION_NODES.forEach(node => {
             if (node.turn) return;
-            // Calculate Position (Already handled by your auto-scaler, but we map it here)
             const nodeMerc = maplibregl.MercatorCoordinate.fromLngLat(
                 [node.coords[0], node.coords[1]], 
                 node.coords[2] 
@@ -1419,8 +1410,6 @@ const customLayer = {
             const y = -(nodeMerc.y - originMerc.y) / originScale; 
             const z = (nodeMerc.z - originMerc.z) / originScale;
 
-            // --- SPHERE SCALING ---
-            // Multiply radius (1.2) by 's'
             const geometry = new THREE.SphereGeometry(1.2 * s, 32, 32);
 
             const material = new THREE.MeshBasicMaterial({
@@ -1444,7 +1433,7 @@ const customLayer = {
             };
             this.sceneNodes.add(sphere);
 
-            // --- HIGH RES TEXT LABEL ---
+            // HIGH RES TEXT LABEL
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             
@@ -1469,7 +1458,7 @@ const customLayer = {
             const centerX = 2048;
             context.strokeText(node.name, centerX, 180);
             context.fillText(node.name, centerX, 180);
-
+            // Magnifying glass icon for class nodes
             if (!node.turn && !node.stair && !node.elevator) {
                 context.save();
                 context.strokeStyle = "#35ceb9";
@@ -1504,14 +1493,11 @@ const customLayer = {
             
 
 
-            // --- LABEL SCALING ---
-            // Multiply Width (12) and Height (3) by 's'
+            // LABEL SCALING
             const labelGeo = new THREE.PlaneGeometry(24 * (s*2), 3 * (s*2));
             const labelMesh = new THREE.Mesh(labelGeo, labelMat);
             labelMesh.userData.isStoryVisible = true;
-            // --- OFFSET SCALING ---
-            // Multiply the vertical lift (4.5) by 's'
-            // Otherwise, on a huge model, the text would be inside the sphere
+
             labelMesh.position.set(x, y, z + (4.5 * s)); 
             
             this.textLabels.push(labelMesh);
@@ -1529,13 +1515,15 @@ const customLayer = {
         });
         this.renderer.autoClear = false;
 
+        // Rendering settings
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 0.5; // Increased from 0.5 to prevent "Black" look
+        this.renderer.toneMappingExposure = 0.5;
         this.renderer.autoClear = false;
 
         isThreeReady = true;
 
+        // Update labels
         if (window.pendingLabelRefresh) {
             refreshThreeJsLabels();
             window.pendingLabelRefresh = false;
@@ -1543,7 +1531,7 @@ const customLayer = {
     },
 
     render: function (gl, matrix) {
-        // --- ROTATION FIX ---
+        // ROTATION FIX
         const pitchRad = this.map.getPitch() * (Math.PI / 180);
         const bearingRad = this.map.getBearing() * (Math.PI / 180);
 
@@ -1614,7 +1602,6 @@ const customLayer = {
 
         const m = new THREE.Matrix4().fromArray(matrix);
         
-        // Matrix A: Building
         const lModel = new THREE.Matrix4()
             .makeTranslation(modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ)
             .scale(new THREE.Vector3(modelTransform.scale * MODEL_SCALE[0], -modelTransform.scale * MODEL_SCALE[1], modelTransform.scale * MODEL_SCALE[2]))
@@ -1622,17 +1609,14 @@ const customLayer = {
             .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), modelTransform.rotateY))
             .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ));
 
-        // Matrix B: Nodes
         const lNodes = new THREE.Matrix4()
             .makeTranslation(modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ)
             .scale(new THREE.Vector3(modelTransform.scale, -modelTransform.scale, modelTransform.scale));
 
         const pathMesh = window.threeLayer.sceneNodes.children.find(c => c.userData.isPathLine === true);
         if (pathMesh && pathMesh.material.map) {
-            // Adjust speed here (negative for forward direction along the array)
             pathMesh.material.map.offset.x -= 0.01; 
             
-            // Essential: Trigger a repaint to keep the animation running smooth
             map.triggerRepaint(); 
         }
 
@@ -1646,10 +1630,10 @@ const customLayer = {
 };
 
 map.on('load', () => {
-    // 1. Add the 3D Building Layer FIRST
+    // Add the 3D Building Layer
     map.addLayer(customLayer);
 
-    // 3. Convert to GeoJSON
+    // Convert to GeoJSON
     const nodesGeoJSON = {
         type: 'FeatureCollection',
         features: NAVIGATION_NODES.map(node => ({
@@ -1659,6 +1643,7 @@ map.on('load', () => {
         }))
     };
 
+    // Moved to CSV load callback to ensure names are updated first
     // initDropdowns();
 
     filterNodesByStory(0);
@@ -1680,19 +1665,19 @@ map.on('load', () => {
             const rawNodes = findPath(startId, endId);
         
             if (rawNodes.length > 0) {
-                // 2. Reset Animation
+                // Reset Animation
                 if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
                     cancelAnimationFrame(currentAnimFrame);
                     currentAnimFrame = null;
                 }
 
-                // 3. Process Segments
+                // Process Segments
                 globalPathSegments = groupNodesByStory(rawNodes);
                 currentSegmentIndex = -1; // Reset index
 
                 console.log("Path Segments:", globalPathSegments);
 
-                // 4. Start the first segment immediately
+                // Start the first segment immediately
                 loadNextPathSegment();
             }
         }
@@ -1707,7 +1692,7 @@ map.on('load', () => {
 });
 
 // ==========================================
-// 4. CINEMATIC CAMERA LOGIC & PATH UPDATE
+// 5. CINEMATIC CAMERA LOGIC & PATH UPDATE
 // ==========================================
 
 // NEW: Helper to smooth jagged paths into curves
@@ -2091,10 +2076,7 @@ function animateCamera(path, duration, targetStory, onComplete) {
         const currentLng = p1[0] + (p2[0] - p1[0]) * ratio;
         const currentLat = p1[1] + (p2[1] - p1[1]) * ratio;
         
-        // 2. TARGET BEARING (Where we WANT to look)
-        // CHANGE: Reduced from 20 to 5.
-        // This ensures the camera doesn't start turning until it is 
-        // ~25% (5/20) of the way from the corner, preventing the "cutting corner" effect.
+        // 2. TARGET BEARING
         const lookAheadIndex = Math.min(currentIndex + 5, totalPoints);
         
         const target = path[lookAheadIndex];
@@ -2217,7 +2199,7 @@ window.addEventListener('keyup', (e) => {
 function devGameLoop() {
     if (!isDevMode) return;
 
-    // 1. Horizontal Movement (Pan)
+    // Horizontal Movement (Pan)
     let dx = 0;
     let dy = 0;
 
@@ -2230,7 +2212,7 @@ function devGameLoop() {
         map.panBy([dx, dy], { duration: 0, animate: false });
     }
 
-    // 2. Vertical Movement (Zoom / Altitude)
+    // Vertical Movement (Zoom / Altitude)
     // Space = Up (Ascend) = Zoom OUT (Lower zoom number)
     // Shift = Down (Descend) = Zoom IN (Higher zoom number)
     let currentZoom = map.getZoom();
@@ -2242,7 +2224,7 @@ function devGameLoop() {
         map.setZoom(currentZoom + ZOOM_SPEED);
     }
 
-    // 3. Update HUD
+    // Update HUD
     const center = map.getCenter();
     const pitch = map.getPitch().toFixed(2);
     const bearing = map.getBearing().toFixed(2);
@@ -2267,11 +2249,8 @@ document.querySelectorAll('#dev-hud input').forEach(input => {
 });
 
 // ==========================================
-// 7. INTERACTIVE NODE DRAGGING (DEV MODE)
+// INTERACTIVE NODE DRAGGING (DEV MODE)
 // ==========================================
-
-// We don't use Raycaster because the Camera Matrix is custom-baked for MapLibre.
-// Instead, we project the 3D Node positions to 2D Screen Space to check for clicks.
 
 const mouse = new THREE.Vector2();
 let selectedNode = null;
@@ -2290,18 +2269,16 @@ function getIntersects(mouseNDC, camera) {
     const HIT_RADIUS = 0.05; 
 
     nodes.forEach(node => {
-        // === NEW CODE STARTS HERE ===
         // If the node was hidden by filterNodesByStory, skip it immediately
         if (!node.visible) return; 
-        // === NEW CODE ENDS HERE ===
 
-        // 1. Get local position
+        // Get local position
         const pos = node.position.clone();
         
-        // 2. Project to NDC (Normalized Device Coordinates: -1 to +1)
+        // Project to NDC (Normalized Device Coordinates: -1 to +1)
         pos.applyMatrix4(camera.projectionMatrix);
 
-        // 3. Check if it's in front of the camera (z < 1) and visible
+        // Check if it's in front of the camera (z < 1) and visible
         if (pos.z < 1 && pos.z > -1) {
             // Calculate distance to mouse in 2D screen space
             const dx = pos.x - mouseNDC.x;
@@ -2318,7 +2295,7 @@ function getIntersects(mouseNDC, camera) {
     return closestNode;
 }
 
-// 1. MOUSE DOWN - Select Node
+// MOUSE DOWN - Select Node
 canvas.addEventListener('mousedown', (e) => {
     // Only run this logic if we are in Dev Mode
     if (!isDevMode) return; 
@@ -2340,18 +2317,15 @@ canvas.addEventListener('mousedown', (e) => {
 });
 
 map.on('click', (e) => {
-    // If in Dev Mode, don't open popups (let mousedown handle selection)
     if (isDevMode) return;
 
     const mouse = new THREE.Vector2();
     const canvas = map.getCanvas();
     const rect = canvas.getBoundingClientRect();
 
-    // Convert MapLibre screen point to NDC (-1 to +1)
     mouse.x = (e.point.x / rect.width) * 2 - 1;
     mouse.y = -(e.point.y / rect.height) * 2 + 1;
 
-    // Check 3D Intersection
     if (window.threeLayer && window.threeLayer.camera) {
         const hit = getIntersects(mouse, window.threeLayer.camera);
         if (hit) {
@@ -2386,7 +2360,7 @@ canvas.addEventListener('mousemove', (e) => {
     }
 });
 
-// 3. MOUSE UP - Release
+// MOUSE UP - Release
 canvas.addEventListener('mouseup', () => {
     if (selectedNode) {
         selectedNode.material.color.set(0xff9900);
@@ -2405,7 +2379,7 @@ canvas.addEventListener('mouseup', () => {
 
 
 // ==========================================
-// 2.5 PATHFINDING LOGIC (A*)
+// PATHFINDING LOGIC (A*)
 // ==========================================
 
 let isElevator = 1;
@@ -2448,7 +2422,6 @@ function findPath(startId, endId) {
         let current = openSet.pop()[0];
 
         if (current.id === endId) {
-            // [CHANGE] Now returns Node Objects, not just coordinates
             return reconstructPath(cameFrom, current.id, nodeMap);
         }
 
@@ -2734,7 +2707,7 @@ function resetToFullBuilding() {
 }
 
 // ==========================================
-// 5.9 DEV MODE VISUALS (NETWORK GRAPH)
+// DEV MODE VISUALS (NETWORK GRAPH)
 // ==========================================
 
 function toggleNetworkVisuals(show) {
@@ -2825,7 +2798,7 @@ function toggleNetworkVisuals(show) {
 }
 
 // ==========================================
-// 9. 360 PANORAMA LOGIC
+// 360 PANORAMA LOGIC
 // ==========================================
 
 let panoViewer = null;
@@ -2838,22 +2811,18 @@ function openPanorama(nodeData) {
         if (panoViewer.tempObjectURL) {
             URL.revokeObjectURL(panoViewer.tempObjectURL);
         }
-        // Destroy the WebGL instance
         panoViewer.destroy();
         panoViewer = null;
     }
 
-    // Show Modal
     modal.style.display = 'flex';
-    title.innerText = nodeData.name; // Display Node Name
+    title.innerText = nodeData.name;
 
     const imagePath = isMobile? `images/Optimized_Panoramas/${nodeData.id}.jpg` : `images/${nodeData.id}.jpg`;
 
-    if (isAndroidTV) imagePath = `images/TV_Panoramas/${nodeData.id}.jpg`;
-
     console.log("Loading 360 Image:", imagePath);
 
-    // Initialize Pannellum
+    // Initialize
     try {
         panoViewer = pannellum.viewer('panorama-container', {
             type: 'equirectangular',
@@ -2862,7 +2831,7 @@ function openPanorama(nodeData) {
             compass: true,
             showControls: true,
             theme: 'dark',
-            errorMessage: "Image not found: " + imagePath // Custom error message
+            errorMessage: "Image not found: " + imagePath
         });
     } catch (e) {
         console.error("Pannellum Error:", e);
@@ -2911,7 +2880,6 @@ function openShareModal(url) {
     input.value = url;
     modal.style.display = 'flex';
 
-    // Clear previous QR and generate new one
     qrContainer.innerHTML = "";
     qrcode = new QRCode(qrContainer, {
         text: url,
@@ -2969,7 +2937,7 @@ const context = camcanvas.getContext('2d');
 
 let isStreaming = false;
 
-// 1. Toggle Camera View
+// Toggle Camera View
 liveBtn.addEventListener('click', async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -2990,7 +2958,7 @@ liveBtn.addEventListener('click', async () => {
     }
 });
 
-// 2. Stop Camera
+// Stop Camera
 closeCamBtn.addEventListener('click', () => {
     const stream = video.srcObject;
     if (stream) {
@@ -3000,7 +2968,7 @@ closeCamBtn.addEventListener('click', () => {
     isStreaming = false;
 });
 
-// 3. Send JPEG frames to your Python backend
+// Send JPEG frames to your Python backend
 async function sendFrameLoop() {
     if (!isStreaming) return;
 
@@ -3074,7 +3042,6 @@ async function sendFrameLoop() {
                         const node = NAVIGATION_NODES.find(n => n.id === nodeId);
                         if (node) {
                             console.log("Detected location:", node.name);
-                            // Optional: Update UI to show detected location
                             document.getElementById('status-text').innerText = `Detected: ${node.name}`;
                             $('#start-select').val(node.id).trigger('change');
                         }
@@ -3167,7 +3134,7 @@ playBtn.addEventListener('click', function() {
         const p1 = smoothPath[i]; // [lng, lat, alt]
         const p2 = smoothPath[i+1];
 
-        // 1. Haversine distance (Horizontal meters)
+        // Haversine distance (Horizontal meters)
         const R = 6371e3; // Earth radius in meters
         const phi1 = p1[1] * Math.PI / 180;
         const phi2 = p2[1] * Math.PI / 180;
@@ -3180,10 +3147,10 @@ playBtn.addEventListener('click', function() {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const horizontalDist = R * c;
 
-        // 2. Vertical distance
+        // Vertical distance
         const verticalDist = Math.abs(p2[2] - p1[2]);
 
-        // 3. Total 3D distance
+        // Total 3D distance
         totalDistance += Math.sqrt(horizontalDist * horizontalDist + verticalDist * verticalDist);
     }
 
