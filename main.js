@@ -1410,7 +1410,7 @@ const customLayer = {
             const y = -(nodeMerc.y - originMerc.y) / originScale; 
             const z = (nodeMerc.z - originMerc.z) / originScale;
 
-            const geometry = new THREE.SphereGeometry(1.2 * s, 32, 32);
+            const geometry = new THREE.SphereGeometry(1.5 * s, 32, 32);
 
             const material = new THREE.MeshBasicMaterial({
                 color: 0xff9900,
