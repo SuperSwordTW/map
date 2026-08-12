@@ -147,22 +147,28 @@ function triggerFeedbackPopup() {
             const comment = document.getElementById('feedback-text').value;
 
             try {
-                const response = await fetch('https://feedback.linjustin0209.workers.dev/feedback', {
+                const formId = '1FAIpQLSc-Gl7rTkEP6JC8qfxIqEThWjNLkL0OL1eo7ZxljpXv0fmamQ'; 
+                const formUrl = `https://docs.google.com/forms/d/e/${formId}/formResponse`;
+                
+                const formData = new URLSearchParams();
+                formData.append('entry.1380664288', selectedRating);
+                formData.append('entry.1593471208', comment);
+
+                await fetch(formUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        rating: selectedRating, 
-                        comment: comment, 
-                        timestamp: new Date().toISOString() // Better for JSON storage
-                    })
+                    mode: 'no-cors', // Required for Google Forms
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
                 });
 
-                if (response.ok) {
-                    localStorage.setItem('feedback_submitted', 'true');
-                    document.getElementById('feedback-form-container').style.display = 'none';
-                    document.getElementById('feedback-success').style.display = 'block';
-                    setTimeout(() => modal.style.display = 'none', 3000);
-                }
+                // Because of 'no-cors', response.ok is opaque. We proceed assuming success if no network error was thrown.
+                localStorage.setItem('feedback_submitted', 'true');
+                document.getElementById('feedback-form-container').style.display = 'none';
+                document.getElementById('feedback-success').style.display = 'block';
+                setTimeout(() => modal.style.display = 'none', 3000);
+                
             } catch (err) {
                 console.error("Feedback submission failed:", err);
                 alert("Failed to send feedback. Please try again later.");
@@ -170,7 +176,7 @@ function triggerFeedbackPopup() {
         };
 
         document.getElementById('close-feedback').onclick = () => modal.style.display = 'none';
-    }, 5000);
+    }, 6500);
 }
 
 // ==========================================
@@ -185,11 +191,11 @@ const tutorialPages = [
     },
     {
         title: "選擇起點與終點",
-        text: "在左側的選單中，您可以從下拉清單輕鬆選擇您的起點與終點位置。",
+        text: "在左側的選單中，您可以選擇您的起點與終點。",
     },
     {
         title: "放大倍率、回到起點、播放預覽",
-        text: "檢視地圖的放大倍率。\n點擊按鈕快速返回您的起點位置。\n點擊「播放預覽」按鈕觀看導航路線。",
+        text: "檢視地圖的放大倍率。\n點擊按鈕返回您的起點位置。\n點擊「播放預覽」按鈕開始預覽路線。",
     },
     {
         title: "實景偵測",
@@ -1348,6 +1354,19 @@ const customLayer = {
         this.sceneModel = new THREE.Scene(); 
         this.sceneNodes = new THREE.Scene();
         this.textLabels = [];
+        
+        // FreeCam setup
+        this.freeCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+        this.freeCamera.up.set(0, 0, 1);
+        this.isFreeCam = false;
+        
+        window.addEventListener('resize', () => {
+            if (this.freeCamera) {
+                this.freeCamera.aspect = window.innerWidth / window.innerHeight;
+                this.freeCamera.updateProjectionMatrix();
+            }
+        });
+        
         window.threeLayer = this;
 
         // Lighting
@@ -1531,6 +1550,77 @@ const customLayer = {
     },
 
     render: function (gl, matrix) {
+        const pathMesh = window.threeLayer.sceneNodes.children.find(c => c.userData.isPathLine === true);
+        if (pathMesh && pathMesh.material.map) {
+            pathMesh.material.map.offset.x -= 0.01; 
+            pathMesh.visible = true; // Keep the path visible during animation
+            
+            // Push the path downwards during freecam to prevent its large radius from obstructing the view
+            if (this.isFreeCam) {
+                pathMesh.position.z = -23.8; 
+            } else {
+                pathMesh.position.z = 0; 
+            }
+            
+            map.triggerRepaint(); 
+        }
+
+        if (this.isFreeCam) {
+            this.renderer.resetState();
+            this.freeCamera.updateMatrixWorld();
+
+            this.sceneNodes.children.forEach(child => {
+                if (child.userData.isNode && child.geometry && child.geometry.type === 'SphereGeometry') {
+                    const dist = child.position.distanceTo(this.freeCamera.position);
+                    let nodeScale = 0.6;
+                    if (dist < 4) {
+                        nodeScale = Math.max(0.00001, 0.006 * (dist / 4)); 
+                    }
+                    child.scale.set(nodeScale, nodeScale, nodeScale);
+                }
+            });
+            
+            this.textLabels.forEach(mesh => {
+                if (mesh.userData.isStoryVisible === false) {
+                    mesh.visible = false;
+                    return;
+                }
+                const dist = mesh.position.distanceTo(this.freeCamera.position);
+                
+                if (dist < 3) {
+                    mesh.visible = false;
+                } else {
+                    mesh.visible = true;
+                    mesh.quaternion.copy(this.freeCamera.quaternion);
+                    const s = dist * 0.0008; 
+                    mesh.scale.set(s, s, s);
+                }
+            });
+            
+            const viewProj = new THREE.Matrix4().copy(this.freeCamera.projectionMatrix).multiply(this.freeCamera.matrixWorldInverse);
+            
+            const localModel = new THREE.Matrix4()
+                .scale(new THREE.Vector3(MODEL_SCALE[0], MODEL_SCALE[1], MODEL_SCALE[2]))
+                .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), modelTransform.rotateX))
+                .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), modelTransform.rotateY))
+                .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ));
+                
+            this.camera.projectionMatrix = viewProj.clone().multiply(localModel);
+            this.renderer.render(this.sceneModel, this.camera);
+            
+            this.camera.projectionMatrix = viewProj;
+            this.renderer.render(this.sceneNodes, this.camera);
+            
+            return;
+        }
+
+        // Reset node scaling after freecam ends
+        this.sceneNodes.children.forEach(child => {
+            if (child.userData.isNode && child.geometry && child.geometry.type === 'SphereGeometry') {
+                child.scale.set(1, 1, 1);
+            }
+        });
+
         // ROTATION FIX
         const pitchRad = this.map.getPitch() * (Math.PI / 180);
         const bearingRad = this.map.getBearing() * (Math.PI / 180);
@@ -1549,17 +1639,12 @@ const customLayer = {
                 mesh.visible = false;
                 return;
             }
-            // Reset
             mesh.rotation.set(0, 0, 0);
-
             mesh.rotateZ(-bearingRad);
-
             mesh.rotateX(pitchRad);
-
             mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
             const pos = mesh.position.clone();
-
             pos.applyMatrix4(this.camera.projectionMatrix);
 
             if (pos.z < -1 || pos.z > 1) {
@@ -1612,13 +1697,6 @@ const customLayer = {
         const lNodes = new THREE.Matrix4()
             .makeTranslation(modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ)
             .scale(new THREE.Vector3(modelTransform.scale, -modelTransform.scale, modelTransform.scale));
-
-        const pathMesh = window.threeLayer.sceneNodes.children.find(c => c.userData.isPathLine === true);
-        if (pathMesh && pathMesh.material.map) {
-            pathMesh.material.map.offset.x -= 0.01; 
-            
-            map.triggerRepaint(); 
-        }
 
         this.renderer.resetState();
         this.camera.projectionMatrix = m.clone().multiply(lModel);
@@ -2044,73 +2122,85 @@ function getDestination(lng, lat, distanceMeters, bearing) {
 }
 
 function animateCamera(path, duration, targetStory, onComplete) {
-    if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
-        cancelAnimationFrame(currentAnimFrame);
-    }
-    map.stop();
-
-    const start = performance.now();
-    const totalPoints = path.length - 1;
-
-    let smoothedBearing = 0;
-    if (path.length > 1) {
-        smoothedBearing = calculateBearing(path[0][0], path[0][1], path[1][0], path[1][1]);
-    }
-
-    function frame(time) {
-        const elapsed = time - start;
-        const progress = Math.min(elapsed / duration, 1); 
-
-        const currentFloatIndex = progress * totalPoints;
-        const currentIndex = Math.floor(currentFloatIndex);
+        if (typeof currentAnimFrame !== 'undefined' && currentAnimFrame) {
+            cancelAnimationFrame(currentAnimFrame);
+        }
         
-        if (!path[currentIndex]) return;
-
-        const nextIndex = Math.min(currentIndex + 1, totalPoints);
-        const ratio = currentFloatIndex - currentIndex;
-
-        const p1 = path[currentIndex];
-        const p2 = path[nextIndex];
-
-        // 1. Position Interpolation
-        const currentLng = p1[0] + (p2[0] - p1[0]) * ratio;
-        const currentLat = p1[1] + (p2[1] - p1[1]) * ratio;
+        map.stop();
         
-        // 2. TARGET BEARING
-        const lookAheadIndex = Math.min(currentIndex + 5, totalPoints);
+        const layer = window.threeLayer;
+        if (!layer) return;
         
-        const target = path[lookAheadIndex];
-        const targetBearing = calculateBearing(currentLng, currentLat, target[0], target[1]);
+        layer.isFreeCam = true;
+        
+        const start = performance.now();
 
-        // 3. SMOOTHING LOGIC
-        let diff = targetBearing - smoothedBearing;
-        while (diff > 180) diff -= 360;
-        while (diff < -180) diff += 360;
-
-        // Slightly faster reaction (0.06) to compensate for the later trigger
-        smoothedBearing += diff * 0.06; 
-
-        // 4. RECALIBRATION
-        const offsetDist = 0;
-        const focusPoint = getDestination(currentLng, currentLat, offsetDist, smoothedBearing);
-    
-        // Select the appropriate array
-        const zoomLevel = isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory];
-
-        // CHANGE: Switched back to jumpTo. 
-        // 'flyTo' adds unwanted inertia that messes up the turning timing.
-        map.jumpTo({
-            center: focusPoint,
-            bearing: smoothedBearing, 
-            zoom: zoomLevel,
-            pitch: 0
+        const originMerc = maplibregl.MercatorCoordinate.fromLngLat(MODEL_ORIGIN, 0);
+        const originScale = originMerc.meterInMercatorCoordinateUnits();
+        
+        const localPath = path.map(coord => {
+            const merc = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2] || 0);
+            return new THREE.Vector3(
+                (merc.x - originMerc.x) / originScale,
+                -(merc.y - originMerc.y) / originScale,
+                ((merc.z - originMerc.z) / originScale) + 1.2
+            );
         });
+
+        const curve = new THREE.CurvePath();
+        for (let i = 0; i < localPath.length - 1; i++) {
+            curve.add(new THREE.LineCurve3(localPath[i], localPath[i+1]));
+        }
+
+        function frame(time) {
+            const elapsed = time - start;
+            let progress = elapsed / duration;
+            
+            if (progress > 1) progress = 1;
+            
+            const easeProgress = progress < 0.5 
+                ? 2 * progress * progress 
+                : -1 + (4 - 2 * progress) * progress;
+
+            if (curve.curves.length === 0) {
+                layer.freeCamera.position.copy(localPath[0]);
+            } else {
+                const currentPos = curve.getPointAt(easeProgress);
+                layer.freeCamera.position.copy(currentPos);
+                
+                const lookAheadProgress = Math.min(easeProgress + 0.02, 1.0);
+                const lookAheadPos = curve.getPointAt(lookAheadProgress);
+                
+                if (lookAheadProgress === 1.0 && easeProgress === 1.0) {
+                    const tangent = curve.getTangentAt(1.0);
+                    lookAheadPos.addVectors(currentPos, tangent);
+                } else if (lookAheadPos.distanceTo(currentPos) < 0.01) {
+                    const tangent = curve.getTangentAt(easeProgress);
+                    lookAheadPos.addVectors(currentPos, tangent);
+                }
+                
+                layer.freeCamera.lookAt(lookAheadPos);
+            }
+            
+            map.triggerRepaint();
 
         if (progress < 1) {
             currentAnimFrame = requestAnimationFrame(frame);
         } else {
             console.log("Cinematic Flight Complete");
             currentAnimFrame = null;
+            layer.isFreeCam = false;
+            
+            // Snap MapLibre to final position
+            const finalNode = path[path.length - 1];
+            map.jumpTo({
+                center: [finalNode[0], finalNode[1]],
+                zoom: isMobile ? FLOOR_ZOOMS_MOBILE[targetStory] : FLOOR_ZOOMS[targetStory],
+                pitch: 0, 
+                // Return to the initial bearing of this floor's path
+                bearing: path.length > 1 ? calculateBearing(path[0][0], path[0][1], path[1][0], path[1][1]) : 0
+            });
+            
             if (onComplete) onComplete();
         }
     }
@@ -2480,48 +2570,64 @@ function initDropdowns() {
     const startSel = document.getElementById('start-select');
     const endSel = document.getElementById('end-select');
 
-    // 1. Initialize groups with specific category keys
-    const groups = {
-        "教室": [],
-        "行政單位": [],
-        "其他": []
-    };
+    // 1. Group nodes dynamically by their story (height) level
+    const storyGroupsMap = new Map();
 
     NAVIGATION_NODES.forEach(node => {
-        // Keep your existing filters for stairs/turns
+        // Keep your existing filters to hide stairs, turns, and elevators
         if (node.stair == 1 || node.turn == 1 || node.elevator == 1) return;
 
-        // Categorize based on tags
-        if (node.class == 1) {
-            groups["教室"].push(node);
-        } else if (node.admin == 1) {
-            groups["行政單位"].push(node);
-        } else {
-            groups["其他"].push(node);
+        const story = node.story;
+
+        // Create the group if it doesn't exist yet
+        if (!storyGroupsMap.has(story)) {
+            let groupLabel = `${story}F`; // Fallback label
+            
+            // Check if this story has defined names in FLOOR_NAMES
+            if (typeof FLOOR_NAMES !== 'undefined' && FLOOR_NAMES[story]) {
+                // Get all the building names for this story (e.g., ["丁棟4F", "乙棟7F", "丙棟4F"])
+                const names = Object.values(FLOOR_NAMES[story]);
+                if (names.length > 0) {
+                    groupLabel = names.join('/'); // Join them with a slash
+                }
+            }
+
+            storyGroupsMap.set(story, {
+                label: groupLabel,
+                story: story, // Stored to sort the groups by height later
+                nodes: []
+            });
         }
+        
+        // Add the node to its corresponding story group
+        storyGroupsMap.get(story).nodes.push(node);
     });
 
-    // 2. Function to populate with the new category groups
+    // Convert the Map to an Array and sort the groups by story (descending: 13 -> 1)
+    const sortedGroups = Array.from(storyGroupsMap.values()).sort((a, b) => {
+        return b.story - a.story; 
+    });
+
+    // 2. Function to populate the select elements
     const populate = (selector) => {
         selector.innerHTML = '';
         
-        // Iterate through our defined categories
-        for (const category in groups) {
-            // Only create an optgroup if there are nodes in that category
-            if (groups[category].length > 0) {
+        sortedGroups.forEach(group => {
+            if (group.nodes.length > 0) {
                 const optgroup = document.createElement('optgroup');
-                optgroup.label = category;
+                optgroup.label = group.label; // e.g., "丁棟4F/乙棟7F/丙棟4F"
 
-                // Optional: Sort nodes alphabetically by name within the group
-                groups[category].sort((a, b) => a.name.localeCompare(b.name));
+                // Sort nodes alphabetically by name within the specific floor level
+                group.nodes.sort((a, b) => a.name.localeCompare(b.name));
                 
-                groups[category].forEach(node => {
+                group.nodes.forEach(node => {
                     const opt = new Option(node.name, node.id);
                     optgroup.appendChild(opt);
                 });
+                
                 selector.appendChild(optgroup);
             }
-        }
+        });
     };
 
     populate(startSel);
@@ -3055,7 +3161,7 @@ async function sendFrameLoop() {
                     isStreaming = false;
                 }
                 else{
-                    cameraStatus.textContent = "偵測失敗，請換個角度繼續掃描...";
+                    cameraStatus.textContent = "維修中，暫不開放此功能";
                     cameraStatus.style.color = "red";
                 }
             }
