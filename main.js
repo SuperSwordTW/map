@@ -199,7 +199,7 @@ const tutorialPages = [
     },
     {
         title: "實景偵測",
-        text: "點擊相機圖示可開啟實景偵測畫面，掃描幾秒鐘後系統即可辨識您所在位置。",
+        text: "點擊相機圖示可開啟實景偵測畫面，掃描幾秒鐘後若該位置有在全景照片數據庫中，則向您顯示該位置(系統有可能出錯請自行檢查)。",
         img: "camera.png"
     },
     {
@@ -3161,7 +3161,7 @@ async function sendFrameLoop() {
                     isStreaming = false;
                 }
                 else{
-                    cameraStatus.textContent = "維修中，暫不開放此功能";
+                    cameraStatus.textContent = "辨識失敗，請重新掃描。";
                     cameraStatus.style.color = "red";
                 }
             }
