@@ -3161,7 +3161,8 @@ async function sendFrameLoop() {
                     isStreaming = false;
                 }
                 else{
-                    cameraStatus.textContent = "辨識失敗，請重新掃描。";
+                    // cameraStatus.textContent = "辨識失敗，請重新掃描。";
+                    cameraStatus.textContent = "維修中";
                     cameraStatus.style.color = "red";
                 }
             }
